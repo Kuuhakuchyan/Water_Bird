@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黄河生态方舟 | 态势感知终端</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* === UI 设计系统 === */
+        :root {
+            --c-aqua: #00ADB5; --c-green: #2ECC71; --c-orange: #F39C12; --c-red: #E74C3C; --c-dark: #2C3E50;
+            --bg-glass: rgba(255, 255, 255, 0.96);
+            --shadow: 0 8px 32px rgba(0,0,0,0.12);
+            --radius: 10px;
+        }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Noto Sans SC', sans-serif; background: #eef2f5; }
+
+        #map { height: 100vh; width: 100%; z-index: 1; }
+
+        /* 玻璃面板通用 */
+        .glass-panel {
+            background: var(--bg-glass); backdrop-filter: blur(12px);
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.8);
+            display: flex; flex-direction: column; transition: transform 0.1s; /* 移除 position 的 transition 防止拖拽延迟 */
+        }
+
+        /* 拖拽头部样式优化 */
+        .panel-head {
+            padding: 12px 15px; border-bottom: 1px solid rgba(0,0,0,0.06);
+            font-weight: 700; color: var(--c-dark); font-size: 13px; letter-spacing: 0.5px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move; /* 鼠标变为移动图标 */
+            user-select: none; /* 防止拖动时选中文本 */
+        }
+        .panel-head:active { background: rgba(0,0,0,0.02); } /* 按下时稍微变色 */
+
+        /* 顶部通栏 */
+        .top-beam {
+            position: absolute; top: 0; left: 0; right: 0; height: 60px;
+            background: var(--bg-glass); z-index: 1000; box-shadow: var(--shadow);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+            border-bottom: 3px solid var(--c-aqua);
+        }
+        .brand { font-size: 18px; font-weight: 800; color: var(--c-dark); display:flex; align-items:center; gap:10px; }
+        .stat-box { display: flex; gap: 30px; text-align: center; }
+        .stat-num { font-size: 18px; font-weight: 800; line-height: 1; display: block; }
+        .stat-lbl { font-size: 10px; color: #999; text-transform: uppercase; margin-top: 4px; font-weight: 500; }
+
+        /* 筛选条 */
+        #filter-bar {
+            position: absolute; top: 80px; right: 20px; padding: 8px 12px; z-index: 1000;
+            display: flex; gap: 8px; align-items: center;
+        }
+        .date-inp { border: 1px solid #ddd; padding: 5px; border-radius: 4px; font-size: 12px; width: 110px; background: #f8f9fa; }
+        .btn-go { background: var(--c-aqua); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition:0.2s; }
+        .btn-go:hover { background: #008c93; }
+
+        /* === 面板初始位置 === */
+        /* 注意：拖动后这些 bottom/right 属性会被 JS 覆盖为 top/left */
+        #rank-panel { position: absolute; bottom: 20px; left: 20px; width: 320px; height: 400px; z-index: 1000; }
+        #detail-panel { position: absolute; bottom: 20px; right: 20px; width: 360px; height: 500px; z-index: 1000; }
+
+        /* === 左侧：实时日志流样式 === */
+        .log-container { flex: 1; overflow-y: auto; padding: 0 10px; cursor: default; } /* 内容区恢复默认鼠标 */
+        .log-item {
+            display: flex; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .log-icon {
+            width: 36px; height: 36px; border-radius: 6px; object-fit: cover; margin-right: 10px; background: #f0f0f0;
+            border: 1px solid #ddd;
+        }
+        .log-content { flex: 1; font-size: 12px; }
+        .log-title { font-weight: 700; color: #333; display: flex; justify-content: space-between; }
+        .log-time { color: #999; font-size: 10px; }
+        .log-meta { display: flex; gap: 5px; margin-top: 2px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; display: inline-block; }
+        .status-dot.active { background: var(--c-green); box-shadow: 0 0 5px var(--c-green); animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* === 右侧：列表样式 === */
+        .species-list-container { flex: 1; overflow-y: auto; margin-top: 10px; padding-right: 5px; cursor: default; }
+        .species-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 4px; border-bottom: 1px dashed #eee; font-size: 12px;
+            transition: 0.2s; cursor: default;
+        }
+        .species-row:hover { background: rgba(0,173,181,0.05); }
+        .sp-rank { width: 35px; min-width: 35px; margin-right: 5px; color: #999; font-style: italic; font-size: 11px; }
+        .sp-name { font-weight: 600; color: #333; flex: 1; display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sp-count { font-weight: 700; color: var(--c-aqua); min-width: 40px; text-align: right; }
+
+        /* Badge 标签 */
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; color: white; font-weight: 500; transform: scale(0.9); display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.2); flex-shrink: 0; }
+        .bg-red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .bg-orange { background: linear-gradient(135deg, #f39c12, #d35400); }
+        .bg-green { background: #e0e0e0; color: #666; box-shadow: none; }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+        .btn-admin { background: var(--c-dark); color: white; padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; transition:0.2s;}
+        .popup-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 5px; }
+        .popup-table td { padding: 3px 0; border-bottom: 1px solid #eee; color: #555; }
+        .leaflet-top { top: 70px; }
+    </style>
+</head>
+<body>
+
+<div class="top-beam">
+    <div class="brand"><i class="fas fa-dragon" style="color:var(--c-aqua)"></i> 黄河生态方舟</div>
+    <div class="stat-box">
+        <div><span class="stat-num" style="color:var(--c-orange)" id="s-records">--</span><span class="stat-lbl">观测记录</span></div>
+        <div><span class="stat-num" style="color:var(--c-green)" id="s-species">--</span><span class="stat-lbl">物种总数</span></div>
+        <div><span class="stat-num" style="color:var(--c-red)" id="s-protected">--</span><span class="stat-lbl">珍稀保护</span></div>
+    </div>
+    <a href="/admin/" target="_blank" class="btn-admin"><i class="fas fa-cog"></i> 管理后台</a>
+</div>
+
+<div id="filter-bar" class="glass-panel" style="flex-direction:row">
+    <input type="date" id="d-start" class="date-inp">
+    <span style="color:#999">-</span>
+    <input type="date" id="d-end" class="date-inp">
+    <button class="btn-go" onclick="app.refresh()"><i class="fas fa-search"></i></button>
+</div>
+
+<div id="rank-panel" class="glass-panel">
+    <div class="panel-head" id="drag-left">
+        <span><i class="fas fa-satellite-dish" style="color:var(--c-green)"></i> 实时数据接入</span>
+        <div style="font-size:10px; color:#999; display:flex; align-items:center; gap:4px">
+            <span class="status-dot active"></span> 监控中
+        </div>
+    </div>
+    <div class="log-container" id="realtime-log-box">
+        </div>
+</div>
+
+<div id="detail-panel" class="glass-panel">
+    <div class="panel-head" id="drag-right">
+        <span><i class="fas fa-chart-pie" style="color:var(--c-aqua)"></i> 监测分析概览</span>
+        <i class="fas fa-minus" style="cursor:pointer;opacity:0.5;font-size:12px;" onclick="event.stopPropagation(); $('#detail-panel').toggleClass('minimized');"></i>
+    </div>
+    <div style="flex:1; padding:15px; display:flex; flex-direction:column; overflow:hidden;">
+
+        <div style="height: 140px; display:flex; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;">
+            <div style="width:120px; height:120px;">
+                <canvas id="chart-pie"></canvas>
+            </div>
+            <div style="flex:1; padding-left:15px; font-size:11px; color:#666; line-height:1.6">
+                <div><span style="display:inline-block;width:8px;height:8px;background:#00ADB5;margin-right:5px;border-radius:50%"></span>优势物种 Top 1</div>
+                <div style="font-size:18px; font-weight:800; color:#2c3e50" id="top-species-name">--</div>
+                <div style="color:var(--c-orange)">共发现 <span id="top-species-count">0</span> 只</div>
+            </div>
+        </div>
+
+        <div style="font-size:12px; font-weight:700; color:var(--c-dark); margin-bottom:5px;">
+            <i class="fas fa-list-ul"></i> 完整物种清单
+        </div>
+        <div id="species-list-box" class="species-list-container"></div>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    const app = {
+        api: 'http://127.0.0.1:8000/api',
+        map: null,
+        layers: { station: L.layerGroup(), line: L.layerGroup(), record: L.layerGroup() },
+        charts: { pie: null },
+        data: [],
+
+        init: function() {
+            this.initMap();
+            this.initDates();
+            this.loadStatic();
+            this.loadData();
+
+            // 启用拖拽
+            this.makeDraggable('rank-panel');
+            this.makeDraggable('detail-panel');
+        },
+
+        // === 拖拽核心功能 ===
+        makeDraggable: function(id) {
+            const el = document.getElementById(id);
+            const header = el.querySelector('.panel-head');
+            let isDragging = false, startX, startY, initialLeft, initialTop;
+
+            header.addEventListener('mousedown', (e) => {
+                // 如果点的是最小化按钮，不触发拖拽
+                if(e.target.tagName.toLowerCase() === 'i') return;
+
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+
+                // 获取当前计算后的位置，并转换为 top/left 布局
+                const rect = el.getBoundingClientRect();
+                el.style.bottom = 'auto';
+                el.style.right = 'auto';
+                el.style.left = rect.left + 'px';
+                el.style.top = rect.top + 'px';
+
+                initialLeft = rect.left;
+                initialTop = rect.top;
+
+                // 提升层级，让正在拖拽的在最上面
+                el.style.zIndex = 1001;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                el.style.left = `${initialLeft + dx}px`;
+                el.style.top = `${initialTop + dy}px`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                if(isDragging) {
+                    isDragging = false;
+                    el.style.zIndex = 1000; // 还原层级
+                }
+            });
+        },
+
+        initMap: function() {
+            const tk = "0de0375367832014891a9f40e0e42911";
+            const tdt = t => `http://t0.tianditu.gov.cn/${t}_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${t}&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tk}`;
+            const vec = L.layerGroup([L.tileLayer(tdt('vec')), L.tileLayer(tdt('cva'))]);
+            const img = L.layerGroup([L.tileLayer(tdt('img')), L.tileLayer(tdt('cia'))]);
+
+            this.map = L.map('map', { center: [34.85, 113.55], zoom: 10, layers: [vec, this.layers.station, this.layers.line, this.layers.record], zoomControl: false, attributionControl:false });
+            L.control.layers({ "电子地图": vec, "卫星影像": img }, { "监测点位": this.layers.station, "监测样线": this.layers.line, "观测记录": this.layers.record }, { position: 'topleft' }).addTo(this.map);
+            L.control.zoom({ position: 'topleft' }).addTo(this.map);
+        },
+
+        initDates: function() {
+            const d = new Date();
+            document.getElementById('d-end').valueAsDate = d;
+            d.setDate(d.getDate() - 30);
+            document.getElementById('d-start').valueAsDate = d;
+        },
+
+        loadStatic: function() {
+            $.get(`${this.api}/zones/`).done(res => {
+                (res.results || res || []).forEach(z => {
+                    if(z.latitude && z.longitude) {
+                        L.marker([z.latitude, z.longitude], {
+                            icon: L.divIcon({className:'', html:'<div style="background:#34495e;width:10px;height:10px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.3)"></div>'})
+                        }).bindPopup(`<b>${z.name}</b>`).addTo(this.layers.station);
+                    }
+                });
+            });
+            $.get(`${this.api}/transects/`).done(res => {
+                this.layers.line.clearLayers();
+                (res.results || res || []).forEach(r => {
+                    if(r.path && r.path.length) {
+                        L.polyline(r.path, { color: '#F39C12', weight: 4, opacity: 0.8, dashArray:'10,5' }).bindPopup(`<b>${r.name}</b>`).addTo(this.layers.line);
+                    }
+                });
+            });
+        },
+
+        loadData: function() {
+            $.get(`${this.api}/observations/`).done(res => {
+                this.data = res.results || res || [];
+                // 时间倒序
+                this.data.sort((a, b) => new Date(b.observation_time) - new Date(a.observation_time));
+                this.refresh();
+            }).fail(() => console.error("API Error"));
+        },
+
+        refresh: function() {
+            const start = new Date(document.getElementById('d-start').value);
+            const end = new Date(document.getElementById('d-end').value); end.setHours(23,59,59);
+            this.layers.record.clearLayers();
+
+            const stats = {};
+            let count = 0, pCount = 0;
+            const bounds = [];
+            const filteredLogs = [];
+
+            this.data.forEach(item => {
+                const p = item;
+                const time = new Date(p.observation_time);
+                const lat = p.y || p.latitude;
+                const lng = p.x || p.longitude;
+
+                if (lat && lng && time >= start && time <= end) {
+                    count++;
+                    filteredLogs.push(p);
+
+                    const name = p.species_name || "未知";
+                    const level = p.species_protection || "普通";
+
+                    if(!stats[name]) stats[name] = { count: 0, level: level };
+                    stats[name].count++;
+                    if(level.includes('一') || level.includes('Ⅰ') || level.includes('二') || level.includes('Ⅱ')) pCount++;
+
+                    let badgeClass = 'bg-green';
+                    if (level.includes('一') || level.includes('Ⅰ')) badgeClass = 'bg-red';
+                    else if (level.includes('二') || level.includes('Ⅱ')) badgeClass = 'bg-orange';
+
+                    const popupContent = `
+                        <div style="font-size:14px; font-weight:bold; color:#00ADB5; margin-bottom:5px;">
+                            ${name} <span class="badge ${badgeClass}">${level}</span>
+                        </div>
+                        <table class="popup-table">
+                            <tr><td>数量</td><td><b>${p.count}</b></td></tr>
+                            <tr><td>区域</td><td>${p.zone_name || '-'}</td></tr>
+                            <tr><td>时间</td><td>${p.observation_time}</td></tr>
+                        </table>
+                        ${p.image ? `<img src="${p.image}" style="width:100%;height:120px;object-fit:cover;margin-top:5px;border-radius:4px;">` : ''}
+                    `;
+
+                    const color = (p.status === 1) ? '#2ECC71' : '#F39C12';
+                    L.circleMarker([lat, lng], { radius: 6, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.8 })
+                     .bindPopup(popupContent)
+                     .addTo(this.layers.record);
+
+                    bounds.push([lat, lng]);
+                }
+            });
+
+            if(bounds.length) this.map.fitBounds(bounds);
+
+            $('#s-records').text(count);
+            $('#s-species').text(Object.keys(stats).length);
+            $('#s-protected').text(pCount);
+
+            this.renderDashboard(stats);
+            this.renderRealTimeLogs(filteredLogs);
+        },
+
+        renderRealTimeLogs: function(logs) {
+            const displayLogs = logs.slice(0, 20);
+            const html = displayLogs.map(item => {
+                const imgUrl = item.image ? item.image : '';
+                const name = item.species_name || "未知物种";
+                const zone = item.zone_name || "未知区域";
+                const isVerified = (item.status === 1);
+                const statusColor = isVerified ? '#2ECC71' : '#F39C12';
+
+                const imgTag = imgUrl
+                    ? `<img src="${imgUrl}" class="log-icon">`
+                    : `<div class="log-icon" style="display:flex;align-items:center;justify-content:center;color:#ccc"><i class="fas fa-camera"></i></div>`;
+
+                return `
+                    <div class="log-item">
+                        ${imgTag}
+                        <div class="log-content">
+                            <div class="log-title">
+                                <span>${name}</span>
+                                <span style="font-weight:normal; color:#666">${item.count}只</span>
+                            </div>
+                            <div class="log-meta">
+                                <span class="badge" style="background:${statusColor};padding:1px 4px;font-size:9px">${isVerified ? '已核验' : 'AI预警'}</span>
+                                <span style="color:#999">${zone}</span>
+                            </div>
+                            <div class="log-time" style="margin-top:2px;">
+                                <i class="far fa-clock" style="font-size:9px"></i> ${item.observation_time}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            $('#realtime-log-box').html(html || '<div style="text-align:center;color:#ccc;margin-top:20px;">暂无实时数据</div>');
+        },
+
+        renderDashboard: function(stats) {
+            const arr = Object.keys(stats).map(k => ({ name: k, ...stats[k] })).sort((a,b) => b.count - a.count);
+
+            const top10 = arr.slice(0, 10);
+            const colors10 = [
+                '#00ADB5', '#2ECC71', '#F39C12', '#E74C3C', '#9B59B6',
+                '#34495E', '#16A085', '#27AE60', '#2980B9', '#8E44AD'
+            ];
+
+            if(this.charts.pie) this.charts.pie.destroy();
+            this.charts.pie = new Chart(document.getElementById('chart-pie'), {
+                type: 'doughnut',
+                data: {
+                    labels: top10.map(i => i.name),
+                    datasets: [{
+                        data: top10.map(i => i.count),
+                        backgroundColor: colors10,
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+            });
+
+            if(arr.length > 0) {
+                $('#top-species-name').text(arr[0].name);
+                $('#top-species-count').text(arr[0].count);
+            }
+
+            const listHtml = arr.map((item, i) => {
+                let badgeClass = 'bg-green';
+                let levelText = '';
+                if (item.level.includes('一') || item.level.includes('Ⅰ')) { badgeClass = 'bg-red'; levelText = `<span class="badge ${badgeClass}">${item.level}</span>`; }
+                else if (item.level.includes('二') || item.level.includes('Ⅱ')) { badgeClass = 'bg-orange'; levelText = `<span class="badge ${badgeClass}">${item.level}</span>`; }
+
+                return `
+                    <div class="species-row">
+                        <span class="sp-rank">#${i + 1}</span>
+                        <div class="sp-name">${item.name} ${levelText}</div>
+                        <span class="sp-count">${item.count}</span>
+                    </div>`;
+            }).join('');
+            $('#species-list-box').html(listHtml);
+        }
+    };
+
+    app.init();
+</script>
+</body>
+</html>
