@@ -1,20 +1,20 @@
 from rest_framework import serializers
-# 引入所有需要的模型 (确保 models.py 里已经有了 Product 和 UserProfile)
+# 引入所有需要的模型
 from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile
 from django.contrib.auth.models import User
 
 
 # ==========================================
-# 1. 新增：商品序列化器 (用于积分商城)
+# 1. 商品序列化器 (用于积分商城)
 # ==========================================
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'  # 返回 id, name, price, image, description, stock
+        fields = '__all__'
 
 
 # ==========================================
-# 2. 新增：用户信息序列化器 (用于个人中心)
+# 2. 用户信息序列化器 (用于个人中心)
 # ==========================================
 class UserInfoSerializer(serializers.ModelSerializer):
     # 从关联的 UserProfile 表中读取积分和头像
@@ -23,12 +23,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # 前端获取 /api/profiles/me/ 时会得到这些字段
         fields = ['id', 'username', 'email', 'score', 'avatar']
 
 
 # ==========================================
-# 3. 监测样线 (保留你原来的逻辑)
+# 3. 监测样线 (保留原逻辑)
 # ==========================================
 class MonitoringRouteSerializer(serializers.ModelSerializer):
     path = serializers.SerializerMethodField()
@@ -49,7 +48,7 @@ class MonitoringRouteSerializer(serializers.ModelSerializer):
 
 
 # ==========================================
-# 4. 监测点位 (保留你原来的逻辑)
+# 4. 监测点位 (保留原逻辑)
 # ==========================================
 class WetlandZoneSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,24 +57,24 @@ class WetlandZoneSerializer(serializers.ModelSerializer):
 
 
 # ==========================================
-# 5. 观测记录 (核心升级)
+# 5. 观测记录 (核心：兼容修复版)
 # ==========================================
 class ObservationRecordSerializer(serializers.ModelSerializer):
-    # --- 1. 字段显示优化 (ReadOnly) ---
+    # --- A. 必须恢复的旧字段 (为了让前端地图不报错) ---
+    # 前端找的是 x 和 y，而不是 lat 和 lng
+    x = serializers.SerializerMethodField()
+    y = serializers.SerializerMethodField()
 
-    # 获取上传者的名字 (对应 model 里的 uploader 字段)
-    uploader_name = serializers.CharField(source='uploader.username', read_only=True)
+    # 前端找的是 reporter_name
+    reporter_name = serializers.SerializerMethodField()
 
-    # 获取物种中文名
+    # --- B. 新功能的字段 (后台管理用) ---
+    uploader_name = serializers.ReadOnlyField(source='uploader.username')
     species_name = serializers.ReadOnlyField(source='species.name_cn')
     species_protection = serializers.ReadOnlyField(source='species.protection_level')
-
-    # 获取关联区域名字 (如果有)
     zone_name = serializers.ReadOnlyField(source='zone.name')
 
-    # --- 2. 坐标处理 ---
-    # 优先使用记录自带的 Point 坐标，如果没有，再尝试去拿 Zone 的坐标
-    # 这样既支持固定点位监测，也支持用户随意上传的新点位
+    # --- C. 备用新字段 (建议前端以后慢慢迁移到这两个字段) ---
     lat = serializers.SerializerMethodField()
     lng = serializers.SerializerMethodField()
 
@@ -84,34 +83,61 @@ class ObservationRecordSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'image',
-            'description',  # 描述
+            'description',
             'observation_time',
             'count',
-            'status',  # 新增：审核状态 (pending/approved)
-            'species',  # 上传时填 ID
-            'species_name',  # 显示时看名字
+            'status',  # 新增：审核状态
+            'species', 'zone',  # ID 字段
+
+            # === 显示字段 ===
+            'species_name',
             'species_protection',
-            'uploader',  # 关联的用户 ID
-            'uploader_name',  # 显示的用户名
-            'zone',
             'zone_name',
-            'lat', 'lng'  # 统一返回 lat/lng 方便前端 Leaflet 使用
+
+            # === 坐标字段 (新旧共存) ===
+            'x', 'y',  # 🚑 旧前端救命字段
+            'lat', 'lng',  # ✨ 新前端推荐字段
+
+            # === 人员字段 (新旧共存) ===
+            'reporter_name',  # 🚑 旧前端救命字段
+            'uploader_name'  # ✨ 新后台字段
         ]
-        # 设置只读字段，防止用户篡改审核状态
         read_only_fields = ['status', 'uploader', 'observation_time']
 
-    def get_lat(self, obj):
-        # 如果这条记录自己有坐标 (GIS PointField)，优先用自己的
-        if hasattr(obj, 'location') and obj.location:
-            return obj.location.y
-        # 如果没有，尝试用关联区域的坐标
-        if obj.zone:
-            return obj.zone.latitude
-        return None
+    # ---------------------------------------------------
+    # 逻辑实现：无论数据怎么存，都转换成前端能看懂的样子
+    # ---------------------------------------------------
 
-    def get_lng(self, obj):
+    def get_x(self, obj):
+        # 逻辑：优先取 GIS 坐标点的 X，没有则取关联区域的经度
         if hasattr(obj, 'location') and obj.location:
             return obj.location.x
         if obj.zone:
             return obj.zone.longitude
         return None
+
+    def get_y(self, obj):
+        # 逻辑：优先取 GIS 坐标点的 Y，没有则取关联区域的纬度
+        if hasattr(obj, 'location') and obj.location:
+            return obj.location.y
+        if obj.zone:
+            return obj.zone.latitude
+        return None
+
+    # 为了方便以后迁移，lat/lng 直接复用 x/y 的逻辑
+    def get_lng(self, obj):
+        return self.get_x(obj)
+
+    def get_lat(self, obj):
+        return self.get_y(obj)
+
+    def get_reporter_name(self, obj):
+        # 逻辑：这行代码同时兼容了新数据(uploader)和旧数据(reporter)
+        # 1. 优先显示“上传者”(新功能)
+        if obj.uploader:
+            return obj.uploader.username
+        # 2. 如果没有上传者，尝试显示“上报人”(旧数据)
+        if obj.reporter:
+            return obj.reporter.username
+        # 3. 如果都没有
+        return "匿名用户"

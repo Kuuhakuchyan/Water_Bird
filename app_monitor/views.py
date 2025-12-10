@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.db import connection
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Sum, Q  # 👈 新增 Q 用于复杂查询
+from django.db.models import Sum, Q  # 引入 Q 用于复杂查询
 
 # DRF 相关引用
 from rest_framework import viewsets, permissions, status
@@ -19,12 +19,11 @@ except ImportError:
     D = None
 
 # === 引入模型 ===
-# 👈 确保这里引入了新加的 Product 和 UserProfile
+# 确保包含 Product, UserProfile
 from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile
 from django.contrib.auth.models import User
 
 # === 引入序列化器 ===
-# 👈 确保这里引入了新加的 ProductSerializer 和 UserInfoSerializer
 from .serializers import (
     ObservationRecordSerializer,
     WetlandZoneSerializer,
@@ -34,71 +33,73 @@ from .serializers import (
 )
 
 
-# === 1. 监测点位视图 ===
+# ==========================================
+# 1. 监测点位视图 /api/zones/
+# ==========================================
 class ZoneViewSet(viewsets.ModelViewSet):
-    """
-    API: 监测点位 /api/zones/
-    """
     queryset = WetlandZone.objects.all()
     serializer_class = WetlandZoneSerializer
 
 
-# === 2. 监测样线视图 ===
+# ==========================================
+# 2. 监测样线视图 /api/transects/
+# ==========================================
 class TransectViewSet(viewsets.ModelViewSet):
-    """
-    API: 监测样线 /api/transects/
-    """
     queryset = MonitoringRoute.objects.all()
     serializer_class = MonitoringRouteSerializer
 
 
-# === 3. 观测记录视图 (核心逻辑升级) ===
+# ==========================================
+# 3. 观测记录视图 /api/observations/ (核心)
+# ==========================================
 class ObservationViewSet(viewsets.ModelViewSet):
     """
-    API: 观测记录 /api/observations/
-    功能: 上传、查看、权限控制、自动加分、GIS分析
+    核心业务视图：
+    1. 游客：只能看已通过(approved)的数据
+    2. 登录用户：能看已通过 + 自己上传(pending/rejected)的数据
+    3. 管理员：能看所有数据
+    4. 上传：自动关联用户，自动加分
     """
     serializer_class = ObservationRecordSerializer
-    # 👈 权限控制: 登录用户可以增删改查，游客只能看
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]  # 游客只读，登录可写
 
-    # 3.1 权限过滤逻辑 (谁能看什么数据)
     def get_queryset(self):
         # 默认按时间倒序
         queryset = ObservationRecord.objects.all().order_by('-observation_time')
 
         user = self.request.user
 
-        # A. 管理员/巡护员: 看所有数据
+        # A. 管理员/巡护员: 看所有
         if user.is_staff:
             return queryset
 
-        # B. 登录的普通用户: 看 '已通过审核' 的 + '我自己上传' 的
+        # B. 登录的普通用户: 看 '已通过' | '我自己上传的'
         if user.is_authenticated:
             return queryset.filter(
                 Q(status='approved') | Q(uploader=user)
             )
 
-        # C. 游客: 只看 '已通过审核' 的
+        # C. 游客: 只看 '已通过'
         return queryset.filter(status='approved')
 
-    # 3.2 上传数据时的逻辑 (自动加分)
     def perform_create(self, serializer):
-        # A. 保存数据，自动关联当前登录用户
+        """
+        当用户 POST 上传数据时执行
+        """
+        # 1. 自动关联当前登录用户
         serializer.save(uploader=self.request.user)
 
-        # B. 积分奖励逻辑
+        # 2. 积分奖励逻辑 (上传一条 +10分)
         try:
-            # 获取用户档案
-            profile = self.request.user.profile
-            profile.score += 10  # 上传一条加 10 分
+            # 获取或创建用户的积分档案
+            profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+            profile.score += 10
             profile.save()
-            print(f"用户 {self.request.user.username} 上传成功，积分+10")
+            print(f"用户 {self.request.user.username} 上传成功，积分+10，当前: {profile.score}")
         except Exception as e:
-            # 即使加分失败，也不要阻断数据上传，但在后台打印错误
-            print(f"积分奖励失败 (可能是UserProfile未创建): {e}")
+            print(f"加分失败: {e}")
 
-    # === 保留原有的 GIS 功能 ===
+    # === GIS 功能: 附近预警 ===
     @action(detail=False, methods=['get'])
     def nearby_alert(self, request):
         if not Point:
@@ -107,24 +108,27 @@ class ObservationViewSet(viewsets.ModelViewSet):
             lat = float(request.query_params.get('lat'))
             lng = float(request.query_params.get('lng'))
             p = Point(lng, lat, srid=4326)
-            birds = ObservationRecord.objects.filter(location__dwithin=(p, D(m=500)))
-            # 这里要注意：如果有权限过滤，这里最好也复用 get_queryset 的逻辑
-            # 为简单起见，这里先查所有通过审核的
-            birds = birds.filter(status='approved')
+
+            # 这里的查询也应该只返回已通过的，避免用户看到脏数据
+            birds = ObservationRecord.objects.filter(
+                location__dwithin=(p, D(m=500)),
+                status='approved'
+            )
             serializer = self.get_serializer(birds, many=True)
             return Response(serializer.data)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
+    # === GIS 功能: MVT 矢量瓦片 ===
     @action(detail=False, methods=['get'], url_path='tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+)')
     def tiles(self, request, z, x, y):
-        # MVT 瓦片逻辑保留不变
+        # SQL 查询：只返回 status='approved' 的点位
         sql = """
               WITH mvtgeom AS (SELECT ST_AsMVTGeom(location, ST_TileEnvelope(%s, %s, %s), 4096, 256, true) AS geom,
                                       id, \
                                       status
                                FROM app_monitor_observationrecord
-                               WHERE ST_Intersects(location, ST_TileEnvelope(%s, %s, %s)) \
+                               WHERE ST_Intersects(location, ST_TileEnvelope(%s, %s, %s))
                                  AND status = 'approved')
               SELECT ST_AsMVT(mvtgeom.*, 'layer_birds') \
               FROM mvtgeom;
@@ -139,17 +143,15 @@ class ObservationViewSet(viewsets.ModelViewSet):
             return HttpResponse(status=500)
 
 
-# === 4. 商品/积分商城视图 (新增) ===
+# ==========================================
+# 4. 商品/积分商城视图 /api/products/
+# ==========================================
 class ProductViewSet(viewsets.ModelViewSet):
-    """
-    API: 商品列表 /api/products/
-    兑换: POST /api/products/{id}/redeem/
-    """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # 游客可看列表，登录才能兑换
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    # POST /api/products/{id}/redeem/
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def redeem(self, request, pk=None):
         product = self.get_object()
@@ -160,15 +162,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         except UserProfile.DoesNotExist:
             return Response({"error": "用户档案不存在"}, status=400)
 
-        # 校验库存
+        # 1. 校验库存
         if product.stock <= 0:
             return Response({"error": "商品库存不足"}, status=400)
 
-        # 校验积分
+        # 2. 校验积分
         if profile.score < product.price:
             return Response({"error": f"积分不足，还需要 {product.price - profile.score} 分"}, status=400)
 
-        # 执行交易：扣分、扣库存
+        # 3. 执行交易
         profile.score -= product.price
         profile.save()
 
@@ -181,43 +183,65 @@ class ProductViewSet(viewsets.ModelViewSet):
         })
 
 
-# === 5. 用户档案视图 (更新版) ===
+# ==========================================
+# 5. 用户档案视图 /api/profiles/
+# ==========================================
 class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API: 用户信息 /api/profiles/
-    获取自己信息: GET /api/profiles/me/
-    """
     queryset = User.objects.all()
     serializer_class = UserInfoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    # GET /api/profiles/me/  <-- 前端获取自己信息的接口
     @action(detail=False, methods=['get'])
     def me(self, request):
-        # 返回当前登录用户的详细信息 (含积分、头像)
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
 
-# === 6. 普通页面视图 (保留) ===
+# ==========================================
+# 6. 普通页面视图 (热点推荐)
+# ==========================================
 def index_view(request):
     return render(request, 'index.html')
 
 
 def get_todays_hotspot(request):
-    # 保留你原来的热点逻辑，但建议稍作修改以适应 status 字段
     three_days_ago = timezone.now().date() - timedelta(days=3)
 
-    # 只统计 '已通过' 的记录
+    # 只统计 '已通过' (approved) 的记录
     hot_zone_data = ObservationRecord.objects.filter(
         observation_time__gte=three_days_ago,
         status='approved'
     ).values('zone').annotate(total_count=Sum('count')).order_by('-total_count').first()
 
-    # ... 后面的逻辑保持不变 ...
-    # (为了节省篇幅，这里假设你原来的 get_todays_hotspot 后面部分不变，
-    # 只需要记得在查询 filter 里都加上 status='approved' 即可)
+    recommendation_data = {}
 
-    return render(request, 'app_monitor/hotspot.html', {'recommendation': _default_hotspot()})
+    if hot_zone_data and hot_zone_data['zone']:
+        try:
+            zone = WetlandZone.objects.get(id=hot_zone_data['zone'])
+            # 获取最新且已通过的记录
+            latest_record = ObservationRecord.objects.filter(
+                zone=zone,
+                status='approved'
+            ).order_by('-observation_time').first()
+
+            bird_name = "珍稀鸟类"
+            if latest_record and latest_record.species:
+                bird_name = latest_record.species.name_cn
+
+            tips = getattr(zone, 'observation_tips', "请保持安全距离观赏")
+
+            recommendation_data = {
+                "title": f"今日推荐：{zone.name}，近期有{bird_name}集群活动",
+                "tips": f"观鸟注意事项：{tips}",
+                "location": zone.name
+            }
+        except WetlandZone.DoesNotExist:
+            recommendation_data = _default_hotspot()
+    else:
+        recommendation_data = _default_hotspot()
+
+    return render(request, 'app_monitor/hotspot.html', {'recommendation': recommendation_data})
 
 
 def _default_hotspot():

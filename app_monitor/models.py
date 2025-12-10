@@ -119,7 +119,7 @@ class ObservationRecord(models.Model):
     observation_time = models.DateField(verbose_name="观测日期")
     count = models.IntegerField(default=1, verbose_name="数量")
     image = models.ImageField(upload_to='observations/', blank=True, null=True, verbose_name="现场照片")
-
+    description = models.TextField(blank=True, null=True, verbose_name="描述")
     # 审核状态 (统一使用字符串枚举)
     STATUS_CHOICES = (
         ('pending', '待审核'),
