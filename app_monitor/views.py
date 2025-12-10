@@ -181,3 +181,57 @@ class TransectViewSet(viewsets.ModelViewSet):
     """
     queryset = MonitoringRoute.objects.all()
     serializer_class = MonitoringRouteSerializer
+
+
+# ============================================================
+# ▼▼▼ 请将以下代码追加到 views.py 的最末尾 ▼▼▼
+# ============================================================
+
+from django.contrib.auth.models import User
+from rest_framework import serializers
+
+
+# 1. 定义一个简单的用户积分序列化器 (临时写在这里，方便你直接用)
+class UserScoreSerializer(serializers.ModelSerializer):
+    # 动态计算积分：上传一条记录算 10 分
+    score = serializers.SerializerMethodField()
+    # 动态计算上传数量
+    upload_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'upload_count', 'score']
+
+    def get_upload_count(self, obj):
+        # 统计该用户关联的 ObservationRecord 数量
+        # 注意：这里假设 ObservationRecord 模型里有个 'uploader' 或 'user' 字段
+        # 如果你的模型里没记录是谁上传的，这里会报错。
+        # 假设你的 ObservationRecord 有个外键指向 User，默认反向查询名为 observationrecord_set
+        try:
+            return obj.observationrecord_set.count()
+        except:
+            return 0
+
+    def get_score(self, obj):
+        # 简单算法：数量 x 10
+        return self.get_upload_count(obj) * 10
+
+
+# 2. 定义用户档案视图集
+class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API: 用户积分档案
+    路径: /api/profiles/
+    """
+    queryset = User.objects.all()
+    serializer_class = UserScoreSerializer
+
+    # 额外功能：获取当前登录用户的信息
+    # 访问路径: /api/profiles/me/
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        if request.user.is_anonymous:
+            return Response({"error": "请先登录"}, status=401)
+
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
