@@ -20,7 +20,7 @@ except ImportError:
 
 # === 引入模型 ===
 # 确保包含 Product, UserProfile
-from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile
+from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile, SpeciesInfo
 from django.contrib.auth.models import User
 
 # === 引入序列化器 ===
@@ -29,8 +29,36 @@ from .serializers import (
     WetlandZoneSerializer,
     MonitoringRouteSerializer,
     ProductSerializer,
-    UserInfoSerializer
+    UserInfoSerializer,
+    UserRegisterSerializer,
+    UserProfileUpdateSerializer,
+    UserAvatarUpdateSerializer,
+    SpeciesInfoSerializer,
 )
+
+
+# ==========================================
+# 0. 用户注册视图 /api/auth/register/
+# ==========================================
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
+
+
+class RegisterViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.AllowAny]
+
+    @action(detail=False, methods=['post'])
+    def register(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                'user': UserInfoSerializer(user).data,
+                'token': token.key,
+                'message': '注册成功'
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # ==========================================
@@ -39,6 +67,15 @@ from .serializers import (
 class ZoneViewSet(viewsets.ModelViewSet):
     queryset = WetlandZone.objects.all()
     serializer_class = WetlandZoneSerializer
+
+
+# ==========================================
+# 1b. 物种列表视图 /api/species/
+# ==========================================
+class SpeciesViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SpeciesInfo.objects.all().order_by('name_cn')
+    serializer_class = SpeciesInfoSerializer
+    permission_classes = [permissions.AllowAny]
 
 
 # ==========================================
@@ -120,7 +157,7 @@ class ObservationViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=400)
 
     # === GIS 功能: MVT 矢量瓦片 ===
-    @action(detail=False, methods=['get'], url_path='tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+)')
+    @action(detail=False, methods=['get'], url_path=r'tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+)')
     def tiles(self, request, z, x, y):
         # SQL 查询：只返回 status='approved' 的点位
         sql = """
@@ -196,6 +233,33 @@ class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    # PUT /api/profiles/me/  <-- 更新个人资料
+    @action(detail=False, methods=['put', 'patch'], permission_classes=[permissions.IsAuthenticated])
+    def update_profile(self, request):
+        user = request.user
+        profile = user.profile
+
+        # 更新邮箱
+        email = request.data.get('email')
+        if email is not None:
+            user.email = email
+            user.save(update_fields=['email'])
+
+        return Response(UserInfoSerializer(user).data)
+
+    # POST /api/profiles/me/avatar/  <-- 上传头像
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated], url_path='me/avatar')
+    def upload_avatar(self, request):
+        profile = request.user.profile
+        serializer = UserAvatarUpdateSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
+                'message': '头像上传成功'
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # ==========================================

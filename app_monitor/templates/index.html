@@ -48,6 +48,33 @@
             border-bottom: 3px solid var(--c-aqua);
         }
         .brand { font-size: 18px; font-weight: 800; color: var(--c-dark); display:flex; align-items:center; gap:10px; }
+        .nav-links { display: flex; align-items: center; gap: 10px; }
+        .nav-btn {
+            padding: 6px 14px; border-radius: 20px; text-decoration: none;
+            font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .nav-btn-outline {
+            border: 2px solid var(--c-aqua); color: var(--c-aqua);
+        }
+        .nav-btn-outline:hover { background: var(--c-aqua); color: white; }
+        .nav-btn-primary {
+            background: linear-gradient(135deg, var(--c-aqua), #008c93); color: white; border: none;
+        }
+        .nav-btn-primary:hover { box-shadow: 0 4px 12px rgba(0,173,181,0.4); transform: translateY(-1px); }
+        .nav-avatar {
+            width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+            border: 2px solid var(--c-aqua); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--c-aqua), #008c93); color: white; font-weight: bold;
+            transition: all 0.2s;
+        }
+        .nav-avatar:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,173,181,0.4); }
+        .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .nav-score {
+            font-size: 12px; background: linear-gradient(135deg, var(--c-orange), #d35400);
+            color: white; padding: 3px 10px; border-radius: 12px; font-weight: 600;
+        }
         .stat-box { display: flex; gap: 30px; text-align: center; }
         .stat-num { font-size: 18px; font-weight: 800; line-height: 1; display: block; }
         .stat-lbl { font-size: 10px; color: #999; text-transform: uppercase; margin-top: 4px; font-weight: 500; }
@@ -113,18 +140,53 @@
         .popup-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 5px; }
         .popup-table td { padding: 3px 0; border-bottom: 1px solid #eee; color: #555; }
         .leaflet-top { top: 70px; }
+
+        /* 状态可视化 - 审核状态标签 */
+        .status-legend {
+            display: flex; gap: 12px; align-items: center; font-size: 11px; color: #666;
+        }
+        .status-dot-sm {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+        }
+
+        /* 移动端响应式 */
+        @media (max-width: 768px) {
+            .top-beam { padding: 0 12px; height: 56px; }
+            .brand span { display: none; }
+            .nav-btn span { display: none; }
+            .nav-btn { padding: 6px 10px; }
+            #rank-panel { display: none; }
+            #detail-panel { bottom: 10px; right: 10px; left: 10px; width: auto; height: auto; max-height: 45vh; }
+            .stat-box { gap: 15px; }
+            .stat-num { font-size: 14px; }
+            #filter-bar { right: 10px; top: 76px; }
+        }
+        @media (max-width: 480px) {
+            #detail-panel { max-height: 35vh; }
+            .stat-lbl { display: none; }
+        }
     </style>
 </head>
 <body>
 
 <div class="top-beam">
-    <div class="brand"><i class="fas fa-dragon" style="color:var(--c-aqua)"></i> 黄河生态方舟</div>
-    <div class="stat-box">
-        <div><span class="stat-num" style="color:var(--c-orange)" id="s-records">--</span><span class="stat-lbl">观测记录</span></div>
-        <div><span class="stat-num" style="color:var(--c-green)" id="s-species">--</span><span class="stat-lbl">物种总数</span></div>
-        <div><span class="stat-num" style="color:var(--c-red)" id="s-protected">--</span><span class="stat-lbl">珍稀保护</span></div>
+    <div class="brand">
+        <i class="fas fa-dragon" style="color:var(--c-aqua)"></i>
+        <span>黄河生态方舟</span>
     </div>
-    <a href="/admin/" target="_blank" class="btn-admin"><i class="fas fa-cog"></i> 管理后台</a>
+    <div class="nav-links" id="navArea">
+        <!-- 未登录 -->
+        <div id="navGuest">
+            <a href="/login/" class="nav-btn nav-btn-outline"><i class="fas fa-sign-in-alt"></i><span>登录</span></a>
+            <a href="/report/" class="nav-btn nav-btn-primary"><i class="fas fa-plus"></i><span>上报</span></a>
+        </div>
+        <!-- 已登录 -->
+        <div id="navUser" style="display:none; align-items:center; gap:10px;">
+            <span class="nav-score" id="navScore"><i class="fas fa-coins"></i> <span>0</span> 分</span>
+            <a href="/report/" class="nav-btn nav-btn-primary"><i class="fas fa-plus"></i><span>上报</span></a>
+            <a href="/profile/" class="nav-btn nav-btn-outline"><i class="fas fa-user"></i><span>个人</span></a>
+        </div>
+    </div>
 </div>
 
 <div id="filter-bar" class="glass-panel" style="flex-direction:row">
@@ -188,10 +250,43 @@
             this.initDates();
             this.loadStatic();
             this.loadData();
+            this.initAuth();
 
             // 启用拖拽
             this.makeDraggable('rank-panel');
             this.makeDraggable('detail-panel');
+        },
+
+        // === 登录状态初始化 ===
+        initAuth: function() {
+            const token = localStorage.getItem('yb_token');
+            const userStr = localStorage.getItem('yb_user');
+            if (token && userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    $('#navGuest').hide();
+                    $('#navUser').show();
+                    if (user.username) {
+                        const initial = user.username[0].toUpperCase();
+                        $('#navUser').prepend(
+                            `<div class="nav-avatar" onclick="location.href='/profile/'">${user.avatar ? '<img src="' + user.avatar + '">' : initial}</div>`
+                        );
+                    }
+                    if (user.score !== undefined) {
+                        $('#navScore span').text(user.score);
+                    }
+                    // 拉取最新积分
+                    $.ajax({
+                        url: this.api + '/profiles/me/',
+                        method: 'GET',
+                        headers: { 'Authorization': 'Token ' + token },
+                        success: function(data) {
+                            localStorage.setItem('yb_user', JSON.stringify(data));
+                            $('#navScore span').text(data.score || 0);
+                        }
+                    });
+                } catch(e) {}
+            }
         },
 
         // === 拖拽核心功能 ===
@@ -329,7 +424,7 @@
                         ${p.image ? `<img src="${p.image}" style="width:100%;height:120px;object-fit:cover;margin-top:5px;border-radius:4px;">` : ''}
                     `;
 
-                    const color = (p.status === 1) ? '#2ECC71' : '#F39C12';
+                    const color = (p.status === 'approved') ? '#2ECC71' : (p.status === 'pending' ? '#F39C12' : '#E74C3C');
                     L.circleMarker([lat, lng], { radius: 6, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.8 })
                      .bindPopup(popupContent)
                      .addTo(this.layers.record);
@@ -354,8 +449,10 @@
                 const imgUrl = item.image ? item.image : '';
                 const name = item.species_name || "未知物种";
                 const zone = item.zone_name || "未知区域";
-                const isVerified = (item.status === 1);
-                const statusColor = isVerified ? '#2ECC71' : '#F39C12';
+                const isApproved = (item.status === 'approved');
+                const isPending = (item.status === 'pending');
+                const statusColor = isApproved ? '#2ECC71' : (isPending ? '#F39C12' : '#E74C3C');
+                const statusText = isApproved ? '已核验' : (isPending ? '待审核' : '已驳回');
 
                 const imgTag = imgUrl
                     ? `<img src="${imgUrl}" class="log-icon">`
@@ -370,7 +467,7 @@
                                 <span style="font-weight:normal; color:#666">${item.count}只</span>
                             </div>
                             <div class="log-meta">
-                                <span class="badge" style="background:${statusColor};padding:1px 4px;font-size:9px">${isVerified ? '已核验' : 'AI预警'}</span>
+                                <span class="badge" style="background:${statusColor};padding:1px 4px;font-size:9px">${statusText}</span>
                                 <span style="color:#999">${zone}</span>
                             </div>
                             <div class="log-time" style="margin-top:2px;">

@@ -64,7 +64,7 @@ def run_import(csv_file_path):
                 zone=zone_obj,
                 observation_time=obs_date,
                 count=int(row['abundance']) if row['abundance'] else 1,
-                status=1  # 历史数据默认审核通过
+                status='approved'  # 历史数据默认审核通过
             )
 
             success_count += 1

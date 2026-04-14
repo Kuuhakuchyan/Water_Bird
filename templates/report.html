@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上报观鸟记录 | 黄河生态方舟</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --c-aqua: #00ADB5;
+            --c-green: #2ECC71;
+            --c-orange: #F39C12;
+            --c-red: #E74C3C;
+            --c-dark: #2C3E50;
+            --bg-glass: rgba(255, 255, 255, 0.96);
+            --shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #e8f6f7 0%, #d4edf0 50%, #c5e6e8 100%);
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--c-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn-outline {
+            background: transparent;
+            border: 2px solid var(--c-aqua);
+            color: var(--c-aqua);
+        }
+
+        .nav-btn-outline:hover {
+            background: var(--c-aqua);
+            color: white;
+        }
+
+        .main-layout {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-glass);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 25px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--c-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* 地图区域 */
+        #map {
+            height: 320px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .map-hint {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .map-hint i {
+            color: var(--c-aqua);
+            margin-right: 5px;
+        }
+
+        /* 表单 */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group label .required {
+            color: var(--c-red);
+            margin-left: 3px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--c-aqua);
+            box-shadow: 0 0 0 3px rgba(0,173,181,0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* 图片上传 */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: var(--c-aqua);
+            background: rgba(0,173,181,0.03);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--c-aqua);
+            background: rgba(0,173,181,0.08);
+        }
+
+        .upload-icon {
+            font-size: 36px;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .upload-text span {
+            color: var(--c-aqua);
+            font-weight: 600;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        #imagePreview {
+            margin-top: 15px;
+            display: none;
+        }
+
+        #imagePreview img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+
+        #imagePreview .remove-img {
+            display: block;
+            margin-top: 8px;
+            color: var(--c-red);
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* 选中的位置信息 */
+        .location-info {
+            background: linear-gradient(135deg, #e8f6f7, #d4edf0);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .location-info.show {
+            display: block;
+        }
+
+        .location-info .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .location-info .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .location-info .info-label {
+            color: #666;
+        }
+
+        .location-info .info-value {
+            color: var(--c-dark);
+            font-weight: 600;
+        }
+
+        /* 右侧：物种信息和提示 */
+        .species-tips {
+            margin-top: 15px;
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 13px;
+        }
+
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+
+        .tip-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+
+        .tip-icon.green { background: #d4edda; color: #155724; }
+        .tip-icon.orange { background: #fff3cd; color: #856404; }
+        .tip-icon.blue { background: #e3f2fd; color: #1976d2; }
+
+        .tip-text {
+            color: #555;
+            line-height: 1.5;
+        }
+
+        /* 积分提示 */
+        .score-banner {
+            background: linear-gradient(135deg, var(--c-aqua), #008c93);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .score-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .score-text h3 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .score-text p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 3px;
+        }
+
+        /* 提交按钮 */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--c-green), #27ae60);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            box-shadow: 0 8px 20px rgba(46,204,113,0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 消息提示 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .toast.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="brand">
+        <i class="fas fa-dragon" style="color: var(--c-aqua)"></i>
+        黄河生态方舟
+    </div>
+    <div class="nav-links">
+        <a href="/" class="nav-btn nav-btn-outline"><i class="fas fa-home"></i> 首页</a>
+        <a href="/profile/" class="nav-btn nav-btn-outline"><i class="fas fa-user"></i> 个人中心</a>
+    </div>
+</div>
+
+<div class="main-layout">
+    <!-- 左侧：表单 -->
+    <div>
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-feather-alt" style="color: var(--c-aqua)"></i>
+                上报观鸟记录
+            </div>
+
+            <div id="map"></div>
+            <div class="map-hint">
+                <i class="fas fa-hand-pointer"></i>
+                点击地图选择观测位置，或在下拉菜单中选择已有监测点位
+            </div>
+
+            <form id="reportForm">
+                <!-- 监测点位 -->
+                <div class="form-group">
+                    <label>监测点位 <span class="required">*</span></label>
+                    <select id="zoneSelect">
+                        <option value="">-- 请选择或地图点击 --</option>
+                    </select>
+                    <div class="location-info" id="locationInfo">
+                        <div class="info-row">
+                            <span class="info-label">经度</span>
+                            <span class="info-value" id="infoLng">--</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">纬度</span>
+                            <span class="info-value" id="infoLat">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 物种 -->
+                <div class="form-group">
+                    <label>鸟种 <span class="required">*</span></label>
+                    <select id="speciesSelect">
+                        <option value="">-- 请选择物种 --</option>
+                    </select>
+                </div>
+
+                <!-- 数量 -->
+                <div class="form-group">
+                    <label>观测数量 <span class="required">*</span></label>
+                    <input type="number" id="countInput" min="1" value="1" placeholder="观测到的个体数量">
+                </div>
+
+                <!-- 日期 -->
+                <div class="form-group">
+                    <label>观测日期 <span class="required">*</span></label>
+                    <input type="date" id="dateInput">
+                </div>
+
+                <!-- 图片 -->
+                <div class="form-group">
+                    <label>现场照片</label>
+                    <div class="upload-area" id="uploadArea" onclick="$('#imageInput').click()">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">
+                            点击或拖拽上传照片<br>
+                            <span>支持 JPG/PNG，不超过 5MB</span>
+                        </div>
+                    </div>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <div id="imagePreview">
+                        <img id="previewImg" src="">
+                        <span class="remove-img" onclick="removeImage()"><i class="fas fa-times-circle"></i> 移除图片</span>
+                    </div>
+                </div>
+
+                <!-- 描述 -->
+                <div class="form-group">
+                    <label>备注描述</label>
+                    <textarea id="descInput" placeholder="描述观测环境、天气、行为等（选填）"></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i> 提交记录
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 右侧：信息和提示 -->
+    <div>
+        <div class="card">
+            <!-- 积分提示 -->
+            <div class="score-banner">
+                <div class="score-icon"><i class="fas fa-coins"></i></div>
+                <div class="score-text">
+                    <h3>每条记录 +10 积分</h3>
+                    <p>审核通过后自动到账，可在积分商城兑换礼品</p>
+                </div>
+            </div>
+
+            <div class="card-title">
+                <i class="fas fa-info-circle" style="color: var(--c-blue)"></i>
+                上报须知
+            </div>
+
+            <div class="species-tips">
+                <div class="tip-item">
+                    <div class="tip-icon green"><i class="fas fa-check"></i></div>
+                    <div class="tip-text">观测数据审核通过后，将获得 <strong>10 积分</strong> 奖励</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon orange"><i class="fas fa-clock"></i></div>
+                    <div class="tip-text">提交后需等待管理员审核，审核状态可在<strong>个人中心</strong>查看</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon blue"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="tip-text">点击地图选择精确位置，或从下拉菜单选择已有监测点位</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon green"><i class="fas fa-camera"></i></div>
+                    <div class="tip-text">上传清晰的照片有助于物种识别审核，照片将作为珍稀鸟类的凭证</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon blue"><i class="fas fa-shield-alt"></i></div>
+                    <div class="tip-text">请勿上传在保护区核心区近距离拍摄的照片，保护候鸟不受干扰</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 物种保护级别参考 -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-title">
+                <i class="fas fa-star" style="color: var(--c-orange)"></i>
+                保护级别说明
+            </div>
+            <div class="species-tips">
+                <div class="tip-item">
+                    <div class="tip-icon" style="background:#f8d7da;color:#721c24"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="tip-text"><strong>国家一级保护</strong>：极度濒危，如黑鹳、东方白鹳等</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon" style="background:#fff3cd;color:#856404"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="tip-text"><strong>国家二级保护</strong>：濒危或易危，如鸿雁、鸳鸯等</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon" style="background:#d4edda;color:#155724"><i class="fas fa-leaf"></i></div>
+                    <div class="tip-text"><strong>三有动物</strong>：有重要生态、科学、社会价值</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 消息提示 -->
+<div id="toast" class="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const API = '/api';
+    const TOKEN_KEY = 'yb_token';
+
+    // 状态
+    let map, markerLayer;
+    let selectedZoneId = null;
+    let selectedLng = null;
+    let selectedLat = null;
+    let uploadedFile = null;
+
+    function getToken() {
+        return localStorage.getItem(TOKEN_KEY);
+    }
+
+    function checkAuth() {
+        if (!getToken()) {
+            if (confirm('请先登录后再上报记录，是否前往登录？')) {
+                window.location.href = '/login/?next=/report/';
+            }
+            return false;
+        }
+        return true;
+    }
+
+    function toast(msg, type) {
+        const t = $('#toast').text(msg).removeClass('success error').addClass(type || 'success').addClass('show');
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(() => t.removeClass('show'), 3000);
+    }
+
+    // === 初始化地图 ===
+    function initMap() {
+        const tk = "0de0375367832014891a9f40e0e42911";
+        const tdt = t => `http://t0.tianditu.gov.cn/${t}_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${t}&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tk}`;
+        const vec = L.layerGroup([L.tileLayer(tdt('vec')), L.tileLayer(tdt('cva'))]);
+
+        map = L.map('map', {
+            center: [34.85, 113.55],
+            zoom: 10,
+            layers: [vec]
+        });
+
+        markerLayer = L.layerGroup().addTo(map);
+
+        // 点击地图选点
+        map.on('click', function(e) {
+            selectedLng = e.latlng.lng;
+            selectedLat = e.latlng.lat;
+            selectedZoneId = null;
+
+            // 清除旧标记，显示新标记
+            markerLayer.clearLayers();
+            L.marker([selectedLat, selectedLng]).addTo(markerLayer)
+                .bindPopup(`已选择位置<br>经度: ${selectedLng.toFixed(4)}<br>纬度: ${selectedLat.toFixed(4)}`).openPopup();
+
+            // 显示位置信息
+            $('#zoneSelect').val('');
+            $('#infoLng').text(selectedLng.toFixed(6));
+            $('#infoLat').text(selectedLat.toFixed(6));
+            $('#locationInfo').addClass('show');
+        });
+
+        // 加载监测点位
+        $.get(API + '/zones/', function(res) {
+            const zones = res.results || res || [];
+            zones.forEach(z => {
+                if (z.latitude && z.longitude) {
+                    L.circleMarker([z.latitude, z.longitude], {
+                        radius: 5, fillColor: '#00ADB5', color: '#fff', weight: 1, fillOpacity: 0.8
+                    }).bindPopup(`<b>${z.name}</b>`).addTo(markerLayer);
+                }
+                $('#zoneSelect').append(`<option value="${z.id}" data-lng="${z.longitude || ''}" data-lat="${z.latitude || ''}">${z.name}</option>`);
+            });
+        });
+    }
+
+    // 加载物种列表
+    function loadSpecies() {
+        $.get(API + '/species/', { page_size: 500 }, function(res) {
+            const species = res.results || res || [];
+            species.forEach(s => {
+                $('#speciesSelect').append(`<option value="${s.id}">${s.name_cn}${s.name_latin ? ' (' + s.name_latin + ')' : ''}</option>`);
+            });
+        });
+    }
+
+    // 加载已有点位作为下拉选项
+    function loadZones() {
+        // zones 已通过 initMap 加载
+    }
+
+    // 处理点位下拉选择
+    $('#zoneSelect').on('change', function() {
+        const opt = $(this).find(':selected');
+        const lng = parseFloat(opt.data('lng'));
+        const lat = parseFloat(opt.data('lat'));
+
+        if (this.value) {
+            selectedZoneId = parseInt(this.value);
+            selectedLng = lng;
+            selectedLat = lat;
+
+            markerLayer.clearLayers();
+            if (lat && lng) {
+                L.marker([lat, lng]).addTo(markerLayer).openPopup();
+                map.setView([lat, lng], 13);
+            }
+
+            $('#infoLng').text(lng ? lng.toFixed(6) : '--');
+            $('#infoLat').text(lat ? lat.toFixed(6) : '--');
+            $('#locationInfo').addClass('show');
+        } else {
+            selectedZoneId = null;
+            selectedLng = null;
+            selectedLat = null;
+            markerLayer.clearLayers();
+            $('#locationInfo').removeClass('show');
+        }
+    });
+
+    // 拖拽上传
+    const uploadArea = document.getElementById('uploadArea');
+    ['dragenter','dragover'].forEach(evt =>
+        uploadArea.addEventListener(evt, e => { e.preventDefault(); uploadArea.classList.add('dragover'); })
+    );
+    ['dragleave','drop'].forEach(evt =>
+        uploadArea.addEventListener(evt, e => { e.preventDefault(); uploadArea.classList.remove('dragover'); })
+    );
+    uploadArea.addEventListener('drop', e => {
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) handleImageFile(file);
+    });
+    document.getElementById('imageInput').addEventListener('change', e => {
+        if (e.target.files[0]) handleImageFile(e.target.files[0]);
+    });
+
+    function handleImageFile(file) {
+        if (file.size > 5 * 1024 * 1024) {
+            toast('图片大小不能超过 5MB', 'error');
+            return;
+        }
+        uploadedFile = file;
+        const reader = new FileReader();
+        reader.onload = e => {
+            $('#previewImg').attr('src', e.target.result);
+            $('#imagePreview').show();
+            $('#uploadArea').hide();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+        uploadedFile = null;
+        $('#imageInput').val('');
+        $('#imagePreview').hide();
+        $('#uploadArea').show();
+    }
+
+    // 设置默认日期为今天
+    document.getElementById('dateInput').valueAsDate = new Date();
+
+    // 表单提交
+    $('#reportForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const zoneId = selectedZoneId;
+        const speciesId = parseInt($('#speciesSelect').val());
+        const count = parseInt($('#countInput').val()) || 1;
+        const date = $('#dateInput').val();
+        const desc = $('#descInput').val().trim();
+
+        // 校验
+        if (!zoneId) {
+            toast('请选择监测点位', 'error');
+            return;
+        }
+        if (!speciesId) {
+            toast('请选择鸟种', 'error');
+            return;
+        }
+        if (!date) {
+            toast('请选择观测日期', 'error');
+            return;
+        }
+
+        const token = getToken();
+        const btn = $('#submitBtn');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 提交中...');
+
+        // 构建 FormData
+        const formData = new FormData();
+        formData.append('zone', zoneId);
+        formData.append('species', speciesId);
+        formData.append('count', count);
+        formData.append('observation_time', date);
+        if (desc) formData.append('description', desc);
+        if (uploadedFile) formData.append('image', uploadedFile);
+
+        $.ajax({
+            url: API + '/observations/',
+            method: 'POST',
+            headers: { 'Authorization': 'Token ' + token },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function() {
+                toast('提交成功！审核通过后积分将自动到账', 'success');
+                setTimeout(() => window.location.href = '/profile/', 2000);
+            },
+            error: function(xhr) {
+                const err = xhr.responseJSON || {};
+                toast(Object.values(err).flat().join('；') || '提交失败，请重试', 'error');
+                btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> 提交记录');
+            }
+        });
+    });
+
+    // 初始化
+    $(function() {
+        if (!checkAuth()) return;
+        initMap();
+        loadSpecies();
+        document.getElementById('dateInput').valueAsDate = new Date();
+    });
+</script>
+</body>
+</html>

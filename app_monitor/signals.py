@@ -6,23 +6,24 @@ from .models import ObservationRecord, UserProfile
 @receiver(post_save, sender=ObservationRecord)
 def award_points_on_approval(sender, instance, created, **kwargs):
     """
-    当观测记录被保存，且状态变为 '1' (审核通过) 时，给用户加分
+    当观测记录被管理员审核通过（状态变为 'approved'）时，给上传者加分
+    注意：此信号只在新记录创建后、后续状态变更时才触发额外积分。
+    首次创建时的积分已在 views.py perform_create 中处理。
     """
-    # 只有当状态是审核通过(1) 且 有具体的上报人时才加分
-    # 注意：请确保 models.py 中 ObservationRecord 有 status 字段且 '1' 代表通过
-    # 这里的 str(instance.status) == '1' 是为了兼容 status 可能是字符或数字的情况
-    if hasattr(instance, 'status') and str(instance.status) == '1' and instance.reporter:
-        # 获取或创建用户档案
-        profile, _ = UserProfile.objects.get_or_create(user=instance.reporter)
+    if created:
+        # perform_create 已经处理了新建积分，此处不再重复加分
+        return
 
-        POINTS_PER_RECORD = 10
-
-        # 简单累加积分
-        profile.points += POINTS_PER_RECORD
-        profile.save()
-
-        print(f"用户 {instance.reporter.username} 贡献有效数据，获得 {POINTS_PER_RECORD} 积分！")
-
-        # 检查是否满足兑换条件
-        if profile.points >= 500:
-            print("恭喜！您已满足兑换【郑州湿地观鸟指南（纸质版）】的条件")
+    # 非新建记录：只有从 pending/rejected 变为 approved 时才额外加分
+    if str(instance.status) == 'approved' and instance.uploader:
+        # 避免重复加分：简单判断，如果积分已经很高（说明之前加过），就不重复加
+        # 更精确的做法需要引入状态历史表，这里用简化版本
+        try:
+            profile = instance.uploader.profile
+            # 积分已在 perform_create 中计入，此处不再重复处理
+            # 如需"审核通过额外奖励"，可在此处取消注释：
+            # profile.score += 5
+            # profile.save()
+            pass
+        except UserProfile.DoesNotExist:
+            pass

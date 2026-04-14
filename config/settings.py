@@ -48,7 +48,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -169,3 +169,7 @@ SIMPLEUI_ICON = {
     '用户积分档案': 'fas fa-user-tag',  # 🏷️ 对应 UserProfile
     '模型识别记录': 'fas fa-robot',      # 🤖 对应 AIDetectionResult
 }
+
+# === CORS 配置 ===
+CORS_ALLOW_ALL_ORIGINS = True  # 开发环境允许所有跨域请求
+CORS_ALLOW_CREDENTIALS = True

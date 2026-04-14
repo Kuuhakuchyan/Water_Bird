@@ -2,6 +2,42 @@ from rest_framework import serializers
 # 引入所有需要的模型
 from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+
+
+# ==========================================
+# 0. 用户注册序列化器
+# ==========================================
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password],
+        style={'input_type': 'password'}
+    )
+    password_confirm = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'password_confirm']
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({"password_confirm": "两次密码输入不一致"})
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=validated_data['password']
+        )
+        return user
 
 
 # ==========================================
@@ -17,13 +53,53 @@ class ProductSerializer(serializers.ModelSerializer):
 # 2. 用户信息序列化器 (用于个人中心)
 # ==========================================
 class UserInfoSerializer(serializers.ModelSerializer):
-    # 从关联的 UserProfile 表中读取积分和头像
     score = serializers.IntegerField(source='profile.score', read_only=True)
     avatar = serializers.ImageField(source='profile.avatar', read_only=True)
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'score', 'avatar']
+
+
+# ==========================================
+# 2b. 用户资料更新序列化器 (支持修改邮箱和头像)
+# ==========================================
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=False, allow_blank=True)
+    avatar = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = ['email']
+
+    def update(self, instance, validated_data):
+        email = validated_data.get('email', None)
+        if email is not None:
+            instance.email = email
+            instance.save(update_fields=['email'])
+        return instance
+
+
+class UserAvatarUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['avatar']
+
+    def update(self, instance, validated_data):
+        avatar = validated_data.get('avatar')
+        if avatar is not None:
+            instance.avatar = avatar
+            instance.save(update_fields=['avatar'])
+        return instance
+
+
+# ==========================================
+# 0b. 物种列表序列化器
+# ==========================================
+class SpeciesInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpeciesInfo
+        fields = ['id', 'name_cn', 'name_latin', 'order', 'family', 'protection_level', 'distribution_habit']
 
 
 # ==========================================
