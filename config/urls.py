@@ -32,6 +32,10 @@ urlpatterns = [
     # 个人中心页面
     path('profile/', lambda r: render(r, 'profile.html'), name='profile'),
 
+    # 游戏页面
+    path('bird-guess/', lambda r: render(r, 'bird-guess.html'), name='bird_guess'),
+    path('bird-runner/', lambda r: render(r, 'bird-runner.html'), name='bird_runner'),
+
     # 登录页面
     path('login/', lambda r: render(r, 'login.html'), name='login'),
 

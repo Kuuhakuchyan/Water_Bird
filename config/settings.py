@@ -80,16 +80,16 @@ DATABASES = {
 
 if platform.system() == 'Windows':
     # ----- Windows 本地开发环境 -----
-    OSGEO4W_ROOT = r"C:\Users\Xuan\AppData\Local\Programs\OSGeo4W"
+    CONDA_ENV_ROOT = r"C:\Users\123\.conda\envs\waterbird"
 
     # 修复 PROJ 和 PATH
-    os.environ['PROJ_LIB'] = os.path.join(OSGEO4W_ROOT, "share", "proj")
-    os.environ['PATH'] = os.path.join(OSGEO4W_ROOT, "bin") + ";" + os.environ['PATH']
+    os.environ['PROJ_LIB'] = os.path.join(CONDA_ENV_ROOT, "Library", "share", "proj")
+    os.environ['PATH'] = os.path.join(CONDA_ENV_ROOT, "Library", "bin") + ";" + os.environ['PATH']
 
     # 指定 DLL 路径
-    GDAL_LIBRARY_PATH = os.path.join(OSGEO4W_ROOT, "bin", "gdal312.dll")
-    GEOS_LIBRARY_PATH = os.path.join(OSGEO4W_ROOT, "bin", "geos_c.dll")
-    os.environ['GDAL_DATA'] = os.path.join(OSGEO4W_ROOT, "share", "gdal")
+    GDAL_LIBRARY_PATH = os.path.join(CONDA_ENV_ROOT, "Library", "bin", "gdal.dll")
+    GEOS_LIBRARY_PATH = os.path.join(CONDA_ENV_ROOT, "Library", "bin", "geos_c.dll")
+    os.environ['GDAL_DATA'] = os.path.join(CONDA_ENV_ROOT, "Library", "share", "gdal")
 
 else:
     # ----- Linux 服务器环境 -----

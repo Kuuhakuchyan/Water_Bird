@@ -1,6 +1,6 @@
 from rest_framework import serializers
 # 引入所有需要的模型
-from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile
+from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile, SpeciesInfo
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
