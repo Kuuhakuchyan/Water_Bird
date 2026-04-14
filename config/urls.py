@@ -35,6 +35,8 @@ urlpatterns = [
     # 游戏页面
     path('bird-guess/', lambda r: render(r, 'bird-guess.html'), name='bird_guess'),
     path('bird-runner/', lambda r: render(r, 'bird-runner.html'), name='bird_runner'),
+    path('wetland-restorer/', lambda r: render(r, 'wetland-restorer.html'), name='wetland_restorer'),
+    path('migration-flight/', lambda r: render(r, 'migration-flight.html'), name='migration_flight'),
 
     # 登录页面
     path('login/', lambda r: render(r, 'login.html'), name='login'),

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>湿地修复师 | 黄河生态方舟</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="../static/app_monitor/css/games.css">
+    <style>
+        :root {
+            --c-dark: #2D4A3E;
+            --c-primary: #4A7C59;
+            --c-secondary: #8FBC8F;
+            --c-aqua: #20B2AA;
+            --c-water: #5F9EA0;
+        }
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .game-header {
+            background: linear-gradient(135deg, var(--c-water), var(--c-primary));
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .game-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-3px);
+        }
+        .canvas-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .game-canvas {
+            display: block;
+            width: 100%;
+            background: linear-gradient(180deg, #87CEEB 0%, #5F9EA0 40%, #3A7D44 70%, #2E5933 100%);
+        }
+        .status-bar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .stat-box {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            flex: 1;
+            text-align: center;
+        }
+        .stat-box i {
+            margin-right: 5px;
+        }
+        .stat-box .value {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .stat-box.seagrass .value { color: #90EE90; }
+        .stat-box.birds .value { color: #FFD700; }
+        .stat-box.garbage .value { color: #FF6B6B; }
+        .stat-box.restoration .value { color: #00CED1; }
+        .progress-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        .progress-label {
+            color: white;
+            font-size: 12px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .progress-track {
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B6B, #FFD700, #90EE90);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+        }
+        .game-overlay h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #90EE90;
+        }
+        .game-overlay p {
+            font-size: 16px;
+            opacity: 0.8;
+            margin: 5px 0;
+        }
+        .controls-hint {
+            margin: 20px 0;
+            padding: 15px 25px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .controls-hint p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .controls-hint i {
+            color: #FFD700;
+            margin-right: 10px;
+            width: 20px;
+        }
+        .start-btn {
+            background: linear-gradient(135deg, var(--c-aqua), var(--c-primary));
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(32, 178, 170, 0.4);
+        }
+        .mission-list {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        .mission-list h4 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        .mission-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .mission-item.completed {
+            color: #90EE90;
+            text-decoration: line-through;
+        }
+        .mission-item i {
+            margin-right: 10px;
+            width: 20px;
+        }
+        .success-overlay h2 {
+            color: #90EE90;
+        }
+        .game-over-overlay h2 {
+            color: #FF6B6B;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1><i class="fas fa-water"></i> 湿地修复师</h1>
+            <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> 返回</a>
+        </div>
+
+        <div class="canvas-container" id="canvasContainer">
+            <canvas id="gameCanvas" class="game-canvas" width="880" height="500"></canvas>
+            
+            <div class="status-bar">
+                <div class="stat-box seagrass">
+                    <i class="fas fa-seedling"></i> 水草: <span class="value" id="seagrassCount">0</span>
+                </div>
+                <div class="stat-box birds">
+                    <i class="fas fa-dove"></i> 候鸟: <span class="value" id="birdCount">0</span>
+                </div>
+                <div class="stat-box garbage">
+                    <i class="fas fa-trash"></i> 垃圾: <span class="value" id="garbageCount">0</span>
+                </div>
+                <div class="stat-box restoration">
+                    <i class="fas fa-heart"></i> 修复度: <span class="value" id="restoration">0%</span>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-label">
+                    <span><i class="fas fa-chart-line"></i> 湿地健康度</span>
+                    <span id="healthPercent">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="healthBar" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- 开始界面 -->
+            <div class="game-overlay" id="startOverlay">
+                <h2><i class="fas fa-leaf"></i> 湿地修复师</h2>
+                <p>驾驶小船修复黄河湿地生态</p>
+                
+                <div class="controls-hint">
+                    <h4 style="margin-bottom: 10px; color: #FFD700;"><i class="fas fa-gamepad"></i> 游戏操作</h4>
+                    <p><i class="fas fa-arrows"></i> 方向键/WASD - 移动小船</p>
+                    <p><i class="fas fa-keyboard"></i> 空格键 - 切换工具</p>
+                    <p><i class="fas fa-mouse"></i> 点击对应位置 - 使用当前工具</p>
+                </div>
+                
+                <div class="mission-list">
+                    <h4><i class="fas fa-tasks"></i> 修复任务</h4>
+                    <div class="mission-item" id="mission1">
+                        <i class="far fa-square"></i> 种植 10 株水草
+                    </div>
+                    <div class="mission-item" id="mission2">
+                        <i class="far fa-square"></i> 清理 5 处垃圾
+                    </div>
+                    <div class="mission-item" id="mission3">
+                        <i class="far fa-square"></i> 吸引 3 只候鸟栖息
+                    </div>
+                    <div class="mission-item" id="mission4">
+                        <i class="far fa-square"></i> 将湿地修复度提升至 100%
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="restorerGame.start()">
+                    <i class="fas fa-play"></i> 开始修复
+                </button>
+            </div>
+
+            <!-- 成功界面 -->
+            <div class="game-overlay success-overlay" id="successOverlay" style="display: none;">
+                <h2><i class="fas fa-trophy"></i> 湿地修复成功!</h2>
+                <p>恭喜你将黄河湿地恢复到健康状态!</p>
+                <div style="margin: 20px 0;">
+                    <p><i class="fas fa-seedling"></i> 水草数量: <span id="finalSeagrass">0</span></p>
+                    <p><i class="fas fa-dove"></i> 吸引候鸟: <span id="finalBirds">0</span></p>
+                    <p><i class="fas fa-clock"></i> 用时: <span id="finalTime">0:00</span></p>
+                    <p><i class="fas fa-star"></i> 评分: <span id="finalScore">0</span> 星</p>
+                </div>
+                <button class="start-btn" onclick="restorerGame.restart()">
+                    <i class="fas fa-redo"></i> 再玩一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const restorerGame = {
+            canvas: null,
+            ctx: null,
+            isRunning: false,
+            gameTime: 0,
+            frameCount: 0,
+            
+            // 玩家小船
+            boat: {
+                x: 440,
+                y: 250,
+                width: 50,
+                height: 30,
+                speed: 4,
+                tool: 'seagrass', // seagrass, garbage, bird
+                tools: ['seagrass', 'garbage', 'bird'],
+                toolIndex: 0
+            },
+            
+            // 游戏数据
+            seagrass: [],
+            birds: [],
+            garbage: [],
+            deadTrees: [],
+            waterAreas: [],
+            
+            // 任务进度
+            missions: {
+                seagrass: 0,
+                garbage: 0,
+                birds: 0
+            },
+            completedMissions: [],
+            
+            init: function() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // 初始化湿地区域
+                this.initWetland();
+                
+                // 键盘控制
+                document.addEventListener('keydown', (e) => {
+                    if (!this.isRunning) return;
+                    
+                    switch(e.code) {
+                        case 'ArrowUp':
+                        case 'KeyW':
+                            this.boat.y -= this.boat.speed;
+                            break;
+                        case 'ArrowDown':
+                        case 'KeyS':
+                            this.boat.y += this.boat.speed;
+                            break;
+                        case 'ArrowLeft':
+                        case 'KeyA':
+                            this.boat.x -= this.boat.speed;
+                            break;
+                        case 'ArrowRight':
+                        case 'KeyD':
+                            this.boat.x += this.boat.speed;
+                            break;
+                        case 'Space':
+                            e.preventDefault();
+                            this.cycleTool();
+                            break;
+                    }
+                    
+                    // 边界限制
+                    this.boat.x = Math.max(30, Math.min(this.canvas.width - 30, this.boat.x));
+                    this.boat.y = Math.max(80, Math.min(this.canvas.height - 50, this.boat.y));
+                });
+                
+                // 鼠标点击
+                this.canvas.addEventListener('click', (e) => {
+                    if (!this.isRunning) return;
+                    
+                    const rect = this.canvas.getBoundingClientRect();
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    const clickX = (e.clientX - rect.left) * scaleX;
+                    const clickY = (e.clientY - rect.top) * scaleY;
+                    
+                    this.useTool(clickX, clickY);
+                });
+                
+                // 生成初始垃圾和枯树
+                this.spawnInitialGarbage();
+                
+                // 开始渲染
+                this.gameLoop();
+            },
+            
+            initWetland: function() {
+                // 初始化水区
+                this.waterAreas = [
+                    { x: 100, y: 200, width: 200, height: 150, depth: 0.3 },
+                    { x: 400, y: 180, width: 180, height: 120, depth: 0.5 },
+                    { x: 600, y: 220, width: 150, height: 130, depth: 0.4 },
+                    { x: 250, y: 320, width: 250, height: 100, depth: 0.6 },
+                    { x: 550, y: 350, width: 200, height: 80, depth: 0.4 }
+                ];
+                
+                // 初始化枯树
+                this.deadTrees = [
+                    { x: 150, y: 150 },
+                    { x: 500, y: 300 },
+                    { x: 700, y: 180 }
+                ];
+            },
+            
+            spawnInitialGarbage: function() {
+                for (let i = 0; i < 8; i++) {
+                    this.garbage.push({
+                        x: 50 + Math.random() * (this.canvas.width - 100),
+                        y: 100 + Math.random() * (this.canvas.height - 150),
+                        type: Math.floor(Math.random() * 3), // 0: 塑料瓶, 1: 渔网, 2: 垃圾袋
+                        rotation: Math.random() * Math.PI * 2
+                    });
+                }
+            },
+            
+            cycleTool: function() {
+                this.boat.toolIndex = (this.boat.toolIndex + 1) % this.boat.tools.length;
+                this.boat.tool = this.boat.tools[this.boat.toolIndex];
+            },
+            
+            useTool: function(targetX, targetY) {
+                const tool = this.boat.tool;
+                const dist = Math.hypot(targetX - this.boat.x, targetY - this.boat.y);
+                
+                if (dist > 80) return; // 距离太远
+                
+                if (tool === 'seagrass') {
+                    // 检查是否在水区
+                    const inWater = this.waterAreas.some(w => 
+                        targetX >= w.x && targetX <= w.x + w.width &&
+                        targetY >= w.y && targetY <= w.y + w.height
+                    );
+                    
+                    if (inWater && this.seagrass.length < 50) {
+                        this.seagrass.push({
+                            x: targetX,
+                            y: targetY,
+                            growth: 0,
+                            maxHeight: 20 + Math.random() * 20,
+                            sway: Math.random() * Math.PI * 2
+                        });
+                        this.missions.seagrass++;
+                        this.updateMissions();
+                    }
+                } else if (tool === 'garbage') {
+                    // 清理垃圾
+                    for (let i = this.garbage.length - 1; i >= 0; i--) {
+                        const g = this.garbage[i];
+                        if (Math.hypot(targetX - g.x, targetY - g.y) < 30) {
+                            this.garbage.splice(i, 1);
+                            this.missions.garbage++;
+                            this.updateMissions();
+                            break;
+                        }
+                    }
+                } else if (tool === 'bird') {
+                    // 吸引候鸟（需要有足够水草和较少垃圾）
+                    const health = this.getRestorationPercent();
+                    if (health > 30 && this.birds.length < 10) {
+                        this.birds.push({
+                            x: targetX,
+                            y: targetY,
+                            targetX: targetX,
+                            targetY: targetY,
+                            wingFrame: 0,
+                            type: Math.floor(Math.random() * 3)
+                        });
+                        this.missions.birds++;
+                        this.updateMissions();
+                    }
+                }
+            },
+            
+            updateMissions: function() {
+                // 任务1：种植水草
+                if (this.missions.seagrass >= 10 && !this.completedMissions.includes(1)) {
+                    this.completedMissions.push(1);
+                    $('#mission1').addClass('completed').find('i').attr('class', 'far fa-check-square');
+                }
+                
+                // 任务2：清理垃圾
+                if (this.missions.garbage >= 5 && !this.completedMissions.includes(2)) {
+                    this.completedMissions.push(2);
+                    $('#mission2').addClass('completed').find('i').attr('class', 'far fa-check-square');
+                }
+                
+                // 任务3：吸引候鸟
+                if (this.missions.birds >= 3 && !this.completedMissions.includes(3)) {
+                    this.completedMissions.push(3);
+                    $('#mission3').addClass('completed').find('i').attr('class', 'far fa-check-square');
+                }
+                
+                // 任务4：100%修复
+                if (this.getRestorationPercent() >= 100 && !this.completedMissions.includes(4)) {
+                    this.completedMissions.push(4);
+                    $('#mission4').addClass('completed').find('i').attr('class', 'far fa-check-square');
+                }
+            },
+            
+            getRestorationPercent: function() {
+                const seagrassScore = Math.min(100, this.seagrass.length * 4);
+                const birdScore = Math.min(100, this.birds.length * 15);
+                const garbageScore = 100 - Math.min(100, this.garbage.length * 8);
+                const deadTreeScore = 100 - (this.deadTrees.length > 0 ? 20 : 0);
+                
+                return Math.round((seagrassScore * 0.3 + birdScore * 0.3 + garbageScore * 0.3 + deadTreeScore * 0.1));
+            },
+            
+            start: function() {
+                this.isRunning = true;
+                $('#startOverlay').hide();
+                this.gameStartTime = Date.now();
+            },
+            
+            restart: function() {
+                // 重置游戏状态
+                this.boat = {
+                    x: 440,
+                    y: 250,
+                    width: 50,
+                    height: 30,
+                    speed: 4,
+                    tool: 'seagrass',
+                    tools: ['seagrass', 'garbage', 'bird'],
+                    toolIndex: 0
+                };
+                
+                this.seagrass = [];
+                this.birds = [];
+                this.garbage = [];
+                this.deadTrees = [
+                    { x: 150, y: 150 },
+                    { x: 500, y: 300 },
+                    { x: 700, y: 180 }
+                ];
+                
+                this.missions = { seagrass: 0, garbage: 0, birds: 0 };
+                this.completedMissions = [];
+                this.spawnInitialGarbage();
+                
+                // 重置任务UI
+                for (let i = 1; i <= 4; i++) {
+                    $(`#mission${i}`).removeClass('completed')
+                        .find('i').attr('class', 'far fa-square');
+                }
+                
+                $('#successOverlay').hide();
+                $('#startOverlay').show();
+            },
+            
+            update: function() {
+                if (!this.isRunning) return;
+                
+                this.frameCount++;
+                this.gameTime = Math.floor((Date.now() - this.gameStartTime) / 1000);
+                
+                // 更新水草生长
+                this.seagrass.forEach(s => {
+                    s.growth = Math.min(1, s.growth + 0.01);
+                    s.sway += 0.05;
+                });
+                
+                // 更新候鸟
+                this.birds.forEach(b => {
+                    b.wingFrame = (b.wingFrame + 0.2) % 2;
+                    // 候鸟随机飘动
+                    b.x += (Math.random() - 0.5) * 2;
+                    b.y += (Math.random() - 0.5) * 2;
+                    b.x = Math.max(50, Math.min(this.canvas.width - 50, b.x));
+                    b.y = Math.max(50, Math.min(this.canvas.height - 50, b.y));
+                });
+                
+                // 更新UI
+                this.updateUI();
+                
+                // 检查胜利条件
+                if (this.completedMissions.length >= 4) {
+                    this.victory();
+                }
+            },
+            
+            updateUI: function() {
+                const health = this.getRestorationPercent();
+                $('#seagrassCount').text(this.seagrass.length);
+                $('#birdCount').text(this.birds.length);
+                $('#garbageCount').text(this.garbage.length);
+                $('#restoration').text(health + '%');
+                $('#healthPercent').text(health + '%');
+                $('#healthBar').css('width', health + '%');
+            },
+            
+            victory: function() {
+                this.isRunning = false;
+                
+                const minutes = Math.floor(this.gameTime / 60);
+                const seconds = this.gameTime % 60;
+                
+                $('#finalSeagrass').text(this.seagrass.length);
+                $('#finalBirds').text(this.birds.length);
+                $('#finalTime').text(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+                
+                // 根据时间和完成度计算星级
+                let stars = 3;
+                if (this.gameTime > 120) stars = 2;
+                if (this.gameTime > 180) stars = 1;
+                $('#finalScore').text('★'.repeat(stars));
+                
+                $('#successOverlay').show();
+            },
+            
+            draw: function() {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 绘制天空渐变
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                skyGradient.addColorStop(0, '#87CEEB');
+                skyGradient.addColorStop(0.4, '#B0E0E6');
+                skyGradient.addColorStop(0.7, '#3A7D44');
+                skyGradient.addColorStop(1, '#2E5933');
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 绘制远山
+                this.drawMountains();
+                
+                // 绘制水区
+                this.drawWaterAreas();
+                
+                // 绘制水草
+                this.drawSeagrass();
+                
+                // 绘制垃圾
+                this.drawGarbage();
+                
+                // 绘制枯树
+                this.drawDeadTrees();
+                
+                // 绘制候鸟
+                this.drawBirds();
+                
+                // 绘制小船
+                this.drawBoat();
+                
+                // 绘制工具指示器
+                this.drawToolIndicator();
+            },
+            
+            drawMountains: function() {
+                const ctx = this.ctx;
+                ctx.fillStyle = '#5D8A66';
+                ctx.beginPath();
+                ctx.moveTo(0, 150);
+                ctx.lineTo(100, 80);
+                ctx.lineTo(200, 120);
+                ctx.lineTo(350, 60);
+                ctx.lineTo(500, 100);
+                ctx.lineTo(650, 50);
+                ctx.lineTo(800, 90);
+                ctx.lineTo(this.canvas.width, 70);
+                ctx.lineTo(this.canvas.width, 150);
+                ctx.closePath();
+                ctx.fill();
+            },
+            
+            drawWaterAreas: function() {
+                const ctx = this.ctx;
+                
+                this.waterAreas.forEach(water => {
+                    // 水面波动
+                    const waveOffset = Math.sin(this.frameCount * 0.05) * 3;
+                    
+                    const gradient = ctx.createRadialGradient(
+                        water.x + water.width/2, water.y + water.height/2, 0,
+                        water.x + water.width/2, water.y + water.height/2, water.width/2
+                    );
+                    gradient.addColorStop(0, `rgba(64, 164, 223, ${0.4 + water.depth * 0.3})`);
+                    gradient.addColorStop(1, `rgba(32, 128, 180, ${0.3 + water.depth * 0.2})`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        water.x + water.width/2 + waveOffset,
+                        water.y + water.height/2,
+                        water.width/2,
+                        water.height/2,
+                        0, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // 水面波纹
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.ellipse(
+                            water.x + water.width/2,
+                            water.y + water.height/2 - 10 + i * 15,
+                            water.width/3 - i * 10,
+                            water.height/4 - i * 5,
+                            0, 0, Math.PI * 2
+                        );
+                        ctx.stroke();
+                    }
+                });
+            },
+            
+            drawSeagrass: function() {
+                const ctx = this.ctx;
+                
+                this.seagrass.forEach(s => {
+                    const sway = Math.sin(s.sway) * 5;
+                    const height = s.maxHeight * s.growth;
+                    
+                    ctx.strokeStyle = `rgba(34, 139, 34, ${s.growth})`;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    
+                    // 绘制水草茎
+                    ctx.beginPath();
+                    ctx.moveTo(s.x, s.y);
+                    ctx.quadraticCurveTo(s.x + sway, s.y - height/2, s.x + sway * 1.5, s.y - height);
+                    ctx.stroke();
+                    
+                    // 绘制叶子
+                    if (s.growth > 0.5) {
+                        ctx.fillStyle = `rgba(50, 180, 50, ${s.growth})`;
+                        ctx.beginPath();
+                        ctx.ellipse(s.x + sway * 0.5, s.y - height * 0.6, 6, 3, -0.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(s.x + sway * 0.8, s.y - height * 0.4, 5, 2, 0.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            },
+            
+            drawGarbage: function() {
+                const ctx = this.ctx;
+                
+                this.garbage.forEach(g => {
+                    ctx.save();
+                    ctx.translate(g.x, g.y);
+                    ctx.rotate(g.rotation);
+                    
+                    if (g.type === 0) {
+                        // 塑料瓶
+                        ctx.fillStyle = '#87CEEB';
+                        ctx.beginPath();
+                        ctx.roundRect(-8, -15, 16, 30, 3);
+                        ctx.fill();
+                        ctx.fillStyle = '#5BA3C0';
+                        ctx.fillRect(-6, -18, 12, 5);
+                    } else if (g.type === 1) {
+                        // 渔网
+                        ctx.strokeStyle = '#8B7355';
+                        ctx.lineWidth = 2;
+                        for (let i = -15; i <= 15; i += 6) {
+                            ctx.beginPath();
+                            ctx.moveTo(i, -15);
+                            ctx.lineTo(i, 15);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(-15, i);
+                            ctx.lineTo(15, i);
+                            ctx.stroke();
+                        }
+                    } else {
+                        // 垃圾袋
+                        ctx.fillStyle = 'rgba(200,200,200,0.7)';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = '#999';
+                        ctx.setLineDash([3, 3]);
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                    
+                    ctx.restore();
+                });
+            },
+            
+            drawDeadTrees: function() {
+                const ctx = this.ctx;
+                
+                this.deadTrees.forEach(tree => {
+                    // 树干
+                    ctx.strokeStyle = '#5D4037';
+                    ctx.lineWidth = 8;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(tree.x, tree.y + 40);
+                    ctx.lineTo(tree.x, tree.y);
+                    ctx.stroke();
+                    
+                    // 枯枝
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(tree.x, tree.y);
+                    ctx.lineTo(tree.x - 20, tree.y - 15);
+                    ctx.moveTo(tree.x, tree.y + 10);
+                    ctx.lineTo(tree.x + 15, tree.y - 5);
+                    ctx.moveTo(tree.x, tree.y + 5);
+                    ctx.lineTo(tree.x - 10, tree.y - 10);
+                    ctx.stroke();
+                });
+            },
+            
+            drawBirds: function() {
+                const ctx = this.ctx;
+                
+                this.birds.forEach(b => {
+                    const wingUp = b.wingFrame < 1;
+                    
+                    ctx.fillStyle = ['#FFF', '#E8E8E8', '#F5F5DC'][b.type];
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                    
+                    // 身体
+                    ctx.beginPath();
+                    ctx.ellipse(b.x, b.y, 12, 6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // 翅膀
+                    ctx.fillStyle = ['#DDD', '#CCC', '#D4C'][b.type];
+                    ctx.beginPath();
+                    if (wingUp) {
+                        ctx.ellipse(b.x, b.y - 8, 10, 5, -0.3, 0, Math.PI * 2);
+                    } else {
+                        ctx.ellipse(b.x, b.y + 8, 10, 5, 0.3, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // 头
+                    ctx.fillStyle = ['#FFF', '#E8E8E8', '#F5F5DC'][b.type];
+                    ctx.beginPath();
+                    ctx.arc(b.x + 10, b.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // 嘴巴
+                    ctx.fillStyle = '#FFA500';
+                    ctx.beginPath();
+                    ctx.moveTo(b.x + 15, b.y);
+                    ctx.lineTo(b.x + 20, b.y + 1);
+                    ctx.lineTo(b.x + 15, b.y + 2);
+                    ctx.closePath();
+                    ctx.fill();
+                });
+            },
+            
+            drawBoat: function() {
+                const ctx = this.ctx;
+                const b = this.boat;
+                
+                ctx.save();
+                ctx.translate(b.x, b.y);
+                
+                // 船体
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.moveTo(-25, 0);
+                ctx.lineTo(-20, 15);
+                ctx.lineTo(20, 15);
+                ctx.lineTo(25, 0);
+                ctx.lineTo(20, -5);
+                ctx.lineTo(-20, -5);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 船体装饰
+                ctx.strokeStyle = '#5D3A1A';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-15, 0);
+                ctx.lineTo(15, 0);
+                ctx.stroke();
+                
+                // 人物
+                ctx.fillStyle = '#FFE4C4';
+                ctx.beginPath();
+                ctx.arc(0, -12, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 帽子
+                ctx.fillStyle = '#228B22';
+                ctx.beginPath();
+                ctx.arc(0, -18, 6, Math.PI, 0);
+                ctx.fill();
+                
+                // 手中工具
+                ctx.strokeStyle = '#666';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(8, -8);
+                ctx.lineTo(15, -20);
+                ctx.stroke();
+                
+                ctx.restore();
+            },
+            
+            drawToolIndicator: function() {
+                const ctx = this.ctx;
+                const tool = this.boat.tool;
+                
+                // 工具图标
+                const icons = {
+                    seagrass: '🌱',
+                    garbage: '🗑️',
+                    bird: '🐦'
+                };
+                
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillRect(this.canvas.width - 70, 70, 60, 80);
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.canvas.width - 70, 70, 60, 80);
+                
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(icons[tool], this.canvas.width - 40, 105);
+                
+                ctx.font = '12px sans-serif';
+                ctx.fillStyle = '#FFF';
+                const labels = { seagrass: '水草', garbage: '清理', bird: '引鸟' };
+                ctx.fillText(labels[tool], this.canvas.width - 40, 135);
+                
+                // 使用范围指示
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(this.boat.x, this.boat.y, 80, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            },
+            
+            gameLoop: function() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        };
+
+        // 初始化游戏
+        restorerGame.init();
+    </script>
+</body>
+</html>
