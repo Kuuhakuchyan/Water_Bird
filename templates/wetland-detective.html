@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>湿地侦探 | 黄河生态方舟</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="../static/app_monitor/css/games.css">
+    <style>
+        .case-file {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.7);
+            color: #f5f5dc;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            border: 2px solid #8b4513;
+            z-index: 10;
+            min-width: 200px;
+        }
+        .case-file h4 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            border-bottom: 1px dashed #8b4513;
+            padding-bottom: 5px;
+        }
+        .evidence-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .evidence-list li {
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .evidence-list li.found {
+            color: #4CAF50;
+            text-decoration: line-through;
+        }
+        .evidence-list li.pending {
+            color: #999;
+        }
+        .clue-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139,69,19,0.9);
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: #f5f5dc;
+            font-size: 14px;
+            z-index: 10;
+            border: 3px solid #ffd700;
+            max-width: 600px;
+            text-align: center;
+        }
+        .magnifier-btn {
+            position: absolute;
+            background: rgba(255,255,255,0.9);
+            border: 3px solid #8b4513;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: transform 0.2s;
+        }
+        .magnifier-btn:hover {
+            transform: scale(1.1);
+        }
+        .magnifier-btn.used {
+            background: rgba(76,175,80,0.3);
+            border-color: #4CAF50;
+        }
+        .lens-overlay {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 6px solid #8b4513;
+            background: rgba(255,255,255,0.1);
+            pointer-events: none;
+            z-index: 15;
+            overflow: hidden;
+            display: none;
+        }
+        .lens-overlay::after {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        .timer-bar {
+            width: 150px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+        }
+        .timer-fill.warning {
+            background: linear-gradient(90deg, #FF9800, #FFC107);
+        }
+        .timer-fill.danger {
+            background: linear-gradient(90deg, #F44336, #E91E63);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-header">
+            <div class="game-title">
+                <i class="fas fa-search"></i>
+                湿地侦探
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="/" style="color: var(--c-dark); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </a>
+            </div>
+        </div>
+
+        <div class="canvas-container" id="canvasContainer">
+            <canvas id="gameCanvas" class="game-canvas"></canvas>
+
+            <div class="case-file" id="caseFile">
+                <h4><i class="fas fa-folder-open"></i> 案件档案</h4>
+                <ul class="evidence-list" id="evidenceList"></ul>
+            </div>
+
+            <div style="position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); color: white; padding: 10px 15px; border-radius: 8px; font-size: 13px; z-index: 10;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-clock" style="color: #FFD700;"></i>
+                    <span>剩余时间</span>
+                    <div class="timer-bar">
+                        <div class="timer-fill" id="timerBar" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <i class="fas fa-star" style="color: #FFD700;"></i>
+                    <span>得分: <span id="scoreDisplay">0</span></span>
+                </div>
+            </div>
+
+            <button class="magnifier-btn" id="magnifierBtn" title="使用放大镜">
+                <i class="fas fa-search-plus"></i>
+            </button>
+
+            <div class="lens-overlay" id="lensOverlay"></div>
+
+            <div class="clue-panel" id="cluePanel">
+                <i class="fas fa-info-circle"></i>
+                <span id="clueText">在湿地中找到所有证据线索!</span>
+            </div>
+
+            <div class="game-overlay" id="startOverlay">
+                <h2><i class="fas fa-user-secret"></i> 湿地侦探</h2>
+                <p style="color: #666;">根据现场留下的线索推断出现的物种</p>
+                
+                <div style="margin: 15px 0; text-align: left; padding: 0 20px; font-size: 13px; color: #555;">
+                    <p><i class="fas fa-paw" style="color: var(--c-aqua);"></i> 点击场景中的可疑区域收集证据</p>
+                    <p><i class="fas fa-search-plus" style="color: var(--c-aqua);"></i> 使用放大镜查看隐藏细节</p>
+                    <p><i class="fas fa-lightbulb" style="color: #FFD700;"></i> 根据证据推断物种</p>
+                    <p><i class="fas fa-clock" style="color: #FF5722;"></i> 在时间耗尽前完成推理</p>
+                </div>
+                <button class="start-btn" style="margin-top: 15px;" onclick="detective.start()">
+                    <i class="fas fa-play"></i> 开始调查
+                </button>
+            </div>
+
+            <div class="game-overlay" id="winOverlay" style="display: none;">
+                <div style="text-align: center;">
+                    <h2 style="color: #4CAF50;"><i class="fas fa-trophy"></i> 案件告破!</h2>
+                    <p style="font-size: 36px; margin: 15px 0;">
+                        <i class="fas fa-star" style="color: #FFD700;"></i>
+                        <span id="winScore">0</span>
+                        <i class="fas fa-star" style="color: #FFD700;"></i>
+                    </p>
+                    <p id="speciesResult">成功推断出物种!</p>
+                    <button class="start-btn" style="margin-top: 20px;" onclick="detective.restart()">
+                        <i class="fas fa-redo"></i> 下一案件
+                    </button>
+                </div>
+            </div>
+
+            <div class="game-overlay" id="gameOverOverlay" style="display: none;">
+                <div class="game-over-content">
+                    <h2><i class="fas fa-frown"></i> 时间耗尽</h2>
+                    <p style="font-size: 14px; color: #666; margin: 10px 0;">未能完成案件调查</p>
+                    <p style="font-size: 14px; color: #666;">得分: <span id="finalScore">0</span></p>
+                    <button class="start-btn" style="margin-top: 15px;" onclick="detective.restart()">
+                        <i class="fas fa-redo"></i> 重新调查
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel" style="margin-top: 15px; text-align: center;">
+            <h4 style="color: var(--c-dark); margin-bottom: 10px;">
+                <i class="fas fa-lightbulb" style="color: #FFD700;"></i> 侦探提示
+            </h4>
+            <p style="color: #666; font-size: 13px; line-height: 1.8;">
+                每种动物都会留下独特的痕迹：脚印形状、羽毛颜色、粪便特征、筑巢材料等<br>
+                仔细观察现场，收集所有证据后进行推理！
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const speciesData = [
+            {
+                id: 'crane',
+                name: '丹顶鹤',
+                hints: ['细长的红色头顶', '黑白相间的羽毛', '修长的双腿'],
+                clues: [
+                    { type: 'footprint', icon: 'fa-shoe-prints', desc: '细长的三趾脚印', x: 0.2, y: 0.7 },
+                    { type: 'feather', icon: 'fa-feather-alt', desc: '白色羽毛带有黑色飞羽', x: 0.5, y: 0.4 },
+                    { type: 'nest', icon: 'fa-egg', desc: '芦苇编织的巢穴', x: 0.8, y: 0.6 }
+                ],
+                evidence: ['细长的三趾脚印', '白色羽毛带有黑色飞羽', '芦苇编织的巢穴']
+            },
+            {
+                id: 'otter',
+                name: '水獭',
+                hints: ['蹼状脚印', '光滑的毛皮痕迹', '鱼骨残骸'],
+                clues: [
+                    { type: 'footprint', icon: 'fa-paw', desc: '带蹼的五趾脚印', x: 0.3, y: 0.8 },
+                    { type: 'fur', icon: 'fa-fire', desc: '油脂光滑的毛皮痕迹', x: 0.6, y: 0.5 },
+                    { type: 'bones', icon: 'fa-bone', desc: '鱼骨和贝壳残骸', x: 0.75, y: 0.7 }
+                ],
+                evidence: ['带蹼的五趾脚印', '油脂光滑的毛皮痕迹', '鱼骨和贝壳残骸']
+            },
+            {
+                id: 'deer',
+                name: '梅花鹿',
+                hints: ['分叉的蹄印', '树枝摩擦痕迹', '粪便颗粒'],
+                clues: [
+                    { type: 'footprint', icon: 'fa-shoe-prints', desc: '分叉的两趾蹄印', x: 0.15, y: 0.75 },
+                    { type: 'scratch', icon: 'fa-tree', desc: '树干上的角蹭痕迹', x: 0.45, y: 0.35 },
+                    { type: 'droppings', icon: 'fa-circle', desc: '椭圆形粪便颗粒', x: 0.85, y: 0.8 }
+                ],
+                evidence: ['分叉的两趾蹄印', '树干上的角蹭痕迹', '椭圆形粪便颗粒']
+            },
+            {
+                id: 'heron',
+                name: '苍鹭',
+                hints: ['细长的爪印', '鱼鳞散落', '长羽毛'],
+                clues: [
+                    { type: 'footprint', icon: 'fa-shoe-prints', desc: '细长的三趾爪印', x: 0.25, y: 0.85 },
+                    { type: 'scales', icon: 'fa-fish', desc: '散落的鱼鳞', x: 0.55, y: 0.6 },
+                    { type: 'feather', icon: 'fa-feather', desc: '灰色长羽毛', x: 0.7, y: 0.4 }
+                ],
+                evidence: ['细长的三趾爪印', '散落的鱼鳞', '灰色长羽毛']
+            },
+            {
+                id: 'beaver',
+                name: '河狸',
+                hints: ['巨大的板状尾印', '树木咬痕', '木屑散落'],
+                clues: [
+                    { type: 'tail', icon: 'fa-hand-holding-water', desc: '扁平尾鳞印', x: 0.3, y: 0.9 },
+                    { type: 'bite', icon: 'fa-teeth', desc: '树木上的门齿咬痕', x: 0.6, y: 0.3 },
+                    { type: 'chips', icon: 'fa-seedling', desc: '木屑和树枝碎片', x: 0.8, y: 0.7 }
+                ],
+                evidence: ['扁平尾鳞印', '树木上的门齿咬痕', '木屑和树枝碎片']
+            }
+        ];
+
+        const detective = {
+            canvas: null,
+            ctx: null,
+            isRunning: false,
+            score: 0,
+            timeLeft: 120,
+            currentCase: null,
+            foundClues: [],
+            magnifierUsed: false,
+            frameCount: 0,
+            animationId: null,
+            hotspots: [],
+            cursorX: 0,
+            cursorY: 0,
+
+            init: function() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.cursorX = e.clientX - rect.left;
+                    this.cursorY = e.clientY - rect.top;
+                    this.updateMagnifier();
+                });
+
+                this.canvas.addEventListener('click', (e) => {
+                    if (this.isRunning) this.handleClick();
+                });
+
+                $('#magnifierBtn').click(() => {
+                    if (!this.magnifierUsed) {
+                        this.magnifierUsed = true;
+                        $('#magnifierBtn').addClass('used');
+                        $('#magnifierBtn').html('<i class="fas fa-check"></i>');
+                        $('#clueText').text('放大镜已使用！点击场景查看细节。');
+                        this.score += 50;
+                        this.updateUI();
+                    }
+                });
+
+                this.drawStaticScene();
+            },
+
+            resizeCanvas: function() {
+                const container = document.getElementById('canvasContainer');
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            },
+
+            start: function() {
+                $('#startOverlay').hide();
+                $('#winOverlay').hide();
+                $('#gameOverOverlay').hide();
+
+                this.isRunning = true;
+                this.foundClues = [];
+                this.magnifierUsed = false;
+                this.frameCount = 0;
+                this.timeLeft = 120;
+
+                $('#magnifierBtn').removeClass('used').html('<i class="fas fa-search-plus"></i>');
+
+                this.currentCase = speciesData[Math.floor(Math.random() * speciesData.length)];
+                this.hotspots = this.currentCase.clues.map((c, i) => ({
+                    ...c,
+                    found: false,
+                    displayX: c.x * this.canvas.width,
+                    displayY: c.y * this.canvas.height
+                }));
+
+                this.updateCaseFile();
+                this.updateUI();
+                this.gameLoop();
+            },
+
+            restart: function() {
+                this.start();
+            },
+
+            gameLoop: function() {
+                if (!this.isRunning) return;
+
+                this.update();
+                this.draw();
+                this.animationId = requestAnimationFrame(() => this.gameLoop());
+                this.frameCount++;
+
+                if (this.frameCount % 60 === 0 && this.timeLeft > 0) {
+                    this.timeLeft--;
+                    this.updateTimer();
+                    if (this.timeLeft === 0) {
+                        this.gameOver();
+                    }
+                }
+            },
+
+            update: function() {
+                // 检查是否所有证据都找到了
+                if (this.foundClues.length === this.hotspots.length) {
+                    this.win();
+                }
+            },
+
+            handleClick: function() {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = this.cursorX;
+                const y = this.cursorY;
+
+                for (let i = 0; i < this.hotspots.length; i++) {
+                    const h = this.hotspots[i];
+                    if (!h.found) {
+                        const dist = Math.hypot(x - h.displayX, y - h.displayY);
+                        if (dist < 50) {
+                            h.found = true;
+                            this.foundClues.push(h);
+                            this.score += 100 + (this.hotspots.length - this.foundClues.length) * 20;
+                            this.updateCaseFile();
+                            this.updateUI();
+                            $('#clueText').text(`发现证据: ${h.desc}`);
+                            this.createParticles(h.displayX, h.displayY);
+                            break;
+                        }
+                    }
+                }
+            },
+
+            updateMagnifier: function() {
+                const lens = $('#lensOverlay');
+                if (this.magnifierUsed) {
+                    lens.css({
+                        left: (this.cursorX - 100) + 'px',
+                        top: (this.cursorY - 100) + 'px',
+                        display: 'block'
+                    });
+                }
+            },
+
+            updateTimer: function() {
+                const pct = (this.timeLeft / 120) * 100;
+                const bar = $('#timerBar');
+                bar.css('width', pct + '%');
+                bar.removeClass('warning danger');
+                if (pct < 25) bar.addClass('danger');
+                else if (pct < 50) bar.addClass('warning');
+            },
+
+            updateCaseFile: function() {
+                const list = $('#evidenceList');
+                list.empty();
+                this.hotspots.forEach((h, i) => {
+                    const cls = h.found ? 'found' : 'pending';
+                    list.append(`<li class="${cls}">
+                        <i class="fas ${h.icon}"></i>
+                        ${h.found ? h.desc : '???'}
+                    </li>`);
+                });
+            },
+
+            updateUI: function() {
+                $('#scoreDisplay').text(this.score);
+            },
+
+            createParticles: function(x, y) {
+                // 简单的闪光效果
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        this.ctx.fillStyle = `rgba(255,215,0,${1 - i/10})`;
+                        this.ctx.beginPath();
+                        this.ctx.arc(
+                            x + (Math.random() - 0.5) * 60,
+                            y + (Math.random() - 0.5) * 60,
+                            4,
+                            0, Math.PI * 2
+                        );
+                        this.ctx.fill();
+                    }, i * 30);
+                }
+            },
+
+            win: function() {
+                this.isRunning = false;
+                cancelAnimationFrame(this.animationId);
+                this.score += this.timeLeft * 2;
+                $('#winScore').text(this.score);
+                $('#speciesResult').text(`成功推断出: ${this.currentCase.name}`);
+                $('#winOverlay').show();
+            },
+
+            gameOver: function() {
+                this.isRunning = false;
+                cancelAnimationFrame(this.animationId);
+                $('#finalScore').text(this.score);
+                $('#gameOverOverlay').show();
+            },
+
+            draw: function() {
+                const ctx = this.ctx;
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+
+                // 湿地背景
+                const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+                skyGrad.addColorStop(0, '#87CEEB');
+                skyGrad.addColorStop(0.5, '#B0E0E6');
+                skyGrad.addColorStop(1, '#228B22');
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                // 水面
+                ctx.fillStyle = 'rgba(30,144,255,0.4)';
+                ctx.fillRect(0, h * 0.6, w, h * 0.4);
+
+                // 水波纹
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 8; i++) {
+                    const y = h * 0.65 + i * 30;
+                    const offset = Math.sin(this.frameCount * 0.05 + i) * 10;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y + offset);
+                    for (let x = 0; x < w; x += 30) {
+                        ctx.lineTo(x, y + Math.sin(x * 0.05 + this.frameCount * 0.03) * 5 + offset);
+                    }
+                    ctx.stroke();
+                }
+
+                // 芦苇丛
+                ctx.fillStyle = '#556B2F';
+                for (let i = 0; i < w; i += 40) {
+                    const height = 80 + Math.sin(i) * 30;
+                    ctx.fillRect(i + 15, h * 0.6 - height, 8, height);
+                    
+                    // 芦苇花
+                    ctx.fillStyle = '#8B7355';
+                    for (let j = 0; j < 3; j++) {
+                        ctx.beginPath();
+                        ctx.ellipse(i + 19, h * 0.6 - height + j * 15, 4, 10, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = '#556B2F';
+                }
+
+                // 荷叶
+                for (let i = 0; i < 6; i++) {
+                    const x = 100 + i * 150;
+                    const y = h * 0.75 + Math.sin(i * 2) * 20;
+                    ctx.fillStyle = '#228B22';
+                    ctx.beginPath();
+                    ctx.ellipse(x, y, 25, 15, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 荷叶纹理
+                    ctx.strokeStyle = '#1a6b1a';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(x - 20, y);
+                    ctx.lineTo(x + 20, y);
+                    ctx.stroke();
+                }
+
+                // 远处的树
+                ctx.fillStyle = '#2d5016';
+                for (let i = 0; i < w; i += 100) {
+                    this.drawTree(ctx, i + 50, h * 0.45, 40 + Math.random() * 20);
+                }
+
+                // 热点标记（未发现）
+                this.hotspots.forEach((h, i) => {
+                    h.displayX = h.x * w;
+                    h.displayY = h.y * h;
+
+                    if (!h.found) {
+                        // 发光提示
+                        const pulse = Math.sin(this.frameCount * 0.1 + i) * 0.3 + 0.7;
+                        ctx.fillStyle = `rgba(255,215,0,${pulse * 0.3})`;
+                        ctx.beginPath();
+                        ctx.arc(h.displayX, h.displayY, 35, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.strokeStyle = `rgba(255,215,0,${pulse})`;
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([5, 5]);
+                        ctx.beginPath();
+                        ctx.arc(h.displayX, h.displayY, 40, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    } else {
+                        // 已发现的标记
+                        ctx.fillStyle = 'rgba(76,175,80,0.5)';
+                        ctx.beginPath();
+                        ctx.arc(h.displayX, h.displayY, 25, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.fillStyle = 'white';
+                        ctx.font = '20px Font Awesome';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('\u2714', h.displayX, h.displayY + 7);
+                    }
+                });
+
+                // 放大镜效果
+                if (this.magnifierUsed) {
+                    this.drawMagnifier(ctx);
+                }
+            },
+
+            drawTree: function(ctx, x, y, size) {
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(x - 5, y, 10, size * 0.6);
+                
+                ctx.fillStyle = '#228B22';
+                ctx.beginPath();
+                ctx.arc(x, y - size * 0.3, size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x - size * 0.3, y, size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x + size * 0.3, y, size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            },
+
+            drawMagnifier: function(ctx) {
+                const mx = this.cursorX;
+                const my = this.cursorY;
+                const radius = 100;
+
+                // 放大镜边框
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.arc(mx, my, radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // 放大效果（简单模拟）
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(mx, my, radius - 4, 0, Math.PI * 2);
+                ctx.clip();
+
+                // 放大显示热点
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                ctx.fillRect(mx - radius, my - radius, radius * 2, radius * 2);
+
+                this.hotspots.forEach(h => {
+                    const dx = (h.displayX - mx) * 1.5 + mx;
+                    const dy = (h.displayY - my) * 1.5 + my;
+                    
+                    ctx.fillStyle = h.found ? 'rgba(76,175,80,0.8)' : 'rgba(255,215,0,0.8)';
+                    ctx.beginPath();
+                    ctx.arc(dx, dy, h.found ? 15 : 25, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (!h.found) {
+                        ctx.fillStyle = 'white';
+                        ctx.font = '16px Font Awesome';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('?', dx, dy + 6);
+                    }
+                });
+
+                ctx.restore();
+
+                // 手柄
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 10;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(mx + radius * 0.7, my + radius * 0.7);
+                ctx.lineTo(mx + radius * 1.4, my + radius * 1.4);
+                ctx.stroke();
+            },
+
+            drawStaticScene: function() {
+                this.draw();
+            }
+        };
+
+        $(function() {
+            detective.init();
+        });
+    </script>
+</body>
+</html>

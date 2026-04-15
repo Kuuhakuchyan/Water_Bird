@@ -37,6 +37,8 @@ urlpatterns = [
     path('bird-runner/', lambda r: render(r, 'bird-runner.html'), name='bird_runner'),
     path('wetland-restorer/', lambda r: render(r, 'wetland-restorer.html'), name='wetland_restorer'),
     path('migration/', lambda r: render(r, 'migration.html'), name='migration'),
+    path('wetland-detective/', lambda r: render(r, 'wetland-detective.html'), name='wetland_detective'),
+    path('floating-island/', lambda r: render(r, 'floating-island.html'), name='floating_island'),
 
     # 登录页面
     path('login/', lambda r: render(r, 'login.html'), name='login'),
