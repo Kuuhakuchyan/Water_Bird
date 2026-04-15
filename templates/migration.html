@@ -190,9 +190,9 @@
                     <div class="distance-fill" id="distanceBar" style="width: 0%;"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px;">
-                    <span style="color: #90CAF9;">北方</span>
+                    <span style="color: #90CAF9;">当前: <span id="currentScore">0</span></span>
                     <span style="color: #A5D6A7;" id="currentZone">荒原</span>
-                    <span style="color: #A5D6A7;">黄河湿地</span>
+                    <span style="color: #A5D6A7;">目标: <span id="targetScore">500</span></span>
                 </div>
             </div>
 
@@ -344,7 +344,7 @@
             isRunning: false,
             score: 0,
             distance: 0,
-            targetDistance: 3000,
+            targetScore: 500,
             energy: 100,
             currentBird: null,
             frameCount: 0,
@@ -483,7 +483,7 @@
                     if (Math.abs(bird.vy) > 2) this.energy -= 0.1;
                 }
 
-                if (this.distance >= this.targetDistance) {
+                if (this.score >= this.targetScore) {
                     this.win();
                     return;
                 }
@@ -674,13 +674,15 @@
                 bar.css('width', pct + '%');
                 bar.css('background', pct < 25 ? '#F44336' : pct < 50 ? '#FF9800' : '#FFD700');
                 
-                const distPct = Math.min(100, (this.distance / this.targetDistance) * 100);
-                $('#distanceBar').css('width', distPct + '%');
+                const scorePct = Math.min(100, (this.score / this.targetScore) * 100);
+                $('#distanceBar').css('width', scorePct + '%');
+                $('#currentScore').text(this.score);
+                $('#targetScore').text(this.targetScore);
                 
                 $('#obstacleNum').text(this.obstacles.length);
 
                 const zones = ['荒原', '荒漠', '农田', '城市边缘', '河流', '湿地'];
-                const zoneIndex = Math.floor(distPct / 100 * (zones.length - 1));
+                const zoneIndex = Math.floor(scorePct / 100 * (zones.length - 1));
                 $('#currentZone').text(zones[Math.min(zoneIndex, zones.length - 1)]);
             },
 
@@ -695,7 +697,7 @@
             win: function() {
                 this.isRunning = false;
                 cancelAnimationFrame(this.animationId);
-                this.score += Math.floor(this.energy * 5 + 500);
+                this.score += Math.floor(this.energy * 3);
                 $('#winScore').text(this.score);
                 $('#winBirdName').text(`${this.currentBird.name}成功抵达！`);
                 $('#winEnergy').text(Math.floor(this.energy));
@@ -705,8 +707,8 @@
             gameOver: function(reason) {
                 this.isRunning = false;
                 cancelAnimationFrame(this.animationId);
-                const distPct = Math.min(100, Math.floor((this.distance / this.targetDistance) * 100));
-                $('#finalDistance').text(distPct + '%');
+                const scorePct = Math.min(100, Math.floor((this.score / this.targetScore) * 100));
+                $('#finalDistance').text(scorePct + '%');
                 $('#failReason').text(reason || '体力耗尽或撞到障碍物');
                 $('#finalScore').text(this.score);
                 $('#gameOverOverlay').show();
@@ -719,7 +721,7 @@
 
                 ctx.clearRect(0, 0, w, h);
 
-                const progress = this.distance / this.targetDistance;
+                const progress = this.score / this.targetScore;
                 
                 const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
                 skyGrad.addColorStop(0, this.lerpColor('#1a1a2e', '#37474F', progress));
