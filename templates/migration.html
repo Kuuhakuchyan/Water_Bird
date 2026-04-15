@@ -13,10 +13,10 @@
             position: absolute;
             top: 15px;
             left: 15px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.75);
             color: white;
-            padding: 10px 15px;
-            border-radius: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
             font-size: 13px;
             z-index: 10;
         }
@@ -24,28 +24,53 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 3px 0;
+            padding: 4px 0;
         }
         .stats-panel .stat-bar {
             width: 100px;
-            height: 8px;
+            height: 10px;
             background: #333;
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
         }
         .stats-panel .stat-fill {
             height: 100%;
-            border-radius: 4px;
+            border-radius: 5px;
             transition: width 0.3s;
+        }
+        .stats-panel .bird-info {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stats-panel .bird-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .stats-panel .bird-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .stats-panel .bird-ability {
+            font-size: 10px;
+            color: #aaa;
         }
         .progress-panel {
             position: absolute;
             top: 15px;
             right: 15px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.75);
             color: white;
-            padding: 10px 15px;
-            border-radius: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
             font-size: 13px;
             z-index: 10;
         }
@@ -55,9 +80,9 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px 20px;
+            gap: 12px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 25px;
             border-radius: 25px;
             z-index: 10;
         }
@@ -65,36 +90,60 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px 12px;
-            border-radius: 10px;
+            padding: 12px 16px;
+            border-radius: 15px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
             color: white;
-            font-size: 11px;
+            font-size: 12px;
+            min-width: 80px;
+            border: 2px solid transparent;
         }
         .bird-option:hover {
             background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
         }
         .bird-option.selected {
-            background: var(--c-aqua);
+            border-color: #FFD700;
+            background: rgba(255,215,0,0.2);
         }
         .bird-option .icon {
-            font-size: 18px;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .bird-option .name {
+            font-weight: bold;
             margin-bottom: 3px;
+        }
+        .bird-option .stats {
+            font-size: 10px;
+            color: #aaa;
+            text-align: center;
         }
         .distance-bar {
             width: 150px;
-            height: 10px;
+            height: 12px;
             background: #333;
-            border-radius: 5px;
+            border-radius: 6px;
             margin-top: 5px;
             overflow: hidden;
         }
         .distance-fill {
             height: 100%;
-            background: linear-gradient(90deg, #87CEEB, #8B4513, #228B22);
-            border-radius: 5px;
+            background: linear-gradient(90deg, #37474F, #607D8B, #87CEEB, #8B4513, #228B22);
+            border-radius: 6px;
             transition: width 0.5s;
+        }
+        .obstacle-count {
+            position: absolute;
+            top: 85px;
+            left: 15px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 10;
         }
     </style>
 </head>
@@ -115,7 +164,7 @@
         <div class="canvas-container" id="canvasContainer">
             <canvas id="gameCanvas" class="game-canvas"></canvas>
             
-            <div class="stats-panel">
+            <div class="stats-panel" id="statsPanel" style="display: none;">
                 <div class="stat-item">
                     <i class="fas fa-bolt" style="color: #FFD700;"></i>
                     <span>体力</span>
@@ -123,37 +172,65 @@
                         <div class="stat-fill" id="energyBar" style="width: 100%; background: #FFD700;"></div>
                     </div>
                 </div>
+                <div class="bird-info" id="birdInfo">
+                    <div class="bird-icon" id="birdIcon" style="background: #fff;"></div>
+                    <div>
+                        <div class="bird-name" id="birdName">白天鹅</div>
+                        <div class="bird-ability" id="birdAbility">速度: 中 | 体力: 高</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="progress-panel">
+            <div class="progress-panel" id="progressPanel" style="display: none;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-map-marker-alt" style="color: #E74C3C;"></i>
+                    <i class="fas fa-route" style="color: #4CAF50;"></i>
                     <span>迁徙进度</span>
                 </div>
                 <div class="distance-bar">
                     <div class="distance-fill" id="distanceBar" style="width: 0%;"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px;">
-                    <span>北方</span>
-                    <span>黄河湿地</span>
+                    <span style="color: #90CAF9;">北方</span>
+                    <span style="color: #A5D6A7;" id="currentZone">荒原</span>
+                    <span style="color: #A5D6A7;">黄河湿地</span>
                 </div>
             </div>
 
+            <div class="obstacle-count" id="obstacleCount" style="display: none;">
+                <i class="fas fa-exclamation-triangle" style="color: #FF5722;"></i>
+                障碍: <span id="obstacleNum">0</span>
+            </div>
+
             <div class="bird-selector" id="birdSelector">
-                <!-- 由JS生成 -->
+                <div class="bird-option selected" data-index="0" onclick="migrationGame.selectBird(0)">
+                    <i class="fas fa-feather-alt" style="color: #FFFFFF;"></i>
+                    <span class="name">白天鹅</span>
+                    <span class="stats">速度: 中<br>体力: 充足<br>灵活: 中</span>
+                </div>
+                <div class="bird-option" data-index="1" onclick="migrationGame.selectBird(1)">
+                    <i class="fas fa-crane" style="color: #F5F5F5;"></i>
+                    <span class="name">丹顶鹤</span>
+                    <span class="stats">速度: 快<br>体力: 中<br>灵活: 高</span>
+                </div>
+                <div class="bird-option" data-index="2" onclick="migrationGame.selectBird(2)">
+                    <i class="fas fa-bird" style="color: #8B7355;"></i>
+                    <span class="name">大雁</span>
+                    <span class="stats">速度: 中<br>体力: 充沛<br>灵活: 低</span>
+                </div>
+                <div class="bird-option" data-index="3" onclick="migrationGame.selectBird(3)">
+                    <i class="fas fa-wind" style="color: #E8E8E8;"></i>
+                    <span class="name">海鸥</span>
+                    <span class="stats">速度: 最快<br>体力: 较低<br>灵活: 高</span>
+                </div>
             </div>
 
             <div class="game-overlay" id="startOverlay">
                 <h2>候鸟迁徙记</h2>
-                <p>从北方飞往黄河湿地</p>
-                
-                <div style="margin: 15px 0;">
-                    <p style="font-size: 13px; color: #666; margin-bottom: 8px;">选择候鸟：</p>
-                    <div id="birdOptions" style="display: flex; gap: 10px; justify-content: center;"></div>
-                </div>
+                <p style="color: #666; margin: 10px 0;">从北方飞往黄河湿地，躲避危险，收集食物</p>
                 
                 <div style="text-align: left; margin: 15px 20px; font-size: 12px; color: #666;">
-                    <p><i class="fas fa-keyboard" style="color: var(--c-aqua);"></i> 方向键/WSAD 飞行</p>
+                    <p><i class="fas fa-hand-pointer" style="color: var(--c-aqua);"></i> 点击选择候鸟，每种有不同的能力</p>
+                    <p><i class="fas fa-keyboard" style="color: var(--c-aqua);"></i> 方向键/WSAD 控制飞行，空格加速</p>
                     <p><i class="fas fa-utensils" style="color: #4CAF50;"></i> 收集食物补充体力</p>
                     <p><i class="fas fa-exclamation-triangle" style="color: #FF5722;"></i> 躲避障碍物</p>
                 </div>
@@ -165,14 +242,15 @@
             <div class="game-overlay" id="winOverlay" style="display: none;">
                 <div style="text-align: center;">
                     <h2 style="color: #4CAF50;"><i class="fas fa-home"></i> 抵达黄河湿地!</h2>
-                    <p style="font-size: 36px; margin: 15px 0;">
+                    <p style="font-size: 24px; margin: 10px 0;">
                         <i class="fas fa-star" style="color: #FFD700;"></i>
                         <span id="winScore">0</span>
                         <i class="fas fa-star" style="color: #FFD700;"></i>
                     </p>
+                    <p id="winBirdName" style="font-size: 18px; color: #8b4513;"></p>
                     <p>成功完成迁徙之旅!</p>
                     <p style="margin-top: 10px; color: #888;">
-                        <span id="winBirds">0</span> 只候鸟安全抵达
+                        剩余体力: <span id="winEnergy">0</span>%
                     </p>
                     <button class="start-btn" style="margin-top: 20px;" onclick="migrationGame.restart()">
                         <i class="fas fa-redo"></i> 再来一局
@@ -183,9 +261,9 @@
             <div class="game-overlay" id="gameOverOverlay" style="display: none;">
                 <div class="game-over-content">
                     <h2>迁徙失败</h2>
-                    <p style="font-size: 36px; margin: 15px 0;" id="finalDistance">0%</p>
-                    <p>体力耗尽或撞到障碍物</p>
-                    <p style="margin: 10px 0; font-size: 13px; color: #888;">
+                    <p style="font-size: 24px; margin: 10px 0;" id="finalDistance">0%</p>
+                    <p id="failReason" style="font-size: 13px; color: #888;"></p>
+                    <p style="margin: 10px 0; font-size: 13px;">
                         得分: <span id="finalScore">0</span>
                     </p>
                     <button class="start-btn" style="margin-top: 15px;" onclick="migrationGame.restart()">
@@ -197,26 +275,29 @@
 
         <div class="glass-panel" style="margin-top: 15px; text-align: center;">
             <h4 style="color: var(--c-dark); margin-bottom: 10px;">
-                <i class="fas fa-info-circle" style="color: var(--c-aqua);"></i> 迁徙目标
+                <i class="fas fa-info-circle" style="color: var(--c-aqua);"></i> 候鸟能力说明
             </h4>
             <p style="color: #666; font-size: 13px; line-height: 1.8;">
-                从北方飞往黄河湿地，躲避风力发电机、城市建筑、猎人和渔网<br>
-                收集食物补充体力，选择不同的候鸟有不同的能力！
+                <strong>白天鹅</strong>：平衡型，体力充足，适合新手<br>
+                <strong>丹顶鹤</strong>：速度快又灵活，但体力消耗较快<br>
+                <strong>大雁</strong>：体力充沛续航久，但转向较慢<br>
+                <strong>海鸥</strong>：极速型，灵活敏捷，但体力最少
             </p>
         </div>
     </div>
 
     <script>
-        // 候鸟配置
         const birdTypes = [
             {
                 id: 'swan',
                 name: '白天鹅',
                 icon: 'fa-feather-alt',
                 color: '#FFFFFF',
-                speed: 3.5,
-                energy: 100,
-                agility: 4,
+                speed: 2.5,
+                maxSpeed: 5,
+                energy: 120,
+                agility: 0.4,
+                boostCost: 8,
                 desc: '速度中等，体力充足'
             },
             {
@@ -224,9 +305,11 @@
                 name: '丹顶鹤',
                 icon: 'fa-crane',
                 color: '#F5F5F5',
-                speed: 4.5,
-                energy: 80,
-                agility: 5,
+                speed: 3,
+                maxSpeed: 6.5,
+                energy: 90,
+                agility: 0.55,
+                boostCost: 6,
                 desc: '速度快，灵活敏捷'
             },
             {
@@ -234,9 +317,11 @@
                 name: '大雁',
                 icon: 'fa-bird',
                 color: '#8B7355',
-                speed: 4,
-                energy: 120,
-                agility: 3,
+                speed: 2.8,
+                maxSpeed: 4.5,
+                energy: 150,
+                agility: 0.25,
+                boostCost: 10,
                 desc: '体力充沛，适合长途'
             },
             {
@@ -244,9 +329,11 @@
                 name: '海鸥',
                 icon: 'fa-wind',
                 color: '#E8E8E8',
-                speed: 5,
+                speed: 3.5,
+                maxSpeed: 7,
                 energy: 70,
-                agility: 5,
+                agility: 0.65,
+                boostCost: 5,
                 desc: '速度最快，但体力较低'
             }
         ];
@@ -257,7 +344,7 @@
             isRunning: false,
             score: 0,
             distance: 0,
-            targetDistance: 1000,
+            targetDistance: 3000,
             energy: 100,
             currentBird: null,
             frameCount: 0,
@@ -267,7 +354,9 @@
             particles: [],
             animationId: null,
             keys: {},
-            currentType: 0,
+            selectedBirdIndex: 0,
+            boosting: false,
+            autoForward: 0,
 
             init: function() {
                 this.canvas = document.getElementById('gameCanvas');
@@ -275,13 +364,18 @@
                 this.resizeCanvas();
                 window.addEventListener('resize', () => this.resizeCanvas());
 
-                this.renderBirdSelector();
-
                 document.addEventListener('keydown', (e) => {
                     this.keys[e.code] = true;
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.boosting = true;
+                    }
                 });
                 document.addEventListener('keyup', (e) => {
                     this.keys[e.code] = false;
+                    if (e.code === 'Space') {
+                        this.boosting = false;
+                    }
                 });
 
                 this.drawStaticScene();
@@ -293,30 +387,21 @@
                 this.canvas.height = container.clientHeight;
             },
 
-            renderBirdSelector: function() {
-                const container = $('#birdOptions');
-                container.empty();
-                
-                birdTypes.forEach((bird, index) => {
-                    const cls = index === this.currentType ? 'selected' : '';
-                    container.append(`
-                        <div class="bird-option ${cls}" onclick="migrationGame.selectBird(${index})">
-                            <i class="fas ${bird.icon}" style="color: ${bird.color};"></i>
-                            <span>${bird.name}</span>
-                        </div>
-                    `);
-                });
-            },
-
             selectBird: function(index) {
-                this.currentType = index;
-                this.renderBirdSelector();
+                this.selectedBirdIndex = index;
+                document.querySelectorAll('.bird-option').forEach((el, i) => {
+                    el.classList.toggle('selected', i === index);
+                });
             },
 
             start: function() {
                 $('#startOverlay').hide();
                 $('#gameOverOverlay').hide();
                 $('#winOverlay').hide();
+                $('#birdSelector').hide();
+                $('#statsPanel').show();
+                $('#progressPanel').show();
+                $('#obstacleCount').show();
 
                 this.isRunning = true;
                 this.score = 0;
@@ -325,17 +410,16 @@
                 this.obstacles = [];
                 this.foods = [];
                 this.particles = [];
+                this.boosting = false;
+                this.autoForward = 0;
 
-                const birdConfig = birdTypes[this.currentType];
-                this.energy = birdConfig.energy;
+                const birdConfig = birdTypes[this.selectedBirdIndex];
                 this.currentBird = birdConfig;
+                this.energy = birdConfig.energy;
 
-                // 初始化候鸟
                 this.bird = {
                     x: 100,
                     y: this.canvas.height / 2,
-                    width: 50,
-                    height: 30,
                     vx: 0,
                     vy: 0,
                     wingPhase: 0,
@@ -343,10 +427,12 @@
                 };
 
                 this.updateUI();
+                this.updateBirdInfo();
                 this.gameLoop();
             },
 
             restart: function() {
+                $('#birdSelector').show();
                 this.start();
             },
 
@@ -356,7 +442,6 @@
                 this.update();
                 this.draw();
                 this.animationId = requestAnimationFrame(() => this.gameLoop());
-
                 this.frameCount++;
             },
 
@@ -364,137 +449,149 @@
                 const bird = this.bird;
                 const cfg = this.currentBird;
 
-                // 键盘控制
-                let ax = 0, ay = 0;
-                if (this.keys['ArrowLeft'] || this.keys['KeyA']) ax -= cfg.agility;
-                if (this.keys['ArrowRight'] || this.keys['KeyD']) ax += cfg.agility;
-                if (this.keys['ArrowUp'] || this.keys['KeyW']) ay -= cfg.agility;
-                if (this.keys['ArrowDown'] || this.keys['KeyS']) ay += cfg.agility;
+                const ax = this.keys['ArrowLeft'] || this.keys['KeyA'] ? -1 :
+                           this.keys['ArrowRight'] || this.keys['KeyD'] ? 1 : 0;
+                const ay = this.keys['ArrowUp'] || this.keys['KeyW'] ? -1 :
+                           this.keys['ArrowDown'] || this.keys['KeyS'] ? 1 : 0;
 
-                bird.vx += ax * 0.5;
-                bird.vy += ay * 0.5;
+                bird.vx += ax * cfg.agility;
+                bird.vy += ay * cfg.agility;
 
-                // 阻力
-                bird.vx *= 0.92;
-                bird.vy *= 0.92;
+                bird.vx *= 0.88;
+                bird.vy *= 0.88;
+
+                const boostActive = this.boosting && this.energy > 0;
+                const baseSpeed = cfg.speed;
+                const forwardBoost = boostActive ? cfg.maxSpeed - cfg.speed : 0;
+
+                bird.vx = Math.max(-cfg.maxSpeed * 0.5, Math.min(cfg.maxSpeed * 0.5, bird.vx));
+                bird.vy = Math.max(-cfg.maxSpeed * 0.5, Math.min(cfg.maxSpeed * 0.5, bird.vy));
+
+                const actualForward = baseSpeed + forwardBoost + this.autoForward * 0.3;
+                this.distance += Math.max(0, actualForward);
 
                 bird.x += bird.vx;
                 bird.y += bird.vy;
 
-                // 边界
-                bird.x = Math.max(50, Math.min(this.canvas.width - 50, bird.x));
-                bird.y = Math.max(50, Math.min(this.canvas.height - 50, bird.y));
+                const margin = 40;
+                bird.x = Math.max(margin, Math.min(this.canvas.width - margin, bird.x));
+                bird.y = Math.max(margin, Math.min(this.canvas.height - margin, bird.y));
 
-                // 速度影响距离
-                const forwardSpeed = bird.vx + cfg.speed;
-                this.distance += Math.max(0, forwardSpeed * 0.1);
-
-                // 体力消耗
-                if (this.frameCount % 10 === 0) {
-                    this.energy -= 0.3 + Math.abs(bird.vy) * 0.05;
+                if (this.frameCount % 8 === 0) {
+                    this.energy -= 0.2;
+                    if (boostActive) this.energy -= 0.3;
+                    if (Math.abs(bird.vy) > 2) this.energy -= 0.1;
                 }
 
-                // 检查胜利/失败
                 if (this.distance >= this.targetDistance) {
                     this.win();
                     return;
                 }
                 if (this.energy <= 0) {
-                    this.gameOver();
+                    this.gameOver('体力耗尽');
                     return;
                 }
 
-                // 翅膀动画
-                bird.wingPhase += 0.3;
+                bird.wingPhase += boostActive ? 0.5 : 0.25;
 
-                // 尾迹
-                if (this.frameCount % 3 === 0) {
-                    bird.trail.push({ x: bird.x - 20, y: bird.y, alpha: 1 });
+                if (this.frameCount % 4 === 0) {
+                    bird.trail.push({ x: bird.x - 20, y: bird.y, alpha: 0.6, size: boostActive ? 4 : 2 });
                 }
                 bird.trail = bird.trail.filter(t => {
-                    t.alpha -= 0.05;
-                    t.x -= 2;
+                    t.alpha -= 0.03;
+                    t.x -= 1.5;
+                    t.size *= 0.98;
                     return t.alpha > 0;
                 });
 
-                // 生成障碍物
-                if (this.frameCount % 60 === 0) {
-                    this.spawnObstacle();
-                }
+                if (this.frameCount % 50 === 0) this.spawnObstacle();
+                if (this.frameCount % 30 === 0) this.spawnFood();
 
-                // 生成食物
-                if (this.frameCount % 40 === 0) {
-                    this.spawnFood();
-                }
+                const scrollSpeed = actualForward * 0.8;
 
-                // 更新障碍物
                 this.obstacles.forEach(obs => {
-                    obs.x -= cfg.speed + 1;
-                    obs.windPhase += obs.windSpeed;
+                    obs.x -= scrollSpeed;
+                    if (obs.type === 'turbine') {
+                        obs.windPhase += 0.08;
+                    } else if (obs.type === 'hunter') {
+                        obs.aimX = bird.x;
+                        obs.aimY = bird.y;
+                    } else if (obs.type === 'net') {
+                        obs.swayPhase += 0.03;
+                    }
                 });
-                this.obstacles = this.obstacles.filter(obs => obs.x > -100);
+                this.obstacles = this.obstacles.filter(obs => obs.x > -150);
 
-                // 更新食物
                 this.foods.forEach(f => {
-                    f.x -= cfg.speed + 1;
-                    f.y += Math.sin(this.frameCount * 0.05 + f.phase) * 0.5;
-                    f.phase += 0.1;
+                    f.x -= scrollSpeed;
+                    f.y += Math.sin(this.frameCount * 0.03 + f.phase) * 0.8;
+                    f.phase += 0.05;
                 });
-                this.foods = this.foods.filter(f => f.x > -50);
+                this.foods = this.foods.filter(f => f.x > -50 && f.x < this.canvas.width + 50);
 
-                // 碰撞检测 - 障碍物
                 for (let obs of this.obstacles) {
                     if (this.checkCollision(bird, obs)) {
-                        this.energy -= 20;
-                        this.createParticles(bird.x, bird.y, '#FF5722', 10);
-                        bird.vx = -5;
-                        bird.vy = -3;
+                        this.energy -= 25;
+                        this.score -= 20;
+                        this.createParticles(bird.x, bird.y, '#FF5722', 12);
+                        bird.vx = -8;
+                        bird.vy = (Math.random() - 0.5) * 10;
+                        this.score = Math.max(0, this.score);
                     }
                 }
 
-                // 碰撞检测 - 食物
                 for (let i = this.foods.length - 1; i >= 0; i--) {
                     const f = this.foods[i];
-                    if (Math.hypot(bird.x - f.x, bird.y - f.y) < 40) {
-                        this.energy = Math.min(cfg.energy, this.energy + 15);
-                        this.score += 50;
+                    const dist = Math.hypot(bird.x - f.x, bird.y - f.y);
+                    if (dist < 45) {
+                        this.energy = Math.min(cfg.energy, this.energy + 12);
+                        this.score += 30;
                         this.createParticles(f.x, f.y, '#FFD700', 8);
                         this.foods.splice(i, 1);
                     }
                 }
 
+                this.score += Math.floor(actualForward * 0.5);
                 this.updateUI();
             },
 
             spawnObstacle: function() {
                 const types = ['turbine', 'building', 'hunter', 'net'];
-                const type = types[Math.floor(Math.random() * types.length)];
+                const weights = [0.3, 0.3, 0.2, 0.2];
+                let r = Math.random();
+                let type = types[0];
+                let cum = 0;
+                for (let i = 0; i < types.length; i++) {
+                    cum += weights[i];
+                    if (r < cum) { type = types[i]; break; }
+                }
                 
+                const margin = 80;
                 let obs = {
-                    x: this.canvas.width + 50,
-                    type: type,
-                    windPhase: 0,
-                    windSpeed: 0.05
+                    x: this.canvas.width + 60,
+                    y: margin + Math.random() * (this.canvas.height - margin * 2),
+                    type: type
                 };
 
                 if (type === 'turbine') {
-                    obs.y = 80 + Math.random() * (this.canvas.height - 200);
+                    obs.y = 100 + Math.random() * (this.canvas.height - 250);
                     obs.width = 80;
                     obs.height = 200;
+                    obs.windPhase = Math.random() * Math.PI * 2;
                 } else if (type === 'building') {
-                    obs.y = this.canvas.height - 100 - Math.random() * 150;
-                    obs.width = 60 + Math.random() * 40;
-                    obs.height = 100 + Math.random() * 150;
+                    obs.y = this.canvas.height - 80 - Math.random() * 120;
+                    obs.width = 55 + Math.random() * 35;
+                    obs.height = 80 + Math.random() * 120;
                 } else if (type === 'hunter') {
-                    obs.y = 50 + Math.random() * (this.canvas.height - 150);
                     obs.width = 40;
                     obs.height = 40;
-                    obs.bulletTimer = 0;
+                    obs.aimX = 0;
+                    obs.aimY = 0;
                 } else {
                     obs.y = 100 + Math.random() * (this.canvas.height - 250);
-                    obs.width = 100;
-                    obs.height = 80;
-                    obs.swayOffset = Math.random() * Math.PI * 2;
+                    obs.width = 90;
+                    obs.height = 70;
+                    obs.swayPhase = Math.random() * Math.PI * 2;
                 }
 
                 this.obstacles.push(obs);
@@ -502,10 +599,11 @@
 
             spawnFood: function() {
                 const types = ['fish', 'berry', 'seed'];
+                const t = types[Math.floor(Math.random() * types.length)];
                 this.foods.push({
-                    x: this.canvas.width + 20,
-                    y: 50 + Math.random() * (this.canvas.height - 100),
-                    type: types[Math.floor(Math.random() * types.length)],
+                    x: this.canvas.width + 30,
+                    y: 60 + Math.random() * (this.canvas.height - 120),
+                    type: t,
                     phase: Math.random() * Math.PI * 2
                 });
             },
@@ -513,89 +611,103 @@
             checkCollision: function(bird, obs) {
                 const bx = bird.x;
                 const by = bird.y;
-                const br = 20;
+                const br = 18;
 
                 if (obs.type === 'turbine') {
-                    // 风机叶片旋转
-                    const bladeAngle = obs.windPhase % (Math.PI * 2);
-                    const bladeLength = 80;
+                    const bladeAngle = obs.windPhase;
+                    const bladeLen = 70;
                     const cx = obs.x;
                     const cy = obs.y;
-
                     for (let i = 0; i < 3; i++) {
                         const angle = bladeAngle + (i * Math.PI * 2 / 3);
-                        const tipX = cx + Math.cos(angle) * bladeLength;
-                        const tipY = cy + Math.sin(angle) * bladeLength;
-                        
-                        if (this.pointToLineDistance(bx, by, cx, cy, tipX, tipY) < br + 5) {
-                            return true;
-                        }
+                        const tipX = cx + Math.cos(angle) * bladeLen;
+                        const tipY = cy + Math.sin(angle) * bladeLen;
+                        if (this.pointToLineDistance(bx, by, cx, cy, tipX, tipY) < br + 4) return true;
                     }
-                    return Math.hypot(bx - cx, by - cy) < br + 30;
+                    return Math.hypot(bx - cx, by - cy) < br + 25;
                 }
 
-                // 矩形碰撞
+                if (obs.type === 'hunter') {
+                    const dist = Math.hypot(bx - obs.x - 20, by - obs.y - 20);
+                    return dist < br + 18;
+                }
+
+                if (obs.type === 'net') {
+                    const sway = Math.sin(obs.swayPhase) * 8;
+                    const closestX = Math.max(obs.x + sway, Math.min(bx, obs.x + obs.width + sway));
+                    const closestY = Math.max(obs.y, Math.min(by, obs.y + obs.height));
+                    return Math.hypot(bx - closestX, by - closestY) < br;
+                }
+
                 const closestX = Math.max(obs.x, Math.min(bx, obs.x + obs.width));
                 const closestY = Math.max(obs.y, Math.min(by, obs.y + obs.height));
                 return Math.hypot(bx - closestX, by - closestY) < br;
-
-                return false;
             },
 
             pointToLineDistance: function(px, py, x1, y1, x2, y2) {
-                const A = px - x1;
-                const B = py - y1;
-                const C = x2 - x1;
-                const D = y2 - y1;
+                const A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
                 const dot = A * C + B * D;
                 const lenSq = C * C + D * D;
-                let param = -1;
-                if (lenSq !== 0) param = dot / lenSq;
-
+                let param = lenSq !== 0 ? dot / lenSq : -1;
                 let xx, yy;
                 if (param < 0) { xx = x1; yy = y1; }
                 else if (param > 1) { xx = x2; yy = y2; }
                 else { xx = x1 + param * C; yy = y1 + param * D; }
-
                 return Math.hypot(px - xx, py - yy);
             },
 
             createParticles: function(x, y, color, count) {
                 for (let i = 0; i < count; i++) {
                     this.particles.push({
-                        x: x,
-                        y: y,
-                        vx: (Math.random() - 0.5) * 8,
-                        vy: (Math.random() - 0.5) * 8,
+                        x, y,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
                         life: 1,
-                        color: color
+                        color
                     });
                 }
             },
 
             updateUI: function() {
                 const pct = Math.min(100, (this.energy / this.currentBird.energy) * 100);
-                $('#energyBar').css('width', pct + '%');
-                $('#energyBar').css('background', pct < 30 ? '#FF5722' : '#FFD700');
+                const bar = $('#energyBar');
+                bar.css('width', pct + '%');
+                bar.css('background', pct < 25 ? '#F44336' : pct < 50 ? '#FF9800' : '#FFD700');
                 
-                const distPct = (this.distance / this.targetDistance) * 100;
+                const distPct = Math.min(100, (this.distance / this.targetDistance) * 100);
                 $('#distanceBar').css('width', distPct + '%');
+                
+                $('#obstacleNum').text(this.obstacles.length);
+
+                const zones = ['荒原', '荒漠', '农田', '城市边缘', '河流', '湿地'];
+                const zoneIndex = Math.floor(distPct / 100 * (zones.length - 1));
+                $('#currentZone').text(zones[Math.min(zoneIndex, zones.length - 1)]);
+            },
+
+            updateBirdInfo: function() {
+                const cfg = this.currentBird;
+                $('#birdIcon').html(`<i class="fas ${cfg.icon}" style="color:${cfg.color}; font-size:18px;"></i>`);
+                $('#birdIcon').css('background', cfg.color === '#FFFFFF' ? '#f0f0f0' : cfg.color);
+                $('#birdName').text(cfg.name);
+                $('#birdAbility').text(`速度:${Math.round(cfg.speed*10)/10} 体力:${cfg.energy}`);
             },
 
             win: function() {
                 this.isRunning = false;
                 cancelAnimationFrame(this.animationId);
-                this.score += Math.floor(this.energy * 10);
+                this.score += Math.floor(this.energy * 5 + 500);
                 $('#winScore').text(this.score);
-                $('#winBirds').text(1);
+                $('#winBirdName').text(`${this.currentBird.name}成功抵达！`);
+                $('#winEnergy').text(Math.floor(this.energy));
                 $('#winOverlay').show();
             },
 
-            gameOver: function() {
+            gameOver: function(reason) {
                 this.isRunning = false;
                 cancelAnimationFrame(this.animationId);
-                const distPct = Math.floor((this.distance / this.targetDistance) * 100);
+                const distPct = Math.min(100, Math.floor((this.distance / this.targetDistance) * 100));
                 $('#finalDistance').text(distPct + '%');
+                $('#failReason').text(reason || '体力耗尽或撞到障碍物');
                 $('#finalScore').text(this.score);
                 $('#gameOverOverlay').show();
             },
@@ -607,263 +719,270 @@
 
                 ctx.clearRect(0, 0, w, h);
 
-                // 天空渐变 - 根据距离变化
                 const progress = this.distance / this.targetDistance;
+                
                 const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-                skyGrad.addColorStop(0, this.lerpColor('#1a1a2e', '#87CEEB', progress));
-                skyGrad.addColorStop(1, this.lerpColor('#16213e', '#B0E0E6', progress));
+                skyGrad.addColorStop(0, this.lerpColor('#1a1a2e', '#37474F', progress));
+                skyGrad.addColorStop(0.3, this.lerpColor('#16213e', '#607D8B', progress));
+                skyGrad.addColorStop(0.6, this.lerpColor('#0f3460', '#87CEEB', progress));
+                skyGrad.addColorStop(1, this.lerpColor('#1a1a2e', '#228B22', progress));
                 ctx.fillStyle = skyGrad;
                 ctx.fillRect(0, 0, w, h);
 
-                // 云朵
-                this.drawClouds(ctx, w, h);
-
-                // 背景地形
+                this.drawClouds(ctx, w, h, progress);
                 this.drawTerrain(ctx, w, h, progress);
-
-                // 障碍物
                 this.obstacles.forEach(obs => this.drawObstacle(ctx, obs));
-
-                // 食物
                 this.foods.forEach(f => this.drawFood(ctx, f));
 
-                // 粒子
-                this.particles.forEach((p, i) => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life -= 0.03;
+                this.particles = this.particles.filter(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    p.vx *= 0.95; p.vy *= 0.95;
+                    p.life -= 0.04;
                     if (p.life > 0) {
-                        ctx.fillStyle = p.color;
                         ctx.globalAlpha = p.life;
+                        ctx.fillStyle = p.color;
                         ctx.beginPath();
-                        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                        ctx.arc(p.x, p.y, 3 * p.life, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.globalAlpha = 1;
                     }
+                    return p.life > 0;
                 });
-                this.particles = this.particles.filter(p => p.life > 0);
 
-                // 候鸟
-                if (this.bird) {
-                    this.drawBird(ctx, this.bird);
-                }
+                if (this.bird) this.drawBird(ctx, this.bird);
             },
 
-            lerpColor: function(color1, color2, t) {
-                const c1 = this.hexToRgb(color1);
-                const c2 = this.hexToRgb(color2);
-                const r = Math.round(c1.r + (c2.r - c1.r) * t);
-                const g = Math.round(c1.g + (c2.g - c1.g) * t);
-                const b = Math.round(c1.b + (c2.b - c1.b) * t);
-                return `rgb(${r},${g},${b})`;
+            lerpColor: function(c1, c2, t) {
+                const a = this.hexToRgb(c1), b = this.hexToRgb(c2);
+                const r = Math.round(a.r + (b.r - a.r) * t);
+                const g = Math.round(a.g + (b.g - a.g) * t);
+                const bl = Math.round(a.b + (b.b - a.b) * t);
+                return `rgb(${r},${g},${bl})`;
             },
 
             hexToRgb: function(hex) {
-                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return result ? {
-                    r: parseInt(result[1], 16),
-                    g: parseInt(result[2], 16),
-                    b: parseInt(result[3], 16)
-                } : {r: 0, g: 0, b: 0};
+                const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return r ? {r: parseInt(r[1],16), g: parseInt(r[2],16), b: parseInt(r[3],16)} : {r:0,g:0,b:0};
             },
 
-            drawClouds: function(ctx, w, h) {
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                for (let i = 0; i < 5; i++) {
-                    const x = ((this.frameCount * 0.3 + i * 200) % (w + 200)) - 100;
-                    const y = 50 + i * 30;
+            drawClouds: function(ctx, w, h, progress) {
+                ctx.fillStyle = `rgba(255,255,255,${0.15 + progress * 0.15})`;
+                for (let i = 0; i < 6; i++) {
+                    const x = ((this.frameCount * 0.5 + i * 180) % (w + 200)) - 100;
+                    const y = 40 + i * 25 + progress * 20;
                     ctx.beginPath();
-                    ctx.arc(x, y, 25, 0, Math.PI * 2);
-                    ctx.arc(x + 30, y - 10, 30, 0, Math.PI * 2);
-                    ctx.arc(x + 60, y, 25, 0, Math.PI * 2);
+                    ctx.arc(x, y, 22, 0, Math.PI * 2);
+                    ctx.arc(x + 28, y - 8, 28, 0, Math.PI * 2);
+                    ctx.arc(x + 56, y, 22, 0, Math.PI * 2);
                     ctx.fill();
                 }
             },
 
             drawTerrain: function(ctx, w, h, progress) {
-                // 地面
-                const groundColor = this.lerpColor('#2d3436', '#228B22', progress);
-                ctx.fillStyle = groundColor;
-                
+                const groundColors = ['#37474F', '#5D4037', '#8D6E63', '#795548', '#4E342E', '#33691E'];
+                const gc = groundColors[Math.min(Math.floor(progress * groundColors.length), groundColors.length - 1)];
+                ctx.fillStyle = gc;
                 ctx.beginPath();
                 ctx.moveTo(0, h);
-                for (let x = 0; x <= w; x += 50) {
-                    const y = h - 50 + Math.sin(x * 0.02) * 20;
-                    ctx.lineTo(x, y);
+                for (let x = 0; x <= w; x += 40) {
+                    const baseY = h - 60 + progress * 30;
+                    ctx.lineTo(x, baseY + Math.sin(x * 0.015 + this.frameCount * 0.01) * 15);
                 }
                 ctx.lineTo(w, h);
                 ctx.closePath();
                 ctx.fill();
 
-                // 迁徙路线指示
-                ctx.strokeStyle = 'rgba(255,215,0,0.3)';
-                ctx.setLineDash([10, 10]);
+                if (progress > 0.3) {
+                    ctx.fillStyle = 'rgba(30,144,255,0.2)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, h);
+                    for (let x = 0; x <= w; x += 40) {
+                        ctx.lineTo(x, h - 30 + Math.sin(x * 0.02 + this.frameCount * 0.015) * 8);
+                    }
+                    ctx.lineTo(w, h);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.strokeStyle = 'rgba(255,215,0,0.2)';
+                ctx.setLineDash([12, 12]);
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(50, h / 2);
-                ctx.lineTo(w - 50, h / 2);
+                ctx.moveTo(60, h * 0.5);
+                ctx.lineTo(w - 60, h * 0.5);
                 ctx.stroke();
                 ctx.setLineDash([]);
             },
 
             drawObstacle: function(ctx, obs) {
                 if (obs.type === 'turbine') {
-                    // 风机塔架
-                    ctx.fillStyle = '#E8E8E8';
-                    ctx.fillRect(obs.x - 5, obs.y, 10, 200);
-                    
-                    // 风机叶片
-                    ctx.strokeStyle = '#DDD';
-                    ctx.lineWidth = 4;
+                    ctx.fillStyle = '#CFD8DC';
+                    ctx.fillRect(obs.x - 4, obs.y, 8, 180);
                     for (let i = 0; i < 3; i++) {
                         const angle = obs.windPhase + (i * Math.PI * 2 / 3);
-                        const tipX = obs.x + Math.cos(angle) * 80;
-                        const tipY = obs.y + Math.sin(angle) * 80;
+                        const tipX = obs.x + Math.cos(angle) * 65;
+                        const tipY = obs.y + Math.sin(angle) * 65;
+                        ctx.strokeStyle = '#B0BEC5';
+                        ctx.lineWidth = 5;
                         ctx.beginPath();
                         ctx.moveTo(obs.x, obs.y);
                         ctx.lineTo(tipX, tipY);
                         ctx.stroke();
                     }
-                    
-                    // 中心圆
-                    ctx.fillStyle = '#AAA';
+                    ctx.fillStyle = '#78909C';
                     ctx.beginPath();
-                    ctx.arc(obs.x, obs.y, 8, 0, Math.PI * 2);
+                    ctx.arc(obs.x, obs.y, 7, 0, Math.PI * 2);
                     ctx.fill();
                 } else if (obs.type === 'building') {
-                    ctx.fillStyle = '#555';
+                    ctx.fillStyle = '#455A64';
                     ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                    ctx.fillStyle = '#FFD700';
-                    for (let i = 0; i < obs.width; i += 15) {
-                        for (let j = 0; j < obs.height; j += 20) {
-                            if (Math.random() > 0.5) {
-                                ctx.fillRect(obs.x + i + 3, obs.y + j + 3, 8, 12);
+                    ctx.fillStyle = '#FFC107';
+                    for (let i = 0; i < obs.width; i += 12) {
+                        for (let j = 0; j < obs.height; j += 15) {
+                            if (Math.sin(i + j + this.frameCount * 0.1) > 0) {
+                                ctx.fillRect(obs.x + i + 2, obs.y + j + 2, 6, 9);
                             }
                         }
                     }
                 } else if (obs.type === 'hunter') {
-                    // 猎人
-                    ctx.fillStyle = '#8B4513';
-                    ctx.fillRect(obs.x, obs.y + 20, 30, 20);
-                    ctx.fillStyle = '#FFE4C4';
+                    ctx.fillStyle = '#5D4037';
+                    ctx.fillRect(obs.x, obs.y + 15, 25, 18);
+                    ctx.fillStyle = '#FFCCBC';
                     ctx.beginPath();
-                    ctx.arc(obs.x + 15, obs.y + 10, 10, 0, Math.PI * 2);
+                    ctx.arc(obs.x + 12, obs.y + 8, 8, 0, Math.PI * 2);
                     ctx.fill();
-                    
-                    // 枪
-                    ctx.strokeStyle = '#333';
-                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#37474F';
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.moveTo(obs.x + 25, obs.y + 25);
-                    ctx.lineTo(obs.x + 50, obs.y + 20);
+                    ctx.moveTo(obs.x + 20, obs.y + 18);
+                    ctx.lineTo(obs.x + 40, obs.y + 15);
                     ctx.stroke();
+                    
+                    if (this.frameCount % 60 < 40) {
+                        ctx.strokeStyle = 'rgba(255,0,0,0.4)';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([4, 4]);
+                        ctx.beginPath();
+                        ctx.moveTo(obs.x + 40, obs.y + 15);
+                        ctx.lineTo(obs.aimX, obs.aimY);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
                 } else if (obs.type === 'net') {
-                    // 渔网
-                    const sway = Math.sin(obs.windPhase) * 10;
-                    ctx.strokeStyle = '#4A4A4A';
+                    const sway = Math.sin(obs.swayPhase) * 6;
+                    ctx.strokeStyle = '#546E7A';
                     ctx.lineWidth = 1;
-                    for (let i = 0; i < obs.width; i += 10) {
+                    for (let i = 0; i < obs.width; i += 12) {
                         ctx.beginPath();
                         ctx.moveTo(obs.x + i + sway, obs.y);
                         ctx.lineTo(obs.x + i - sway, obs.y + obs.height);
                         ctx.stroke();
                     }
-                    for (let j = 0; j < obs.height; j += 10) {
+                    for (let j = 0; j < obs.height; j += 12) {
                         ctx.beginPath();
                         ctx.moveTo(obs.x + sway, obs.y + j);
                         ctx.lineTo(obs.x + obs.width - sway, obs.y + j);
                         ctx.stroke();
                     }
-                    ctx.strokeStyle = '#333';
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#37474F';
+                    ctx.lineWidth = 3;
                     ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
                 }
             },
 
             drawFood: function(ctx, f) {
+                const bob = Math.sin(this.frameCount * 0.08 + f.phase) * 3;
                 if (f.type === 'fish') {
-                    ctx.fillStyle = '#1E90FF';
+                    ctx.fillStyle = '#1E88E5';
                     ctx.beginPath();
-                    ctx.ellipse(f.x, f.y, 15, 8, 0, 0, Math.PI * 2);
+                    ctx.ellipse(f.x, f.y + bob, 14, 7, 0, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.fillStyle = '#FFD700';
+                    ctx.fillStyle = '#FFC107';
                     ctx.beginPath();
-                    ctx.moveTo(f.x + 12, f.y);
-                    ctx.lineTo(f.x + 20, f.y - 5);
-                    ctx.lineTo(f.x + 20, f.y + 5);
+                    ctx.moveTo(f.x + 11, f.y + bob);
+                    ctx.lineTo(f.x + 18, f.y - 3 + bob);
+                    ctx.lineTo(f.x + 18, f.y + 3 + bob);
                     ctx.closePath();
                     ctx.fill();
                 } else if (f.type === 'berry') {
-                    ctx.fillStyle = '#DC143C';
+                    ctx.fillStyle = '#E53935';
                     ctx.beginPath();
-                    ctx.arc(f.x, f.y, 8, 0, Math.PI * 2);
+                    ctx.arc(f.x, f.y + bob, 7, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.fillStyle = '#228B22';
+                    ctx.fillStyle = '#43A047';
                     ctx.beginPath();
-                    ctx.ellipse(f.x, f.y - 10, 4, 6, 0, 0, Math.PI * 2);
+                    ctx.ellipse(f.x, f.y - 10 + bob, 4, 5, 0, 0, Math.PI * 2);
                     ctx.fill();
                 } else {
-                    ctx.fillStyle = '#DAA520';
+                    ctx.fillStyle = '#FDD835';
                     ctx.beginPath();
-                    ctx.ellipse(f.x, f.y, 6, 4, 0, 0, Math.PI * 2);
+                    ctx.ellipse(f.x, f.y + bob, 6, 4, 0, 0, Math.PI * 2);
                     ctx.fill();
                 }
             },
 
             drawBird: function(ctx, bird) {
                 const cfg = this.currentBird;
-                
-                // 尾迹
+
                 bird.trail.forEach(t => {
-                    ctx.fillStyle = `rgba(255,255,255,${t.alpha * 0.3})`;
+                    ctx.fillStyle = `rgba(255,255,255,${t.alpha * 0.4})`;
                     ctx.beginPath();
-                    ctx.arc(t.x, t.y, 3, 0, Math.PI * 2);
+                    ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
                     ctx.fill();
                 });
 
                 ctx.save();
                 ctx.translate(bird.x, bird.y);
 
-                // 身体
-                ctx.fillStyle = cfg.color;
+                const tiltX = Math.min(0.4, Math.max(-0.4, bird.vx * 0.05));
+                ctx.rotate(tiltX);
+
+                const bodyColor = cfg.color === '#FFFFFF' ? '#F5F5F5' : cfg.color;
+                ctx.fillStyle = bodyColor;
                 ctx.beginPath();
-                ctx.ellipse(0, 0, 25, 12, 0, 0, Math.PI * 2);
+                ctx.ellipse(0, 0, 22, 11, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 头
                 ctx.beginPath();
-                ctx.arc(20, -3, 10, 0, Math.PI * 2);
+                ctx.arc(18, -2, 9, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 嘴巴
-                ctx.fillStyle = '#FFD700';
+                ctx.fillStyle = '#FFC107';
                 ctx.beginPath();
-                ctx.moveTo(28, -3);
-                ctx.lineTo(38, -2);
-                ctx.lineTo(28, 0);
+                ctx.moveTo(25, -2);
+                ctx.lineTo(34, -1);
+                ctx.lineTo(25, 1);
                 ctx.closePath();
                 ctx.fill();
 
-                // 翅膀
-                ctx.fillStyle = this.darkenColor(cfg.color, 20);
-                const wingY = Math.sin(bird.wingPhase) * 12;
+                const wingY = Math.sin(bird.wingPhase) * 10;
+                ctx.fillStyle = this.darkenColor(bodyColor, 30);
                 ctx.beginPath();
-                ctx.ellipse(-5, wingY, 20, 8, -0.2, 0, Math.PI * 2);
+                ctx.ellipse(-4, wingY, 16, 7, -0.2, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 眼睛
-                ctx.fillStyle = '#333';
+                if (this.boosting && this.energy > 0) {
+                    ctx.fillStyle = 'rgba(255,152,0,0.6)';
+                    ctx.beginPath();
+                    ctx.moveTo(-20, 0);
+                    ctx.lineTo(-35 - Math.random() * 10, -3);
+                    ctx.lineTo(-35 - Math.random() * 10, 3);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#263238';
                 ctx.beginPath();
-                ctx.arc(24, -5, 2, 0, Math.PI * 2);
+                ctx.arc(22, -4, 2.5, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 腿
-                ctx.strokeStyle = '#FFA500';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#FF8F00';
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.moveTo(-5, 10);
-                ctx.lineTo(-8, 18);
-                ctx.moveTo(5, 10);
-                ctx.lineTo(8, 18);
+                ctx.moveTo(-4, 9);
+                ctx.lineTo(-7, 16);
+                ctx.moveTo(4, 9);
+                ctx.lineTo(7, 16);
                 ctx.stroke();
 
                 ctx.restore();
@@ -871,7 +990,7 @@
 
             darkenColor: function(color, amount) {
                 const rgb = this.hexToRgb(color);
-                return `rgb(${Math.max(0, rgb.r - amount)},${Math.max(0, rgb.g - amount)},${Math.max(0, rgb.b - amount)})`;
+                return `rgb(${Math.max(0,rgb.r-amount)},${Math.max(0,rgb.g-amount)},${Math.max(0,rgb.b-amount)})`;
             },
 
             drawStaticScene: function() {
