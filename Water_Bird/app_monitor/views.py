@@ -267,6 +267,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
     queryset = Article.objects.filter(is_published=True)
     serializer_class = ArticleSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = None  # 禁用分页，确保前端分类筛选能看到所有文章
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
