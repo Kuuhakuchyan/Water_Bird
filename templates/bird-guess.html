@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>看图识鸟 | 黄河生态方舟</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="../static/app_monitor/css/games.css">
+    <style>
+        /* 鸟类图片映射 - 使用网络真实图片 */
+        .game-instruction {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <!-- 顶部导航 -->
+        <div class="game-header">
+            <div class="game-title">
+                <i class="fas fa-feather"></i>
+                看图识鸟
+            </div>
+            <div class="game-score">
+                <div class="score-item">
+                    <span class="score-label">得分</span>
+                    <span class="score-value" id="score">0</span>
+                </div>
+                <div class="score-item combo">
+                    <span class="score-label">连击</span>
+                    <span class="score-value" id="combo">0</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">题数</span>
+                    <span class="score-value"><span id="current">0</span>/<span id="total">10</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主游戏区域 -->
+        <div class="game-main">
+            <!-- 开始界面 -->
+            <div id="startScreen" class="start-screen glass-panel">
+                <div class="start-title">看图识鸟</div>
+                <div class="start-subtitle">
+                    通过图片识别湿地水鸟，考验你的鸟类知识！<br>
+                    答对+10分，连续答对3次额外+5分
+                </div>
+                <button class="start-btn" onclick="game.start()">
+                    <i class="fas fa-play"></i> 开始挑战
+                </button>
+                <div style="margin-top: 20px;">
+                    <a href="/" style="color: var(--c-aqua); text-decoration: none; font-size: 14px;">
+                        <i class="fas fa-arrow-left"></i> 返回首页
+                    </a>
+                </div>
+            </div>
+
+            <!-- 游戏进行中 -->
+            <div id="gameScreen" style="display: none; width: 100%;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+
+                <div class="bird-image-container" id="birdImageContainer">
+                    <img id="birdImage" src="" alt="请识别这只鸟">
+                </div>
+
+                <p class="game-instruction">这是什么鸟类？</p>
+
+                <div class="options-grid" id="optionsGrid">
+                    <!-- 选项按钮由JS生成 -->
+                </div>
+            </div>
+
+            <!-- 结果界面 -->
+            <div id="resultScreen" style="display: none; width: 100%;">
+                <div class="result-screen glass-panel">
+                    <div class="start-title">本轮结束</div>
+                    <div class="result-label">你的得分</div>
+                    <div class="result-score" id="finalScore">0</div>
+
+                    <div class="result-stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="correctCount" style="color: var(--c-green)">0</div>
+                            <div class="stat-label">答对</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="wrongCount" style="color: var(--c-red)">0</div>
+                            <div class="stat-label">答错</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="maxCombo" style="color: var(--c-orange)">0</div>
+                            <div class="stat-label">最高连击</div>
+                        </div>
+                    </div>
+
+                    <div class="review-list" id="reviewList">
+                        <!-- 答题回顾 -->
+                    </div>
+
+                    <button class="start-btn" onclick="game.restart()">
+                        <i class="fas fa-redo"></i> 再来一局
+                    </button>
+                    <a href="/" class="start-btn" style="display: inline-block; margin-top: 10px; text-decoration: none; background: linear-gradient(135deg, var(--c-dark), #1a252f);">
+                        <i class="fas fa-home"></i> 返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // 鸟类数据 - 包含中文名、拉丁名和图片URL
+        const BIRD_DATA = [
+            {
+                name: "丹顶鹤",
+                latin: "Grus japonensis",
+                image: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400&h=400&fit=crop",
+                protection: "国家一级保护"
+            },
+            {
+                name: "白天鹅",
+                latin: "Cygnus olor",
+                image: "https://images.unsplash.com/photo-1497206365907-f5e630693df0?w=400&h=400&fit=crop",
+                protection: "国家二级保护"
+            },
+            {
+                name: "东方白鹳",
+                latin: "Ciconia boyciana",
+                image: "https://images.unsplash.com/photo-1555169062-013468b47731?w=400&h=400&fit=crop",
+                protection: "国家一级保护"
+            },
+            {
+                name: "黑鹳",
+                latin: "Ciconia nigra",
+                image: "https://images.unsplash.com/photo-1549608276-5786777e6587?w=400&h=400&fit=crop",
+                protection: "国家一级保护"
+            },
+            {
+                name: "灰鹤",
+                latin: "Grus grus",
+                image: "https://images.unsplash.com/photo-1591375371043-34e159f3da31?w=400&h=400&fit=crop",
+                protection: "国家二级保护"
+            },
+            {
+                name: "白鹭",
+                latin: "Egretta garzetta",
+                image: "https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=400&h=400&fit=crop",
+                protection: "三有动物"
+            },
+            {
+                name: "苍鹭",
+                latin: "Ardea cinerea",
+                image: "https://images.unsplash.com/photo-1558362477-2f648e4fe5a5?w=400&h=400&fit=crop",
+                protection: "三有动物"
+            },
+            {
+                name: "绿头鸭",
+                latin: "Anas platyrhynchos",
+                image: "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=400&fit=crop",
+                protection: "三有动物"
+            },
+            {
+                name: "鸳鸯",
+                latin: "Aix galericulata",
+                image: "https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&h=400&fit=crop",
+                protection: "国家二级保护"
+            },
+            {
+                name: "鸬鹚",
+                latin: "Phalacrocorax carbo",
+                image: "https://images.unsplash.com/photo-1597055181449-56c9dddf6267?w=400&h=400&fit=crop",
+                protection: "三有动物"
+            },
+            {
+                name: "斑头雁",
+                latin: "Anser indicus",
+                image: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=400&h=400&fit=crop",
+                protection: "三有动物"
+            },
+            {
+                name: "豆雁",
+                latin: "Anser fabalis",
+                image: "https://images.unsplash.com/photo-1486022619714-338aa8ae1679?w=400&h=400&fit=crop",
+                protection: "三有动物"
+            },
+            {
+                name: "大天鹅",
+                latin: "Cygnus cygnus",
+                image: "https://images.unsplash.com/photo-1506477335437-0c4ed8c2ee7f?w=400&h=400&fit=crop",
+                protection: "国家二级保护"
+            },
+            {
+                name: "小天鹅",
+                latin: "Cygnus columbianus",
+                image: "https://images.unsplash.com/photo-1559715541-5daf8a0296d0?w=400&h=400&fit=crop",
+                protection: "国家二级保护"
+            },
+            {
+                name: "凤头麦鸡",
+                latin: "Vanellus vanellus",
+                image: "https://images.unsplash.com/photo-1558384062-612389d6d97e?w=400&h=400&fit=crop",
+                protection: "三有动物"
+            }
+        ];
+
+        const game = {
+            currentQuestion: 0,
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            correctCount: 0,
+            wrongCount: 0,
+            totalQuestions: 10,
+            questions: [],
+            answers: [],
+
+            start: function() {
+                // 随机选择题目
+                this.questions = this.shuffleArray([...BIRD_DATA]).slice(0, this.totalQuestions);
+                this.currentQuestion = 0;
+                this.score = 0;
+                this.combo = 0;
+                this.maxCombo = 0;
+                this.correctCount = 0;
+                this.wrongCount = 0;
+                this.answers = [];
+
+                $('#startScreen').hide();
+                $('#resultScreen').hide();
+                $('#gameScreen').show();
+
+                this.showQuestion();
+            },
+
+            restart: function() {
+                this.start();
+            },
+
+            shuffleArray: function(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            },
+
+            showQuestion: function() {
+                if (this.currentQuestion >= this.totalQuestions) {
+                    this.showResult();
+                    return;
+                }
+
+                const question = this.questions[this.currentQuestion];
+                const progress = (this.currentQuestion / this.totalQuestions) * 100;
+
+                // 更新进度
+                $('#progressFill').css('width', progress + '%');
+                $('#current').text(this.currentQuestion + 1);
+                $('#score').text(this.score);
+                $('#combo').text(this.combo);
+
+                // 显示图片
+                $('#birdImage').attr('src', question.image);
+                $('#birdImageContainer').removeClass('correct wrong');
+
+                // 生成选项
+                const options = this.generateOptions(question);
+                const optionsHtml = options.map((opt, index) =>
+                    `<button class="option-btn" onclick="game.selectAnswer('${opt.name}', this)">${opt.name}</button>`
+                ).join('');
+                $('#optionsGrid').html(optionsHtml);
+            },
+
+            generateOptions: function(correctBird) {
+                const options = [correctBird];
+                const otherBirds = BIRD_DATA.filter(b => b.name !== correctBird.name);
+                const shuffled = this.shuffleArray([...otherBirds]);
+
+                for (let i = 0; i < 3 && i < shuffled.length; i++) {
+                    options.push(shuffled[i]);
+                }
+
+                return this.shuffleArray(options);
+            },
+
+            selectAnswer: function(selectedName, btnElement) {
+                const question = this.questions[this.currentQuestion];
+                const isCorrect = selectedName === question.name;
+                const container = $('#birdImageContainer');
+                const buttons = $('.option-btn');
+
+                // 禁用所有按钮
+                buttons.attr('disabled', true);
+
+                // 标记正确和错误答案
+                buttons.each(function() {
+                    if ($(this).text() === question.name) {
+                        $(this).addClass('correct');
+                    }
+                });
+
+                if (isCorrect) {
+                    container.addClass('correct');
+                    this.score += 10;
+                    this.combo++;
+                    this.correctCount++;
+
+                    if (this.combo >= 3) {
+                        this.score += 5; // 连击奖励
+                        this.showComboEffect();
+                    }
+
+                    if (this.combo > this.maxCombo) {
+                        this.maxCombo = this.combo;
+                    }
+                } else {
+                    container.addClass('wrong');
+                    $(btnElement).addClass('wrong');
+                    this.combo = 0;
+                    this.wrongCount++;
+                }
+
+                // 记录答案
+                this.answers.push({
+                    bird: question,
+                    selected: selectedName,
+                    correct: isCorrect
+                });
+
+                // 更新显示
+                $('#score').text(this.score);
+                $('#combo').text(this.combo);
+
+                // 延迟进入下一题
+                setTimeout(() => {
+                    this.currentQuestion++;
+                    this.showQuestion();
+                }, 1200);
+            },
+
+            showComboEffect: function() {
+                // 创建连击特效
+                for (let i = 0; i < 5; i++) {
+                    const sparkle = $('<div class="sparkle"></div>');
+                    sparkle.css({
+                        left: (Math.random() * 100) + '%',
+                        top: (Math.random() * 100) + '%',
+                        background: ['gold', 'orange', 'yellow'][Math.floor(Math.random() * 3)]
+                    });
+                    $('#birdImageContainer').append(sparkle);
+                    setTimeout(() => sparkle.remove(), 600);
+                }
+            },
+
+            showResult: function() {
+                $('#gameScreen').hide();
+                $('#resultScreen').show();
+
+                $('#finalScore').text(this.score);
+                $('#correctCount').text(this.correctCount);
+                $('#wrongCount').text(this.wrongCount);
+                $('#maxCombo').text(this.maxCombo);
+
+                // 生成答题回顾
+                const reviewHtml = this.answers.map((ans, index) => {
+                    const iconClass = ans.correct ? 'correct' : 'wrong';
+                    const iconText = ans.correct ? '&#10003;' : '&#10007;';
+                    const selectedClass = ans.correct ? '' : 'style="color: var(--c-red)"';
+                    return `
+                        <div class="review-item">
+                            <div class="review-icon ${iconClass}">${iconText}</div>
+                            <div style="flex: 1">
+                                <div style="font-weight: 600">${ans.bird.name}</div>
+                                <div style="font-size: 12px; color: #666">
+                                    <span>你的选择: </span>
+                                    <span ${selectedClass}>${ans.selected}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                $('#reviewList').html(reviewHtml);
+
+                // 更新用户积分
+                this.updateScore();
+            },
+
+            updateScore: function() {
+                const token = localStorage.getItem('yb_token');
+                if (!token) return;
+
+                $.ajax({
+                    url: '/api/profiles/me/',
+                    method: 'GET',
+                    headers: { 'Authorization': 'Token ' + token },
+                    success: function(data) {
+                        const newScore = (data.score || 0) + game.score;
+                        $.ajax({
+                            url: '/api/profiles/me/',
+                            method: 'PATCH',
+                            headers: { 'Authorization': 'Token ' + token },
+                            contentType: 'application/json',
+                            data: JSON.stringify({ score: newScore }),
+                            error: function() {
+                                console.log('积分更新失败');
+                            }
+                        });
+                    }
+                });
+            }
+        };
+    </script>
+</body>
+</html>
