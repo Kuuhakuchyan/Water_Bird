@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科普文章 | 黄河生态方舟</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a2a3a 50%, #0d2137 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            padding: 12px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .nav-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: #5DD39E;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-links { display: flex; gap: 6px; }
+        .nav-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover { background: rgba(93,211,158,0.15); color: #5DD39E; }
+
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 200px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(93,211,158,0.15), transparent 70%);
+            pointer-events: none;
+        }
+        .hero h1 { font-size: 36px; color: #fff; margin-bottom: 10px; }
+        .hero p { font-size: 16px; color: rgba(255,255,255,0.6); max-width: 600px; margin: 0 auto; }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(93,211,158,0.15);
+            border: 1px solid rgba(93,211,158,0.3);
+            border-radius: 20px;
+            padding: 4px 16px;
+            font-size: 13px;
+            color: #5DD39E;
+            margin-bottom: 15px;
+        }
+
+        /* 分类标签 */
+        .filter-bar {
+            max-width: 1100px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-tag {
+            padding: 7px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .filter-tag:hover, .filter-tag.active {
+            background: rgba(93,211,158,0.2);
+            border-color: #5DD39E;
+            color: #5DD39E;
+        }
+
+        /* 置顶文章（大卡片） */
+        .featured-wrap {
+            max-width: 1100px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+        }
+        .featured-card {
+            display: flex;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .featured-card:hover {
+            border-color: rgba(93,211,158,0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .featured-img {
+            width: 380px;
+            min-height: 220px;
+            background: linear-gradient(135deg, #1a2a3a, #0d2137);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .featured-img i { font-size: 60px; color: rgba(93,211,158,0.3); }
+        .featured-body {
+            flex: 1;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .featured-cat {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            width: fit-content;
+        }
+        .cat-habitat { background: rgba(39,174,96,0.2); color: #27AE60; border: 1px solid rgba(39,174,96,0.3); }
+        .cat-species { background: rgba(155,89,182,0.2); color: #9B59B6; border: 1px solid rgba(155,89,182,0.3); }
+        .cat-knowledge { background: rgba(52,152,219,0.2); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+        .cat-news { background: rgba(243,156,18,0.2); color: #f39c12; border: 1px solid rgba(243,156,18,0.3); }
+        .featured-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        .featured-summary {
+            font-size: 14px;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.7;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .featured-meta {
+            font-size: 12px;
+            color: rgba(255,255,255,0.35);
+            display: flex;
+            gap: 16px;
+        }
+        .featured-meta span { display: flex; align-items: center; gap: 4px; }
+
+        /* 文章网格 */
+        .articles-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .article-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+        .article-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(93,211,158,0.35);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+        }
+        .card-img {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #1a2a3a, #0d2137);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-img i { font-size: 40px; color: rgba(93,211,158,0.25); }
+        .card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-summary {
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            line-height: 1.6;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .card-meta {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            display: flex;
+            gap: 12px;
+        }
+        .card-meta span { display: flex; align-items: center; gap: 3px; }
+
+        /* 详情弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #0d1b2a;
+            border: 1px solid rgba(93,211,158,0.2);
+            border-radius: 20px;
+            max-width: 760px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        .modal-close:hover { background: rgba(231,76,60,0.3); color: #fff; }
+        .modal-cover {
+            width: 100%;
+            height: 260px;
+            background: linear-gradient(135deg, #1a2a3a, #0d2137);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px 20px 0 0;
+        }
+        .modal-cover i { font-size: 70px; color: rgba(93,211,158,0.3); }
+        .modal-body { padding: 30px; }
+        .modal-cat { margin-bottom: 12px; }
+        .modal-title { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 16px; line-height: 1.3; }
+        .modal-meta { font-size: 12px; color: rgba(255,255,255,0.35); display: flex; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .modal-content-text {
+            font-size: 15px;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.9;
+        }
+        .modal-content-text p { margin-bottom: 16px; }
+        .modal-content-text h3 {
+            color: #5DD39E;
+            font-size: 17px;
+            margin: 20px 0 10px;
+            border-left: 3px solid #5DD39E;
+            padding-left: 10px;
+        }
+        .loading { text-align: center; padding: 60px; color: rgba(255,255,255,0.4); }
+        .loading i { font-size: 30px; animation: spin 1s linear infinite; color: #5DD39E; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/" class="nav-brand"><i class="fas fa-leaf"></i> 黄河生态方舟</a>
+    <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="/species/">物种百科</a>
+        <a href="/articles/" style="color:#5DD39E">科普文章</a>
+        <a href="/report/">观测上报</a>
+        <a href="/login/" id="navLogin"><i class="fas fa-sign-in-alt"></i> 登录</a>
+    </div>
+</nav>
+
+<div class="hero">
+    <div class="hero-badge"><i class="fas fa-book-open"></i> 黄河湿地生态科普</div>
+    <h1>科普文章</h1>
+    <p>了解黄河湿地生态系统，学习鸟类保护知识，关注保护动态</p>
+</div>
+
+<div class="filter-bar">
+    <button class="filter-tag active" data-cat="all">全部</button>
+    <button class="filter-tag" data-cat="habitat">栖息地保护</button>
+    <button class="filter-tag" data-cat="species">物种保护</button>
+    <button class="filter-tag" data-cat="knowledge">生态知识</button>
+    <button class="filter-tag" data-cat="news">保护动态</button>
+</div>
+
+<!-- 置顶文章 -->
+<div class="featured-wrap">
+    <div class="featured-card" id="featuredCard" onclick="showModal(currentArticles[0])">
+        <div class="featured-img"><i class="fas fa-water"></i></div>
+        <div class="featured-body">
+            <div class="featured-cat cat-habitat" id="featuredCat">栖息地保护</div>
+            <div class="featured-title" id="featuredTitle">黄河湿地：候鸟迁徙的重要驿站</div>
+            <div class="featured-summary" id="featuredSummary">黄河湿地国家级自然保护区是东亚-澳大利西亚候鸟迁徙路线上的重要驿站，每年秋季，数百万只候鸟从这里飞过，补充能量后继续南迁...</div>
+            <div class="featured-meta">
+                <span><i class="far fa-calendar"></i> <span id="featuredDate">2026-03-15</span></span>
+                <span><i class="far fa-eye"></i> <span id="featuredViews">0</span> 次阅读</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 文章网格 -->
+<div class="articles-grid" id="articlesGrid">
+    <div class="loading"><i class="fas fa-spinner"></i></div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal-overlay" id="articleModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        <div class="modal-cover" id="modalCover"><i class="fas fa-feather-alt"></i></div>
+        <div class="modal-body">
+            <div class="modal-cat" id="modalCat"></div>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-meta">
+                <span><i class="far fa-calendar"></i> <span id="modalDate"></span></span>
+                <span><i class="far fa-eye"></i> <span id="modalViews"></span> 次阅读</span>
+            </div>
+            <div class="modal-content-text" id="modalContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = '/api';
+let currentArticles = [];
+let currentCat = 'all';
+
+// ===== 备用文章数据（API 不可用时展示）=====
+const FALLBACK_ARTICLES = [
+    {
+        id: 1, category: 'habitat', title: '黄河湿地：候鸟迁徙的重要驿站',
+        summary: '黄河湿地国家级自然保护区是东亚-澳大利西亚候鸟迁徙路线上的重要驿站，每年秋季，数百万只候鸟从这里飞过，补充能量后继续南迁。',
+        content: `<p>黄河湿地国家级自然保护区位于河南省郑州市北部黄河河道及沿岸，是我国中部地区重要的湿地生态系统之一。每年春秋两季，这里都会迎来大规模的候鸟迁徙高峰期。</p><h3>为什么黄河湿地如此重要？</h3><p>黄河湿地地处我国三大候鸟迁徙通道之一——东亚-澳大利西亚迁徙路线的中段位置。每年10月至次年3月，来自西伯利亚、蒙古和我国内蒙古地区的候鸟，会在这里停歇觅食，补充长途飞行消耗的能量。</p><h3>主要保护措施</h3><p>近年来，郑州市持续推进黄河湿地生态修复工作，通过退耕还湿、水体治理、禁止人为干扰等措施，为候鸟创造了更加安全的栖息环境。保护区内设置了多个观测站，监测鸟类种群动态和迁徙规律。</p><h3>观鸟提示</h3><p>在观测候鸟时，请务必保持安静，与鸟类保持100米以上的安全距离。不使用强光照射，不要投喂食物，让鸟类自然活动，这是对它们最好的保护。</p>`,
+        views: 2847, created_at: '2026-03-15', author_name: '生态方舟团队'
+    },
+    {
+        id: 2, category: 'species', title: '白鹤：世界上最濒危的鹤类之一',
+        summary: '白鹤是世界上最濒危的鹤类之一，全球种群数量不足4000只。作为东亚-澳大利西亚迁徙路线上的旗舰物种，白鹤的保护备受国际关注。',
+        content: `<p>白鹤（Grus leucogeranus）是世界极危物种，全球种群数量不足4000只，被 IUCN 列为极危（CR）等级，在我国被列国家一级重点保护野生动物。</p><h3>形态特征</h3><p>白鹤体长约130厘米，全身羽毛主要为白色，初级飞羽为黑色，头顶裸露皮肤呈鲜红色，嘴和腿为粉红色。幼鸟体羽呈黄褐色，随着年龄增长逐渐变白。</p><h3>迁徙习性</h3><p>白鹤从俄罗斯西伯利亚的繁殖地出发，途经黄河湿地补充能量后，继续飞往我国长江中下游的鄱阳湖越冬。整个迁徙旅程长达5000公里以上。</p><h3>保护现状</h3><p>黄河湿地是白鹤迁徙途中最重要的能量补给站之一。近年来，随着湿地保护力度加大，白鹤在黄河湿地的观测记录逐年增加，种群数量呈现恢复趋势。</p>`,
+        views: 1932, created_at: '2026-03-10', author_name: '生态方舟团队'
+    },
+    {
+        id: 3, category: 'knowledge', title: '什么是湿地？湿地的生态功能有哪些？',
+        summary: '湿地被称为"地球之肾"，是地球上生物多样性最丰富的生态系统之一。了解湿地的生态功能，是保护湿地的基础。',
+        content: `<p>湿地是介于水生和陆生生态系统之间的独特类型，土地长期被浅层水体覆盖，或者土壤含水量接近饱和，是自然界生物多样性最丰富的生态系统之一。</p><h3>湿地的生态功能</h3><p><strong>水源涵养：</strong>湿地如同巨大的海绵，在雨季吸收雨水，在旱季释放水分，调节河流水量，是天然的"水资源调节器"。</p><p><strong>碳汇功能：</strong>湿地储存了全球约12%的陆地碳储量，在应对气候变化中发挥着重要作用。</p><p><strong>生物多样性：</strong>全球40%的物种在湿地生活或繁殖，湿地是鱼类的产卵场、鸟类的栖息地、两栖动物的家园。</p><p><strong>水质净化：</strong>湿地植物能够吸收水体中的营养物质和污染物，降解有害物质，起到"天然污水处理厂"的作用。</p><h3>黄河湿地面临的威胁</h3><p>围垦开发、水污染、过度放牧、外来物种入侵等是人类活动对湿地造成的主要威胁。保护湿地，需要全社会的共同参与。</p>`,
+        views: 3105, created_at: '2026-03-05', author_name: '生态方舟团队'
+    },
+    {
+        id: 4, category: 'news', title: '2026年春季黄河湿地鸟类同步调查顺利完成',
+        summary: '3月中旬，郑州市林业部门联合多所高校，完成了2026年春季黄河湿地鸟类同步调查，共记录鸟类136种，其中受保护物种18种。',
+        content: `<p>2026年3月10日至15日，郑州市林业局联合河南大学、郑州大学等高校科研团队，圆满完成了本年度春季黄河湿地鸟类同步调查工作。</p><h3>调查范围与方法</h3><p>本次调查覆盖黄河湿地国家级自然保护区核心区、缓冲区和实验区，共设置32个观测样点，采用样线法和样点法相结合的方式进行。</p><h3>调查结果</h3><p>本次调查共记录鸟类<strong>136种</strong>，隶属17目52科，其中雁形目、鹈形目和鹤形目物种数量最多。记录到国家一级保护动物白鹤8只、国家二级保护动物大天鹅126只，以及三有动物鸿雁、普通鸬鹚等优势种群。</p><h3>调查意义</h3><p>通过持续的同步调查，能够系统掌握黄河湿地鸟类资源的时空变化规律，为湿地保护管理提供科学依据，也为"黄河生态方舟"平台的数据积累提供支撑。</p>`,
+        views: 1423, created_at: '2026-03-18', author_name: '郑州市林业局'
+    },
+    {
+        id: 5, category: 'species', title: '东方白鹳：忠贞不渝的"爱情鸟"',
+        summary: '东方白鹳因"一夫一妻、厮守终生"的习性被称为"爱情鸟"。然而，这个优雅的大鸟全球不足3000只，是我国国家一级保护动物。',
+        content: `<p>东方白鹳（Ciconia boyciana）属于鹳形目鹳科，是国家一级重点保护野生动物，全球野生种群数量估计不足3000只，被列入《世界自然保护联盟濒危物种红色名录》。</p><h3>形态特征</h3><p>东方白鹳体长约110厘米，体羽主要为白色，嘴黑色粗长呈锥形，腿较长呈红色。飞行时可见黑色飞羽，与白色体羽形成鲜明对比，十分优雅。</p><h3>繁殖习性</h3><p>东方白鹳有"爱情鸟"之称，它们一旦配对便终生不渝，每年返回同一巢址繁殖。巢穴巨大，直径可达1.5米，由树枝和泥土堆积而成，可使用数十年。</p><h3>食性特点</h3><p>东方白鹳主要以鱼类和蛙类为食，也会捕食小型爬行动物和昆虫。它们觅食时站立浅水中，静静等待猎物靠近，然后快速用长嘴啄击捕获。</p><h3>黄河湿地分布</h3><p>黄河湿地是东方白鹳的重要觅食地和停歇地。近年来，保护区持续监测到东方白鹳的活动记录，种群呈稳定恢复态势。</p>`,
+        views: 2156, created_at: '2026-03-08', author_name: '生态方舟团队'
+    },
+    {
+        id: 6, category: 'habitat', title: '湿地修复：从"百鸟争鸣"到生态复苏',
+        summary: '曾经因过度开发而生态退化的黄河湿地，经过近十年的系统性修复治理，如今重现"百鸟争鸣"的繁荣景象。',
+        content: `<p>2015年以前，黄河湿地曾面临严重的生态退化问题：围垦耕地侵占湿地面积、水体污染导致水质下降、人为干扰频繁……候鸟种类和数量持续下降。</p><h3>修复措施</h3><p><strong>退耕还湿：</strong>将保护区内的耕地逐步退出，恢复湿地水面和植被。</p><p><strong>污染治理：</strong>关闭沿河排污口，建设人工湿地净化系统，改善水体质量。</p><p><strong>生态补水：</strong>在枯水期通过人工补水维持湿地水位，保障鸟类觅食环境。</p><p><strong>围栏封育：</strong>在鸟类集中分布区域设置围栏，禁止人为进入干扰。</p><h3>修复成效</h3><p>十年修复，黄河湿地重现生机。鸟类种类从2015年的89种恢复到如今的160余种，白鹤、东方白鹳等珍稀物种的观测频率显著增加，"百鸟争鸣"的美景再次呈现。</p>`,
+        views: 1890, created_at: '2026-03-12', author_name: '生态方舟团队'
+    }
+];
+
+function catLabel(cat) {
+    const m = { habitat:'栖息地保护', species:'物种保护', knowledge:'生态知识', news:'保护动态' };
+    return m[cat] || cat;
+}
+function catClass(cat) { return 'cat-' + cat; }
+
+function renderList(articles) {
+    const filtered = currentCat === 'all' ? articles : articles.filter(a => a.category === currentCat);
+    if (filtered.length === 0) {
+        $('#articlesGrid').html(`<div style="grid-column:1/-1;text-align:center;padding:60px;color:rgba(255,255,255,0.3)"><i class="fas fa-feather-alt" style="font-size:50px;display:block;margin-bottom:15px;"></i>暂无此类文章</div>`);
+        return;
+    }
+    // 第一个为置顶
+    const [featured, ...rest] = filtered;
+    currentArticles = [featured, ...rest];
+    $('#featuredCat').attr('class', 'featured-cat ' + catClass(featured.category)).text(catLabel(featured.category));
+    $('#featuredTitle').text(featured.title);
+    $('#featuredSummary').text(featured.summary);
+    $('#featuredDate').text(featured.created_at ? featured.created_at.slice(0,10) : '');
+    $('#featuredViews').text(featured.views || 0);
+    $('#featuredCard').attr('onclick', `showModal(currentArticles[0])`);
+
+    $('#articlesGrid').html(rest.map((a, i) => `
+        <div class="article-card" onclick="showModal(currentArticles[${i+1}])">
+            <div class="card-img"><i class="fas fa-feather-alt"></i></div>
+            <div class="card-body">
+                <div class="card-title">${a.title}</div>
+                <div class="card-summary">${a.summary || ''}</div>
+                <div class="card-meta">
+                    <span><i class="far fa-calendar"></i>${a.created_at ? a.created_at.slice(0,10) : ''}</span>
+                    <span><i class="far fa-eye"></i>${a.views || 0}</span>
+                </div>
+            </div>
+        </div>
+    `).join(''));
+}
+
+function showModal(article) {
+    if (!article) return;
+    $('#modalCat').attr('class', 'featured-cat ' + catClass(article.category)).text(catLabel(article.category));
+    $('#modalTitle').text(article.title);
+    $('#modalDate').text(article.created_at ? article.created_at.slice(0,10) : '');
+    $('#modalViews').text(article.views || 0);
+    $('#modalContent').html(article.content || `<p>${article.summary || ''}</p>`);
+    $('#articleModal').addClass('active');
+    document.body.style.overflow = 'hidden';
+    // 记录阅读
+    if (article.id) {
+        $.post(API + '/articles/' + article.id + '/view/').catch(() => {});
+    }
+}
+
+function closeModal() {
+    $('#articleModal').removeClass('active');
+    document.body.style.overflow = '';
+}
+
+$(document).ready(function() {
+    $.ajax({ url: API + '/articles/', method: 'GET', success: function(data) {
+        const articles = data.results || data;
+        if (articles.length === 0) articles = FALLBACK_ARTICLES;
+        renderList(articles);
+    }, error: function() { renderList(FALLBACK_ARTICLES); }});
+
+    $('.filter-tag').click(function() {
+        $('.filter-tag').removeClass('active');
+        $(this).addClass('active');
+        currentCat = $(this).data('cat');
+        const all = currentArticles.length ? currentArticles : FALLBACK_ARTICLES;
+        renderList(all);
+    });
+
+    $(document).on('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    $('#articleModal').on('click', e => { if (e.target === this) closeModal(); });
+
+    // 导航
+    const token = localStorage.getItem('yb_token');
+    if (token) {
+        $.ajax({ url: API + '/profiles/me/', method: 'GET', headers: { 'Authorization': 'Token ' + token },
+            success: function(d) { $('#navLogin').replaceWith(`<a href="/profile/" style="color:#5DD39E"><i class="fas fa-user"></i> ${d.username}</a>`); },
+            error: function() {} });
+    }
+});
+</script>
+</body>
+</html>

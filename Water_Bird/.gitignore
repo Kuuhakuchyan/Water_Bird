@@ -3,27 +3,28 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Distribution / packaging
-.Python
+# Virtual environments
+anxu/
 env/
 venv/
-anxu/
 ENV/
+.venv/
+
+# Distribution / packaging
 *.egg-info/
 dist/
 build/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Django
+*.log
+local_settings.py
+db.sqlite3
+*.pot
+*.pyc
 
-# Database
-*.sqlite3
-
-# Media & Static (user uploads and generated assets)
+# Media & Static
 media/
 static/
-templates/
 
 # Environment
 .env
@@ -36,13 +37,9 @@ templates/
 Thumbs.db
 
 # Python
-*.pyc
-*.pyo
+*.so
 *.pyd
 .Python
-*.so
-*.egg
-*.egg-info
 pip-log.txt
 pip-delete-this-directory.txt
 htmlcov/

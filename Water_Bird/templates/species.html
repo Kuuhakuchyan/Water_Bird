@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物种百科 | 黄河生态方舟</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a2a3a 50%, #0d2137 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            padding: 12px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .nav-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: #5DD39E;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-brand i { font-size: 22px; }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover {
+            background: rgba(93,211,158,0.15);
+            color: #5DD39E;
+        }
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 200px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(93,211,158,0.15), transparent 70%);
+            pointer-events: none;
+        }
+        .hero h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .hero p {
+            font-size: 16px;
+            color: rgba(255,255,255,0.6);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(93,211,158,0.2), rgba(52,152,219,0.2));
+            border: 1px solid rgba(93,211,158,0.3);
+            border-radius: 20px;
+            padding: 4px 16px;
+            font-size: 13px;
+            color: #5DD39E;
+            margin-bottom: 15px;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            max-width: 1100px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: #e0e6ed;
+            font-size: 14px;
+            font-family: 'Noto Sans SC', sans-serif;
+            transition: border 0.2s;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #5DD39E;
+        }
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-tag {
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .filter-tag:hover, .filter-tag.active {
+            background: rgba(93,211,158,0.2);
+            border-color: #5DD39E;
+            color: #5DD39E;
+        }
+        .count-info {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            padding: 0 4px;
+        }
+
+        /* 物种卡片网格 */
+        .species-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .species-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .species-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(93,211,158,0.4);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 20px rgba(93,211,158,0.1);
+        }
+        .card-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #1a2a3a, #0d2137);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-image .placeholder-icon {
+            font-size: 60px;
+            color: rgba(93,211,158,0.3);
+        }
+        .card-body {
+            padding: 16px;
+        }
+        .card-protection {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .protection-1 { background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+        .protection-2 { background: rgba(243,156,18,0.2); color: #f39c12; border: 1px solid rgba(243,156,18,0.3); }
+        .protection-3 { background: rgba(52,152,219,0.2); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+        .protection-none { background: rgba(93,211,158,0.15); color: #5DD39E; border: 1px solid rgba(93,211,158,0.3); }
+        .card-name-cn {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .card-name-latin {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        .card-taxonomy {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+        .card-taxonomy span i { margin-right: 4px; color: rgba(93,211,158,0.6); }
+        .card-tags {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .card-tag {
+            padding: 2px 8px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+        }
+        .card-habit {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.5;
+            margin-top: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 详情弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #0d1b2a;
+            border: 1px solid rgba(93,211,158,0.2);
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        .modal-close:hover { background: rgba(231,76,60,0.3); color: #fff; }
+        .modal-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #1a2a3a, #0d2137);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px 20px 0 0;
+        }
+        .modal-image .placeholder-icon { font-size: 80px; color: rgba(93,211,158,0.3); }
+        .modal-body { padding: 30px; }
+        .modal-protection {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .modal-name-cn {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .modal-name-latin {
+            font-size: 15px;
+            color: rgba(255,255,255,0.4);
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        .modal-section {
+            margin-bottom: 20px;
+        }
+        .modal-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #5DD39E;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .modal-taxonomy {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .taxonomy-item {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+        .taxonomy-item .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 4px;
+        }
+        .taxonomy-item .value {
+            font-size: 14px;
+            color: #fff;
+            font-weight: 600;
+        }
+        .modal-habit {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.8;
+        }
+        .modal-footer {
+            padding: 0 30px 30px;
+            display: flex;
+            gap: 10px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Noto Sans SC', sans-serif;
+            transition: opacity 0.2s;
+        }
+        .modal-btn:hover { opacity: 0.85; }
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #5DD39E, #3498db);
+            color: white;
+        }
+        .modal-btn-secondary {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255,255,255,0.4);
+        }
+        .empty-state i { font-size: 60px; margin-bottom: 15px; display: block; color: rgba(93,211,158,0.3); }
+        .empty-state p { font-size: 15px; }
+
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: rgba(255,255,255,0.4);
+        }
+        .loading i {
+            font-size: 30px;
+            animation: spin 1s linear infinite;
+            color: #5DD39E;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 底部统计 */
+        .stats-bar {
+            max-width: 1100px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+        }
+        .stat-card .stat-num {
+            font-size: 28px;
+            font-weight: 700;
+            color: #5DD39E;
+            margin-bottom: 4px;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+    <a href="/" class="nav-brand"><i class="fas fa-leaf"></i> 黄河生态方舟</a>
+    <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="/species/">物种百科</a>
+        <a href="/articles/">科普文章</a>
+        <a href="/report/">观测上报</a>
+        <a href="/login/" id="navLogin"><i class="fas fa-sign-in-alt"></i> 登录</a>
+    </div>
+</nav>
+
+<!-- 顶部英雄区 -->
+<div class="hero">
+    <div class="hero-badge"><i class="fas fa-feather"></i> 黄河湿地物种数据库</div>
+    <h1>物种百科</h1>
+    <p>收录黄河湿地自然保护区代表性物种，涵盖鸟类、哺乳类、两栖类等，了解它们的习性、保护等级与分布情况</p>
+</div>
+
+<!-- 统计条 -->
+<div class="stats-bar">
+    <div class="stat-card">
+        <div class="stat-num" id="totalCount">--</div>
+        <div class="stat-label">收录物种</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num" id="protectedCount">--</div>
+        <div class="stat-label">受保护物种</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num" id="birdCount">--</div>
+        <div class="stat-label">鸟类物种</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num" id="orderCount">--</div>
+        <div class="stat-label">涉及目科</div>
+    </div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="filter-bar">
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="搜索物种名称...">
+    </div>
+    <div class="filter-tags">
+        <button class="filter-tag active" data-level="all">全部</button>
+        <button class="filter-tag" data-level="国家一级">国家一级</button>
+        <button class="filter-tag" data-level="国家二级">国家二级</button>
+        <button class="filter-tag" data-level="三有动物">三有动物</button>
+        <button class="filter-tag" data-level="无危">无危</button>
+    </div>
+    <span class="count-info" id="countInfo">加载中...</span>
+</div>
+
+<!-- 物种卡片网格 -->
+<div class="species-grid" id="speciesGrid">
+    <div class="loading"><i class="fas fa-spinner"></i></div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal-overlay" id="speciesModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        <div class="modal-image" id="modalImage">
+            <i class="fas fa-feather-alt placeholder-icon"></i>
+        </div>
+        <div class="modal-body">
+            <div id="modalProtection" class="modal-protection"></div>
+            <div class="modal-name-cn" id="modalNameCn"></div>
+            <div class="modal-name-latin" id="modalNameLatin"></div>
+            <div class="modal-section">
+                <div class="modal-section-title"><i class="fas fa-paw"></i> 分类信息</div>
+                <div class="modal-taxonomy">
+                    <div class="taxonomy-item">
+                        <div class="label">中文名</div>
+                        <div class="value" id="modalTaxCn">--</div>
+                    </div>
+                    <div class="taxonomy-item">
+                        <div class="label">目</div>
+                        <div class="value" id="modalTaxOrder">--</div>
+                    </div>
+                    <div class="taxonomy-item">
+                        <div class="label">科</div>
+                        <div class="value" id="modalTaxFamily">--</div>
+                    </div>
+                    <div class="taxonomy-item">
+                        <div class="label">保护等级</div>
+                        <div class="value" id="modalTaxLevel">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-section">
+                <div class="modal-section-title"><i class="fas fa-map-marker-alt"></i> 分布与习性</div>
+                <div class="modal-habit" id="modalHabit"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-secondary" onclick="closeModal()">关闭</button>
+            <button class="modal-btn modal-btn-primary" onclick="window.location.href='/report/'"><i class="fas fa-camera"></i> 上报观测</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = '/api';
+
+// ===== 黄河湿地代表性物种（备用数据，API 不可用时展示）=====
+const FALLBACK_SPECIES = [
+    {id:1, name_cn:'大天鹅', name_latin:'Cygnus cygnus', order:'雁形目', family:'鸭科', protection_level:'国家二级', distribution_habit:'每年10月至次年3月迁徙至黄河湿地越冬，常在开阔水域集群活动。以水生植物种子、茎叶及少量软体动物为食。观测时应保持100米以上距离，避免惊扰鸟群。'},
+    {id:2, name_cn:'白鹤', name_latin:'Grus leucogeranus', order:'鹤形目', family:'鹤科', protection_level:'国家一级', distribution_habit:'世界极危物种，每年迁徙经停黄河湿地。全长约130cm，通体白色，飞行时可见黑色初级飞羽。栖息于浅水沼泽，以植物根茎和鱼虾为食。'},
+    {id:3, name_cn:'东方白鹳', name_latin:'Ciconia boyciana', order:'鹳形目', family:'鹳科', protection_level:'国家一级', distribution_habit:'大型涉禽，体长约110cm，嘴黑色粗长，腿红色。在黄河湿地繁殖，营巢于高大树木或电力塔上，以鱼类和蛙类为主食。'},
+    {id:4, name_cn:'黑鹳', name_latin:'Ciconia nigra', order:'鹳形目', family:'鹤科', protection_level:'国家一级', distribution_habit:'体长约100cm，上体黑色，下体白色，嘴和腿红色。栖息于河流两岸及沼泽湿地，繁殖期对人为干扰极为敏感。'},
+    {id:5, name_cn:'鸿雁', name_latin:'Anser cygnoides', order:'雁形目', family:'鸭科', protection_level:'国家二级', distribution_habit:'大型雁类，体长约90cm，嘴黑色且近端有白环。每年10月迁经黄河湿地，常百只以上集群飞行，鸣声洪亮。'},
+    {id:6, name_cn:'普通鸬鹚', name_latin:'Phalacrocorax carbo', order:'鲣鸟目', family:'鸬鹚科', protection_level:'无危', distribution_habit:'中型水鸟，体长约80cm，通体黑色，繁殖期颈侧有白斑。擅长潜水捕鱼，常在岩石或树枝上晾翅晾干。'},
+    {id:7, name_cn:'苍鹭', name_latin:'Ardea cinerea', order:'鹈形目', family:'鹭科', protection_level:'无危', distribution_habit:'大型鹭类，体长约95cm，头、颈白色，枕部有黑色冠羽。常单独站在浅水中等待猎物，以鱼类和蛙类为主食。'},
+    {id:8, name_cn:'大白鹭', name_latin:'Ardea alba', order:'鹈形目', family:'鹭科', protection_level:'无危', distribution_habit:'体长约90cm，全身羽毛乳白色，繁殖期肩背部有饰羽。常见于黄河湿地浅水区，步态优雅，飞行时缩颈呈S形。'},
+    {id:9, name_cn:'斑嘴鸭', name_latin:'Anas poecilorhyncha', order:'雁形目', family:'鸭科', protection_level:'三有动物', distribution_habit:'中型鸭类，体长约60cm，嘴端具明显黄色斑块。为黄河湿地常见留鸟，适应能力强，常与其他鸭类混群活动。'},
+    {id:10, name_cn:'白尾鹞', name_latin:'Circus cyaneus', order:'鹰形目', family:'鹰科', protection_level:'国家二级', distribution_habit:'中型猛禽，体长约50cm，雄鸟上体灰色，下体白色，尾白色。栖息于芦苇沼泽和开阔草地，掠食鼠类和小型鸟类。'},
+    {id:11, name_cn:'震旦鸦雀', name_latin:'Calamornis heudei', order:'雀形目', family:'鸦雀科', protection_level:'国家二级', distribution_habit:'小型鸟类，体长约18cm，上体黄褐色，嘴呈锥形。是中国特有物种，仅栖息于芦苇沼泽，被视为湿地生态指示物种。'},
+    {id:12, name_cn:'小天鹅', name_latin:'Cygnus columbianus', order:'雁形目', family:'鸭科', protection_level:'国家二级', distribution_habit:'体长约120cm，通体白色，嘴端黑色。与大天鹅相似但体型略小，鸣声清脆，迁徙季节常数十只集群。'},
+];
+
+let allSpecies = [];
+let currentFilter = 'all';
+let currentSearch = '';
+
+// 初始化
+$(document).ready(function() {
+    loadSpecies();
+    setupFilters();
+    setupSearch();
+    setupNav();
+});
+
+// 加载物种数据
+function loadSpecies() {
+    $.ajax({
+        url: API + '/species/',
+        method: 'GET',
+        success: function(data) {
+            allSpecies = data.results || data;
+            if (allSpecies.length === 0) allSpecies = FALLBACK_SPECIES;
+            updateStats();
+            renderSpecies();
+        },
+        error: function() {
+            allSpecies = FALLBACK_SPECIES;
+            updateStats();
+            renderSpecies();
+        }
+    });
+}
+
+// 更新统计
+function updateStats() {
+    const total = allSpecies.length;
+    const protected_ = allSpecies.filter(s => s.protection_level && s.protection_level.includes('国家')).length;
+    const birds = allSpecies.filter(s => s.order && s.order.includes('鸟')).length;
+    const orders = new Set(allSpecies.map(s => s.order)).size;
+    $('#totalCount').text(total);
+    $('#protectedCount').text(protected_);
+    $('#birdCount').text(birds);
+    $('#orderCount').text(orders);
+}
+
+// 渲染卡片
+function renderSpecies() {
+    const filtered = allSpecies.filter(s => {
+        const matchLevel = currentFilter === 'all' || (s.protection_level && s.protection_level.includes(currentFilter));
+        const matchSearch = !currentSearch || s.name_cn.includes(currentSearch) || (s.name_latin && s.name_latin.toLowerCase().includes(currentSearch.toLowerCase()));
+        return matchLevel && matchSearch;
+    });
+
+    $('#countInfo').text(`共 ${filtered.length} 种`);
+    const grid = $('#speciesGrid');
+
+    if (filtered.length === 0) {
+        grid.html(`<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-feather-alt"></i><p>未找到匹配 "${currentSearch}" 的物种</p></div>`);
+        return;
+    }
+
+    grid.html(filtered.map(s => `
+        <div class="species-card" onclick="showModal(${s.id})">
+            <div class="card-image">
+                <i class="fas fa-feather-alt placeholder-icon"></i>
+            </div>
+            <div class="card-body">
+                ${protectionBadge(s.protection_level)}
+                <div class="card-name-cn">${s.name_cn}</div>
+                <div class="card-name-latin">${s.name_latin || ''}</div>
+                <div class="card-taxonomy">
+                    ${s.order ? `<span><i class="fas fa-paw"></i>${s.order}</span>` : ''}
+                    ${s.family ? `<span><i class="fas fa-leaf"></i>${s.family}</span>` : ''}
+                </div>
+                <div class="card-habit">${s.distribution_habit || '暂无详细分布与习性数据'}</div>
+            </div>
+        </div>
+    `).join(''));
+}
+
+// 保护等级徽章
+function protectionBadge(level) {
+    if (!level) return '<span class="card-protection protection-none">未评级</span>';
+    if (level.includes('一级')) return '<span class="card-protection protection-1">一级保护</span>';
+    if (level.includes('二级')) return '<span class="card-protection protection-2">二级保护</span>';
+    if (level.includes('三有')) return '<span class="card-protection protection-3">三有动物</span>';
+    return '<span class="card-protection protection-none">无危</span>';
+}
+
+// 筛选按钮
+function setupFilters() {
+    $('.filter-tag').click(function() {
+        $('.filter-tag').removeClass('active');
+        $(this).addClass('active');
+        currentFilter = $(this).data('level');
+        renderSpecies();
+    });
+}
+
+// 搜索
+function setupSearch() {
+    let timer;
+    $('#searchInput').on('input', function() {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            currentSearch = $(this).val().trim();
+            renderSpecies();
+        }, 300);
+    });
+}
+
+// 详情弹窗
+function showModal(id) {
+    const s = allSpecies.find(x => x.id === id) || FALLBACK_SPECIES.find(x => x.id === id);
+    if (!s) return;
+
+    $('#modalProtection').attr('class', 'modal-protection ' + (protectionClass(s.protection_level))).text(s.protection_level || '未评级');
+    $('#modalNameCn').text(s.name_cn);
+    $('#modalNameLatin').text(s.name_latin || '');
+    $('#modalTaxCn').text(s.name_cn);
+    $('#modalTaxOrder').text(s.order || '--');
+    $('#modalTaxFamily').text(s.family || '--');
+    $('#modalTaxLevel').text(s.protection_level || '未评级');
+    $('#modalHabit').text(s.distribution_habit || '暂无详细分布与习性数据。');
+
+    $('#speciesModal').addClass('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    $('#speciesModal').removeClass('active');
+    document.body.style.overflow = '';
+}
+
+function protectionClass(level) {
+    if (!level) return 'protection-none';
+    if (level.includes('一级')) return 'protection-1';
+    if (level.includes('二级')) return 'protection-2';
+    if (level.includes('三有')) return 'protection-3';
+    return 'protection-none';
+}
+
+// ESC 关闭弹窗
+$(document).on('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
+
+// 点击遮罩关闭
+$('#speciesModal').on('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// 导航登录状态
+function setupNav() {
+    const token = localStorage.getItem('yb_token');
+    if (token) {
+        $.ajax({
+            url: API + '/profiles/me/',
+            method: 'GET',
+            headers: { 'Authorization': 'Token ' + token },
+            success: function(data) {
+                localStorage.setItem('yb_user', JSON.stringify(data));
+                $('#navLogin').replaceWith(`<a href="/profile/" style="color:#5DD39E"><i class="fas fa-user"></i> ${data.username}</a>`);
+            },
+            error: function() {}
+        });
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">物种详情 | 黄河生态方舟</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #0EBFA7; --dark: #0a2e38;
+            --text: #1a2a3a; --muted: #7a8fa6;
+            --danger: #e74c3c; --warn: #f39c12; --safe: #27ae60;
+        }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0a2e38 0%, #0c4a5e 50%, #0EBFA7 100%);
+            min-height: 100vh; color: var(--text);
+        }
+        .navbar {
+            background: rgba(10,46,56,0.97); backdrop-filter: blur(20px);
+            padding: 0 24px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+        .navbar-brand { display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; font-size: 18px; font-weight: 700; }
+        .navbar-brand .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), #3498db); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .nav-links { display: flex; align-items: center; gap: 4px; }
+        .nav-links a { color: rgba(255,255,255,0.75); text-decoration: none; padding: 6px 12px; border-radius: 8px; font-size: 13px; transition: all 0.2s; }
+        .nav-links a:hover { background: rgba(14,191,167,0.2); color: var(--primary); }
+        .nav-links a.active { color: var(--primary); background: rgba(14,191,167,0.15); }
+        .nav-back { margin-left: auto; padding: 6px 14px; border-radius: 8px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); text-decoration: none; font-size: 13px; transition: all 0.2s; }
+        .nav-back:hover { background: rgba(255,255,255,0.2); color: white; }
+
+        .detail-container { max-width: 740px; margin: 80px auto 60px; padding: 0 20px; }
+
+        /* Hero */
+        .detail-hero { border-radius: 20px; overflow: hidden; margin-bottom: 24px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .detail-hero-bg { height: 280px; display: flex; align-items: center; justify-content: center; font-size: 120px; color: rgba(255,255,255,0.2); position: relative; }
+        .detail-hero-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 24px; }
+        .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .hero-badge { padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: white; backdrop-filter: blur(4px); }
+        .hero-title { font-size: 32px; font-weight: 900; color: white; line-height: 1.2; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .hero-latin { font-style: italic; color: rgba(255,255,255,0.7); font-size: 15px; margin-top: 4px; }
+
+        /* 数据指标 */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px; text-align: center; color: white; }
+        .stat-card .num { font-size: 26px; font-weight: 900; line-height: 1; }
+        .stat-card .lbl { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+        /* 区块 */
+        .detail-card { background: rgba(255,255,255,0.97); border-radius: 18px; padding: 24px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .section-title { font-size: 13px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+        .section-title i { color: var(--primary); }
+
+        /* 分类学 */
+        .taxonomy-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .taxonomy-item { background: #f8f9fa; border-radius: 10px; padding: 12px 14px; }
+        .taxonomy-item .t-lbl { font-size: 10px; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .taxonomy-item .t-val { font-size: 14px; font-weight: 700; color: var(--dark); }
+
+        /* IUCN */
+        .iucn-card { background: #f8f9fa; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 16px; }
+        .iucn-code { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: white; flex-shrink: 0; }
+        .iucn-info .iucn-label { font-size: 18px; font-weight: 800; color: var(--dark); }
+        .iucn-info .iucn-desc { font-size: 13px; color: #888; margin-top: 4px; }
+        .iucn-bar { height: 5px; background: rgba(0,0,0,0.06); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        .iucn-bar-fill { height: 100%; border-radius: 3px; }
+
+        /* 习性 */
+        .habit-text { background: #f0fdfb; border-left: 4px solid var(--primary); border-radius: 0 14px 14px 0; padding: 16px; font-size: 15px; line-height: 1.9; color: #334155; }
+
+        /* 快捷操作 */
+        .action-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .action-btn { flex: 1; min-width: 140px; padding: 13px 16px; border-radius: 14px; text-decoration: none; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+        .action-btn.articles { background: linear-gradient(135deg, #9B59B6, #7d3c98); color: white; box-shadow: 0 6px 20px rgba(155,89,182,0.35); }
+        .action-btn.report { background: linear-gradient(135deg, #3498DB, #2980B9); color: white; box-shadow: 0 6px 20px rgba(52,152,219,0.35); }
+        .action-btn.list { background: linear-gradient(135deg, #0EBFA7, #16a085); color: white; box-shadow: 0 6px 20px rgba(14,191,167,0.35); }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.25); }
+
+        /* 加载 */
+        .loading { text-align: center; padding: 80px 20px; color: rgba(255,255,255,0.5); }
+        .loading i { font-size: 48px; margin-bottom: 16px; animation: spin 1s linear infinite; }
+        @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+        .error-msg { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5); }
+        .error-msg h3 { color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+        .error-msg a { color: var(--primary); text-decoration: none; }
+        @media (max-width: 640px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .taxonomy-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="/" class="navbar-brand">
+        <div class="logo"><i class="fas fa-feather" style="color:white"></i></div>
+        黄河生态方舟
+    </a>
+    <div class="nav-links">
+        <a href="/"><i class="fas fa-map-marked-alt"></i> 大屏</a>
+        <a href="/species/"><i class="fas fa-book"></i> 物种百科</a>
+        <a href="/articles/"><i class="fas fa-newspaper"></i> 科普</a>
+        <a href="/report/"><i class="fas fa-camera"></i> 上报</a>
+    </div>
+    <a href="/species/" class="nav-back"><i class="fas fa-arrow-left"></i> 返回百科</a>
+</nav>
+
+<div class="detail-container" id="app">
+    <div class="loading">
+        <i class="fas fa-spinner"></i>
+        <h3>正在加载物种信息...</h3>
+    </div>
+</div>
+
+<script>
+const API = '/api';
+
+const EMOJIS = {
+    '鹰':'🦅','鹗':'🦅','隼':'🦅','鹞':'🦅','鸮':'🦅','鸺':'🦅',
+    '雁':'🦆','鸭':'🦆','天鹅':'🦢','鹤':'🦢',
+    '鹭':'🦅','鹈':'🦅','鸊':'🦆','鸬':'🦅',
+    '燕':'🐦','鸥':'🦆','鳾':'🐦','鸦':'🐦','鹛':'🐦',
+    '喜鹊':'🐦','麻雀':'🐦','山雀':'🐦',
+    'default':'🐦'
+};
+
+function getEmoji(name) {
+    if (!name) return EMOJIS['default'];
+    for (const [k, v] of Object.entries(EMOJIS)) { if (name.includes(k)) return v; }
+    return EMOJIS['default'];
+}
+
+function getLevelBg(level) {
+    if (!level) return 'rgba(255,255,255,0.4)';
+    if (level.includes('一级')) return '#e74c3c';
+    if (level.includes('二级')) return '#f39c12';
+    if (level.includes('三有')) return '#27ae60';
+    return 'rgba(255,255,255,0.4)';
+}
+
+function getLevelLabel(level) {
+    if (!level || level === '无') return '无保护';
+    return level;
+}
+
+function emojiBg(name) {
+    const palette = [
+        'linear-gradient(135deg,#1a5a6e,#0EBFA7)','linear-gradient(135deg,#0a3d62,#1abc9c)',
+        'linear-gradient(135deg,#1e3799,#4a69bd)','linear-gradient(135deg,#0c2461,#3c6382)',
+        'linear-gradient(135deg,#6a1b4d,#a044ff)','linear-gradient(135deg,#0a3d62,#60a3bc)',
+    ];
+    if (!name) return palette[0];
+    let h = 0; for (let i=0;i<name.length;i++) h=name.charCodeAt(i)+((h<<5)-h);
+    return palette[Math.abs(h)%palette.length];
+}
+
+function renderPage(s) {
+    document.title = `${s.name_cn} | 黄河生态方舟`;
+    const iucn = s.iucn_status || { code:'LC',label:'无危',color:'#27ae60',desc:'种群稳定' };
+    const riskMap = { 'EN':80,'VU':55,'NT':30,'LC':10 };
+
+    document.getElementById('app').innerHTML = `
+        <div class="detail-hero">
+            <div class="detail-hero-bg" style="background:${emojiBg(s.name_cn)}">
+                <span style="font-size:120px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3))">${getEmoji(s.name_cn)}</span>
+            </div>
+            <div class="hero-overlay">
+                <div class="hero-badges">
+                    <span class="hero-badge" style="background:${getLevelBg(s.protection_level)}">${getLevelLabel(s.protection_level)}</span>
+                    <span class="hero-badge" style="background:${iucn.color}">${iucn.code} ${iucn.label}</span>
+                    ${s.order ? `<span class="hero-badge" style="background:rgba(255,255,255,0.2)">${s.order}</span>` : ''}
+                </div>
+                <div class="hero-title">${s.name_cn}</div>
+                <div class="hero-latin">${s.name_latin || ''}</div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="num">${s.observation_count || 0}</div>
+                <div class="lbl">观测次数</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">${s.last_observed || '—'}</div>
+                <div class="lbl">最新观测</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">${s.article_count || 0}</div>
+                <div class="lbl">相关文章</div>
+            </div>
+            <div class="stat-card">
+                <div class="num" style="color:${iucn.color}">${iucn.code}</div>
+                <div class="lbl">IUCN等级</div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="section-title"><i class="fas fa-paw"></i> 分类学信息</div>
+            <div class="taxonomy-grid">
+                <div class="taxonomy-item"><div class="t-lbl">中文名</div><div class="t-val">${s.name_cn}</div></div>
+                <div class="taxonomy-item"><div class="t-lbl">保护级别</div><div class="t-val">${getLevelLabel(s.protection_level)}</div></div>
+                <div class="taxonomy-item"><div class="t-lbl">目</div><div class="t-val">${s.order || '—'}</div></div>
+                <div class="taxonomy-item"><div class="t-lbl">科</div><div class="t-val">${s.family || '—'}</div></div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="section-title"><i class="fas fa-globe-asia"></i> IUCN 濒危等级</div>
+            <div class="iucn-card">
+                <div class="iucn-code" style="background:${iucn.color}">${iucn.code}</div>
+                <div class="iucn-info">
+                    <div class="iucn-label">${iucn.label}</div>
+                    <div class="iucn-desc">${iucn.desc}</div>
+                    <div class="iucn-bar"><div class="iucn-bar-fill" style="width:${riskMap[iucn.code]||10}%;background:${iucn.color}"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="section-title"><i class="fas fa-leaf"></i> 分布与习性</div>
+            <div class="habit-text">${s.distribution_habit || '暂无详细分布与习性数据'}</div>
+        </div>
+
+        <div class="detail-card">
+            <div class="section-title"><i class="fas fa-bolt"></i> 快捷操作</div>
+            <div class="action-row">
+                <a href="/articles/?search=${encodeURIComponent(s.name_cn)}" class="action-btn articles">
+                    <i class="fas fa-newspaper"></i> 相关科普文章
+                </a>
+                <a href="/report/" class="action-btn report">
+                    <i class="fas fa-camera"></i> 上报该物种观测
+                </a>
+                <a href="/species/" class="action-btn list">
+                    <i class="fas fa-list"></i> 返回物种百科
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+async function init() {
+    const id = window.location.pathname.match(/\/species\/(\d+)\//)?.[1];
+    if (!id) {
+        document.getElementById('app').innerHTML = `<div class="error-msg"><h3>未找到物种ID</h3><a href="/species/">返回物种百科</a></div>`;
+        return;
+    }
+    try {
+        const res = await fetch(`${API}/species/${id}/`);
+        if (!res.ok) throw new Error('not found');
+        const s = await res.json();
+        renderPage(s);
+    } catch (e) {
+        document.getElementById('app').innerHTML = `<div class="error-msg"><i class="fas fa-search" style="font-size:48px;display:block;margin-bottom:16px"></i><h3>未找到该物种</h3><p style="margin-bottom:16px">可能已被删除或ID无效</p><a href="/species/">返回物种百科</a></div>`;
+    }
+}
+init();
+</script>
+</body>
+</html>
