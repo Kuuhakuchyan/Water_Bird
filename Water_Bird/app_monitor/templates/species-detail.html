@@ -406,7 +406,7 @@ async function init() {
         // 设置"查看完整图库"链接
         const galleryLink = document.getElementById('galleryLink');
         if (galleryLink) {
-            galleryLink.href = '/gallery/?species_id=' + speciesId;
+            galleryLink.href = '/gallery/?species_id=' + id;
         }
     } catch (e) {
         document.getElementById('app').innerHTML = `<div class="error-msg"><i class="fas fa-search" style="font-size:48px;display:block;margin-bottom:16px"></i><h3>未找到该物种</h3><p style="margin-bottom:16px">可能已被删除或ID无效</p><a href="/species/">返回物种百科</a></div>`;

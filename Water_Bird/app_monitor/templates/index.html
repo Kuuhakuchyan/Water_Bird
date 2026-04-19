@@ -900,9 +900,9 @@
                 $('#modal-images').html('');
             }
 
-            // 百科和文章链接（精确ID直接跳转详情页）
-            const speciesId = record.species_id;
-            $('#modal-link-species').attr('href', `/species/${speciesId}/`);
+            // 百科链接（用名称搜索，确保能找到）
+            const speciesName = record.species_name || '未知物种';
+            $('#modal-link-species').attr('href', `/species/?search=${encodeURIComponent(speciesName)}`);
             $('#modal-link-articles').attr('href', `/articles/?search=${encodeURIComponent(name)}`);
 
             // === 保护等级占比图：显示全局所有等级的占比，当前物种所属等级高亮 ===
