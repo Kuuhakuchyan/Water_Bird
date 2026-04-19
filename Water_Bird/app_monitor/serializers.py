@@ -131,7 +131,7 @@ class SpeciesInfoSerializer(serializers.ModelSerializer):
         model = SpeciesInfo
         fields = [
             'id', 'name_cn', 'name_latin', 'order', 'family',
-            'protection_level', 'distribution_habit',
+            'protection_level', 'distribution_habit', 'cover_image',
             'observation_count', 'last_observed', 'iucn_status', 'article_count'
         ]
 

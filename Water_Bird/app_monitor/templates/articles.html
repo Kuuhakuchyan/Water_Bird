@@ -5,260 +5,386 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>科普文章 | 黄河生态方舟</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --ink: #1A1A2E;
+            --ink-light: #2D2D4A;
+            --cream: #FAF7F2;
+            --warm: #F5F0E8;
+            --amber: #C8922A;
+            --amber-dark: #A67520;
+            --card-bg: #ffffff;
+            --text: #1C1C1C;
+            --muted: #7A7A8A;
+            --border: #EAE6DF;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.07);
+            --shadow-md: 0 8px 28px rgba(0,0,0,0.11);
+            --shadow-lg: 0 18px 56px rgba(0,0,0,0.17);
+            --c-habitat: #4A8C6F;
+            --c-species: #B85450;
+            --c-knowledge: #4A7A9C;
+            --c-news: #C08040;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --primary: #9B59B6;
-            --dark: #0a2e38;
-            --card-bg: rgba(255,255,255,0.95);
-            --text: #1a2a3a;
-            --muted: #7a8fa6;
-            --danger: #e74c3c;
-            --warn: #f39c12;
-            --safe: #27ae60;
-            --habitat: #27AE60;
-            --species: #e74c3c;
-            --knowledge: #3498DB;
-            --news: #f39c12;
+        body {
+            font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+            background: var(--warm);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
-        body {
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #0a2e38 0%, #1a1a5e 50%, #7B2D8B 100%);
-            min-height: 100vh;
-            color: var(--text);
-        }
+        h1, h2, h3 { font-family: 'Noto Serif SC', serif; }
 
         /* 阅读进度条 */
         #reading-progress {
             position: fixed; top: 0; left: 0; height: 3px;
-            background: linear-gradient(90deg, #9B59B6, #e74c3c);
-            width: 0%; z-index: 9999;
-            transition: width 0.1s;
+            background: linear-gradient(90deg, var(--amber), var(--c-species));
+            width: 0%; z-index: 9999; transition: width 0.1s;
         }
 
+        /* ========== 导航 ========== */
         .navbar {
-            background: rgba(10,46,56,0.97);
-            backdrop-filter: blur(20px);
-            padding: 0 24px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+            background: rgba(26,26,46,0.97);
+            backdrop-filter: blur(16px);
+            padding: 0 28px; height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
         .navbar-brand {
             display: flex; align-items: center; gap: 10px;
-            color: white; text-decoration: none; font-size: 18px; font-weight: 700;
+            color: white; text-decoration: none; font-size: 17px; font-weight: 700;
+            font-family: 'Noto Serif SC', serif;
         }
         .navbar-brand .logo {
-            width: 36px; height: 36px;
-            background: linear-gradient(135deg, var(--primary), #3498db);
-            border-radius: 10px;
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--amber), #D4A853);
+            border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
         }
-        .navbar-links { display: flex; gap: 6px; align-items: center; }
+        .navbar-links { display: flex; gap: 2px; align-items: center; }
         .nav-btn {
-            padding: 7px 14px; border-radius: 8px;
-            color: rgba(255,255,255,0.8); text-decoration: none;
-            font-size: 13px; font-weight: 600; transition: all 0.2s;
+            padding: 6px 13px; border-radius: 8px;
+            color: rgba(255,255,255,0.7); text-decoration: none;
+            font-size: 13px; font-weight: 500; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
         }
-        .nav-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        .nav-btn.active { background: rgba(155,89,182,0.4); color: white; }
+        .nav-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.95); }
+        .nav-btn.active { color: var(--amber); background: rgba(200,146,42,0.12); }
+        .nav-btn i { font-size: 12px; }
 
-        /* 页面头部 */
+        /* ========== 页面顶部 ========== */
         .page-header {
-            padding: 80px 24px 32px;
-            text-align: center;
-            color: white;
+            margin-top: 58px;
+            background: var(--ink);
+            padding: 56px 24px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse at 10% 80%, rgba(200,146,42,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 20%, rgba(74,122,156,0.2) 0%, transparent 50%);
+        }
+        .page-header::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(200,146,42,0.4), transparent);
+        }
+        .header-inner { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; }
+        .header-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(200,146,42,0.15);
+            border: 1px solid rgba(200,146,42,0.3);
+            color: var(--amber); padding: 5px 14px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; letter-spacing: 1px;
+            margin-bottom: 14px;
         }
         .page-header h1 {
-            font-size: 32px; font-weight: 900; margin-bottom: 8px; letter-spacing: 2px;
+            font-size: clamp(28px, 5vw, 42px); font-weight: 900;
+            color: white; line-height: 1.15; margin-bottom: 10px;
         }
-        .page-header h1 i { margin-right: 10px; }
-        .page-header p { color: rgba(255,255,255,0.6); font-size: 14px; }
+        .page-header h1 em { color: var(--amber); font-style: normal; }
+        .page-header p {
+            color: rgba(255,255,255,0.5); font-size: 14px;
+            max-width: 480px; line-height: 1.7; margin-bottom: 28px; font-weight: 300;
+        }
 
-        /* 统计卡片行 */
+        /* 统计行 */
         .stats-row {
-            display: flex; gap: 12px; justify-content: center;
-            flex-wrap: wrap; margin-bottom: 28px; padding: 0 16px;
+            display: flex; gap: 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
         }
         .stat-card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 14px; padding: 14px 20px;
-            text-align: center; color: white; min-width: 100px;
-            transition: all 0.2s; cursor: default;
+            flex: 1; padding: 14px 20px;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            text-align: center; position: relative;
         }
-        .stat-card:hover { background: rgba(255,255,255,0.14); transform: translateY(-2px); }
-        .stat-card .num { font-size: 26px; font-weight: 900; line-height: 1; }
-        .stat-card .lbl { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; letter-spacing: 0.3px; }
+        .stat-card:last-child { border-right: none; }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: var(--amber); transform: scaleX(0); transition: transform 0.3s;
+        }
+        .stat-card:hover::before { transform: scaleX(1); }
+        .stat-card .num { font-size: 24px; font-weight: 900; color: white; line-height: 1; font-family: 'Noto Serif SC', serif; }
+        .stat-card .lbl { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
         .stat-card .dot {
-            width: 8px; height: 8px; border-radius: 50%; margin: 0 auto 6px;
+            width: 8px; height: 8px; border-radius: 50%;
+            margin: 0 auto 6px;
         }
 
-        /* 搜索框 */
-        .search-bar {
-            max-width: 560px; margin: 0 auto 24px; position: relative;
+        /* ========== 搜索与分类 ========== */
+        .filter-bar {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 58px; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .search-bar input {
-            width: 100%; padding: 14px 20px 14px 46px;
-            border: none; border-radius: 14px;
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white; font-size: 14px; outline: none; transition: 0.2s;
+        .filter-bar-inner {
+            max-width: 960px; margin: 0 auto;
+            padding: 12px 24px;
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
         }
-        .search-bar input::placeholder { color: rgba(255,255,255,0.4); }
-        .search-bar input:focus {
-            background: rgba(255,255,255,0.18);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(155,89,182,0.25);
+        .search-wrap {
+            flex: 1; min-width: 180px; position: relative;
         }
-        .search-bar i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5); }
-
-        /* 分类标签 */
-        .category-tabs {
-            display: flex; gap: 8px; justify-content: center;
-            flex-wrap: wrap; margin-bottom: 32px;
+        .search-wrap i {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--muted); font-size: 13px;
         }
+        .search-wrap input {
+            width: 100%; padding: 9px 12px 9px 36px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            background: var(--cream); font-size: 13px; color: var(--text);
+            outline: none; transition: 0.2s; font-family: inherit;
+        }
+        .search-wrap input:focus {
+            border-color: var(--amber); background: white;
+            box-shadow: 0 0 0 3px rgba(200,146,42,0.1);
+        }
+        .search-wrap input::placeholder { color: #B8B0A8; }
         .cat-tab {
-            padding: 7px 18px; border-radius: 20px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: rgba(255,255,255,0.65); cursor: pointer;
-            font-size: 13px; font-weight: 600; transition: all 0.2s;
+            padding: 7px 16px; border-radius: 20px;
+            background: var(--cream);
+            border: 1.5px solid var(--border);
+            color: var(--muted); cursor: pointer;
+            font-size: 13px; font-weight: 500; transition: all 0.2s;
+            font-family: inherit; white-space: nowrap;
         }
-        .cat-tab:hover { background: rgba(255,255,255,0.16); color: white; }
+        .cat-tab:hover { border-color: var(--amber); color: var(--amber); }
         .cat-tab.active {
-            background: var(--primary); border-color: var(--primary); color: white;
-            box-shadow: 0 4px 14px rgba(155,89,182,0.4);
+            background: var(--ink); border-color: var(--ink); color: white;
         }
         .cat-tab .cat-dot {
             display: inline-block; width: 6px; height: 6px; border-radius: 50%;
             margin-right: 6px; vertical-align: middle;
         }
 
-        /* 文章列表容器 */
-        .articles-container {
-            max-width: 920px; margin: 0 auto; padding: 0 20px 60px;
-        }
+        /* ========== 文章容器 ========== */
+        .articles-wrap { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+
         .result-hint {
-            text-align: center; color: rgba(255,255,255,0.45); font-size: 13px;
+            text-align: center; color: var(--muted); font-size: 13px;
             margin-bottom: 16px;
         }
-        .result-hint span { color: #e0a0f0; font-weight: 700; }
+        .result-hint span { color: var(--amber); font-weight: 700; }
 
-        /* 文章卡片：缩略图+内容 */
-        .article-card {
-            background: var(--card-bg);
-            border-radius: 16px; overflow: hidden;
-            margin-bottom: 16px; cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        /* ========== 杂志风格网格 ========== */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 18px;
+        }
+
+        /* 大卡片（Featured）：占 12 列 */
+        .article-card-featured {
+            grid-column: span 12;
+            background: var(--card-bg); border-radius: 16px; overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .article-card-featured:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: transparent;
+        }
+        .article-card-featured .feat-thumb {
+            width: 45%; min-height: 240px; flex-shrink: 0; position: relative; overflow: hidden;
+        }
+        .article-card-featured .feat-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .article-card-featured:hover .feat-thumb img { transform: scale(1.06); }
+        .feat-thumb-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+        .feat-thumb-placeholder .ftp-deco {
+            position: absolute; inset: 0;
+            opacity: 0.12;
+        }
+        .feat-thumb-placeholder .ftp-emoji {
+            font-size: 72px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+            position: relative; z-index: 1;
+        }
+        .feat-thumb .feat-cat-tag {
+            position: absolute; bottom: 14px; left: 14px;
+        }
+        .feat-body {
+            flex: 1; padding: 28px 28px;
+            display: flex; flex-direction: column;
+        }
+        .feat-cat-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 700; color: white; margin-bottom: 14px;
+            width: fit-content;
+        }
+        .feat-title {
+            font-size: 22px; font-weight: 900; color: var(--ink);
+            line-height: 1.35; margin-bottom: 10px;
+            font-family: 'Noto Serif SC', serif;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .feat-summary {
+            font-size: 14px; color: var(--muted); line-height: 1.7;
+            display: -webkit-box; -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical; overflow: hidden;
+            flex: 1;
+        }
+        .feat-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 20px; padding-top: 16px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap; gap: 10px;
+        }
+        .feat-meta {
+            display: flex; align-items: center; gap: 14px;
+            font-size: 12px; color: #AAAAB0;
+        }
+        .feat-meta span { display: flex; align-items: center; gap: 5px; }
+        .feat-readtime {
+            background: #F5F0E8; color: var(--amber-dark);
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+        }
+        .feat-arrow {
+            color: var(--amber); font-size: 18px;
+            transition: transform 0.2s;
+        }
+        .article-card-featured:hover .feat-arrow { transform: translateX(4px); }
+
+        /* 普通卡片：占 6 列 */
+        .article-card {
+            grid-column: span 6;
+            background: var(--card-bg); border-radius: 14px; overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 1px solid rgba(0,0,0,0.05);
         }
         .article-card:hover {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 12px 40px rgba(155,89,182,0.25);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: transparent;
         }
         .article-thumb {
-            width: 200px; min-height: 160px; flex-shrink: 0;
-            position: relative; overflow: hidden;
+            width: 100%; height: 170px; position: relative; overflow: hidden;
         }
         .article-thumb img {
             width: 100%; height: 100%; object-fit: cover;
             transition: transform 0.4s;
         }
-        .article-card:hover .article-thumb img { transform: scale(1.06); }
-        .article-thumb .thumb-placeholder {
+        .article-card:hover .article-thumb img { transform: scale(1.07); }
+        .article-thumb-placeholder {
             width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 52px;
+            position: relative; overflow: hidden;
         }
-        .article-thumb .cat-overlay {
+        .article-thumb-placeholder .atp-deco {
+            position: absolute; inset: 0; opacity: 0.1;
+        }
+        .article-thumb-placeholder .atp-emoji {
+            font-size: 52px; position: relative; z-index: 1;
+        }
+        .article-cat-tag {
             position: absolute; bottom: 10px; left: 10px;
-        }
-        .article-card-body {
-            flex: 1; padding: 18px 20px;
-            display: flex; flex-direction: column;
-        }
-        .article-card-header {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 8px; flex-wrap: wrap;
         }
         .article-cat-badge {
             padding: 3px 10px; border-radius: 10px;
             font-size: 11px; font-weight: 700; color: white;
         }
-        .badge-habitat { background: linear-gradient(135deg, #27AE60, #1E8449); }
-        .badge-species { background: linear-gradient(135deg, #e74c3c, #C0392B); }
-        .badge-knowledge { background: linear-gradient(135deg, #3498DB, #2980B9); }
-        .badge-news { background: linear-gradient(135deg, #f39c12, #d68910); }
-
+        .article-card-body { padding: 16px 18px; }
         .article-date {
-            font-size: 11px; color: #bbb; margin-left: auto;
+            font-size: 11px; color: #C0BAB2; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 5px;
         }
         .article-title {
-            font-size: 17px; font-weight: 800; color: #1a3a4a;
-            margin-bottom: 8px; line-height: 1.4;
+            font-size: 15px; font-weight: 800; color: var(--ink);
+            line-height: 1.4; margin-bottom: 7px;
+            font-family: 'Noto Serif SC', serif;
             display: -webkit-box; -webkit-line-clamp: 2;
             -webkit-box-orient: vertical; overflow: hidden;
         }
         .article-summary {
-            font-size: 13px; color: #666; line-height: 1.6;
+            font-size: 12px; color: var(--muted); line-height: 1.65;
             display: -webkit-box; -webkit-line-clamp: 2;
             -webkit-box-orient: vertical; overflow: hidden;
             flex: 1;
         }
-        .article-footer {
-            display: flex; align-items: center; gap: 12px;
-            margin-top: 10px; padding-top: 10px;
-            border-top: 1px solid #f0f0f0;
+        .article-card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 12px; padding-top: 10px;
+            border-top: 1px solid var(--border);
         }
         .article-meta {
             display: flex; align-items: center; gap: 4px;
-            font-size: 11px; color: #bbb;
+            font-size: 11px; color: #B0AAA2;
         }
         .article-meta i { font-size: 10px; }
-        .article-meta.reads { color: #e74c3c; }
-        .read-more {
-            margin-left: auto; font-size: 12px;
-            color: var(--primary); font-weight: 700;
-            display: flex; align-items: center; gap: 4px;
+        .article-readtime {
+            background: var(--cream); color: var(--amber-dark);
+            padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
         }
-        .article-footer .read-time {
-            background: #f5f0ff; color: var(--primary);
-            padding: 2px 8px; border-radius: 10px;
-            font-size: 11px; font-weight: 600;
-        }
+
+        /* 分类颜色 */
+        .cat-habitat { background: linear-gradient(135deg, var(--c-habitat), #3A7055); }
+        .cat-species { background: linear-gradient(135deg, var(--c-species), #963830); }
+        .cat-knowledge { background: linear-gradient(135deg, var(--c-knowledge), #3A5A7C); }
+        .cat-news { background: linear-gradient(135deg, var(--c-news), #A06020); }
 
         /* 骨架屏 */
         .skeleton-card {
-            background: var(--card-bg); border-radius: 16px;
-            overflow: hidden; margin-bottom: 16px;
-            display: flex;
+            background: var(--card-bg); border-radius: 14px; overflow: hidden;
+            box-shadow: var(--shadow-sm);
         }
-        .skeleton-thumb { width: 200px; min-height: 160px; flex-shrink: 0; background: #eee; animation: shimmer 1.5s infinite; }
-        .skeleton-body { flex: 1; padding: 18px 20px; }
-        .skeleton-line { height: 12px; background: #eee; border-radius: 6px; margin-bottom: 10px; animation: shimmer 1.5s infinite; }
+        .skeleton-thumb { height: 170px; background: #EEEAE3; }
+        .skeleton-body { padding: 16px 18px; }
+        .skeleton-line { height: 11px; background: #EEEAE3; border-radius: 6px; margin-bottom: 8px; }
         @keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
         /* 空状态 */
-        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4); }
-        .empty-state i { font-size: 48px; margin-bottom: 12px; }
-        .empty-state h3 { font-size: 18px; margin-bottom: 6px; color: rgba(255,255,255,0.6); }
-        .empty-state p { font-size: 13px; }
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state i { font-size: 48px; color: var(--border); margin-bottom: 12px; }
+        .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+        .empty-state p { font-size: 13px; color: #C0BAB2; }
 
-        /* ===== 文章详情弹窗 ===== */
+        /* ========== 文章详情弹窗 ========== */
         .modal-overlay {
             position: fixed; inset: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+            background: rgba(15,15,28,0.65); backdrop-filter: blur(8px);
             z-index: 2000; display: none;
             justify-content: center; align-items: flex-start; padding: 20px;
             overflow-y: auto;
@@ -267,122 +393,138 @@
 
         .modal-article {
             background: white; border-radius: 20px;
-            width: 100%; max-width: 760px;
-            margin: 20px auto;
+            width: 100%; max-width: 800px; margin: 20px auto;
             overflow: hidden;
-            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+            animation: modalIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 30px 100px rgba(0,0,0,0.45);
         }
         @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            from { opacity: 0; transform: scale(0.93) translateY(20px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
         .modal-cover {
-            width: 100%; height: 280px; object-fit: cover;
-            display: block;
+            width: 100%; height: 300px; object-fit: cover; display: block;
         }
-        .modal-cover.placeholder {
-            background: linear-gradient(135deg, #1a1a5e, #7B2D8B);
+        .modal-cover-placeholder {
+            width: 100%; height: 300px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 80px; color: rgba(255,255,255,0.2);
+            position: relative; overflow: hidden;
+        }
+        .modal-cover-placeholder .mcp-deco { position: absolute; inset: 0; }
+        .modal-cover-placeholder .mcp-emoji {
+            font-size: 90px; position: relative; z-index: 1;
+            filter: drop-shadow(0 4px 16px rgba(0,0,0,0.2));
         }
         .modal-header {
-            padding: 24px 28px 16px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 26px 30px 18px;
+            border-bottom: 1px solid var(--border);
         }
         .modal-cat-row {
             display: flex; align-items: center; gap: 10px;
-            margin-bottom: 12px; flex-wrap: wrap;
+            margin-bottom: 14px; flex-wrap: wrap;
         }
         .modal-cat-badge {
-            padding: 4px 12px; border-radius: 12px;
+            padding: 4px 12px; border-radius: 20px;
             font-size: 12px; font-weight: 700; color: white;
         }
         .modal-pub-info {
-            display: flex; align-items: center; gap: 16px;
-            font-size: 12px; color: #aaa; flex-wrap: wrap;
+            display: flex; align-items: center; gap: 14px;
+            font-size: 12px; color: var(--muted); flex-wrap: wrap;
         }
         .modal-pub-info span { display: flex; align-items: center; gap: 4px; }
         .modal-title {
-            font-size: 24px; font-weight: 900; color: #1a3a4a;
-            line-height: 1.4; margin-bottom: 8px;
+            font-size: 26px; font-weight: 900; color: var(--ink);
+            line-height: 1.4; margin-bottom: 10px;
+            font-family: 'Noto Serif SC', serif;
         }
         .modal-summary {
-            font-size: 14px; color: #666; line-height: 1.7;
-            border-left: 3px solid var(--primary);
-            padding-left: 12px; margin-top: 10px;
+            font-size: 14px; color: var(--muted); line-height: 1.75;
+            border-left: 3px solid var(--amber);
+            padding-left: 14px; margin-top: 10px;
         }
         .modal-content {
-            padding: 24px 28px 20px;
-            font-size: 15px; line-height: 1.9; color: #444;
-            max-height: 60vh; overflow-y: auto;
+            padding: 26px 30px 22px;
+            font-size: 15px; line-height: 1.9; color: #3A3A4A;
+            max-height: 58vh; overflow-y: auto;
         }
         .modal-content p { margin-bottom: 16px; }
-        .modal-content img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
-        .modal-divider {
-            height: 1px; background: #f0f0f0; margin: 8px 0;
-        }
+        .modal-content img { max-width: 100%; border-radius: 10px; margin: 14px 0; }
         .modal-tags {
             display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+            padding: 0 30px;
         }
         .modal-tag {
             padding: 3px 10px; border-radius: 8px;
-            background: #f5f0ff; color: var(--primary);
-            font-size: 11px; font-weight: 600;
+            background: var(--cream); color: var(--amber-dark);
+            font-size: 12px; font-weight: 600;
         }
         /* 相关文章 */
-        .modal-related {
-            padding: 0 28px 24px;
-        }
+        .modal-related { padding: 0 30px 24px; }
         .modal-related-title {
-            font-size: 13px; font-weight: 800; color: #aaa;
-            text-transform: uppercase; letter-spacing: 1px;
+            font-size: 11px; font-weight: 800; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 1.2px;
             margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
         }
-        .modal-related-title i { color: var(--primary); }
+        .modal-related-title i { color: var(--amber); }
         .related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .related-card {
-            background: #f8f9fa; border-radius: 10px;
-            padding: 12px; cursor: pointer; transition: all 0.2s;
+            background: var(--cream); border-radius: 12px;
+            padding: 14px; cursor: pointer; transition: all 0.2s;
             border: 1px solid transparent;
         }
         .related-card:hover {
-            border-color: var(--primary);
-            background: #f5f0ff;
+            border-color: var(--amber); background: #FFF8EE;
             transform: translateY(-2px);
         }
         .related-card .r-title {
-            font-size: 13px; font-weight: 700; color: #1a3a4a;
+            font-size: 13px; font-weight: 700; color: var(--ink);
             display: -webkit-box; -webkit-line-clamp: 2;
             -webkit-box-orient: vertical; overflow: hidden;
             line-height: 1.4; margin-bottom: 6px;
+            font-family: 'Noto Serif SC', serif;
         }
-        .related-card .r-meta { font-size: 11px; color: #bbb; }
+        .related-card .r-meta { font-size: 11px; color: #C0BAB2; }
         .modal-close-bar {
-            padding: 14px 28px; border-top: 1px solid #f0f0f0;
-            display: flex; justify-content: flex-end;
+            padding: 14px 30px; border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; align-items: center; gap: 10px;
         }
+        .btn-back {
+            padding: 9px 18px; border-radius: 10px;
+            background: var(--cream); border: 1px solid var(--border);
+            font-size: 13px; font-weight: 600; color: var(--muted);
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+            text-decoration: none;
+        }
+        .btn-back:hover { background: #F0EBE3; }
         .btn-close-modal {
-            padding: 10px 28px; border-radius: 10px;
-            background: #f0f2f5; border: none;
-            font-size: 13px; font-weight: 600; color: #555;
+            padding: 9px 24px; border-radius: 10px;
+            background: var(--ink); border: none;
+            font-size: 13px; font-weight: 600; color: white;
             cursor: pointer; transition: 0.2s;
         }
-        .btn-close-modal:hover { background: #e0e0e0; }
-        .modal-close-bar .btn-back {
-            margin-right: auto; padding: 10px 18px;
-            border-radius: 10px; background: none; border: 1px solid #ddd;
-            font-size: 13px; font-weight: 600; color: #888;
-            cursor: pointer; transition: 0.2s;
-        }
-        .modal-close-bar .btn-back:hover { background: #f5f5f5; }
+        .btn-close-modal:hover { background: var(--ink-light); }
 
         /* 响应式 */
-        @media (max-width: 640px) {
-            .article-card { flex-direction: column; }
-            .article-thumb { width: 100%; min-height: 160px; }
-            .related-grid { grid-template-columns: 1fr; }
+        @media (max-width: 768px) {
+            .article-card-featured { flex-direction: column; }
+            .article-card-featured .feat-thumb { width: 100%; min-height: 200px; }
+            .article-card { grid-column: span 12; }
+            .article-card:first-child { grid-column: span 12; }
         }
+        @media (max-width: 480px) {
+            .article-card { grid-column: span 12; }
+            .articles-grid { grid-template-columns: 1fr; }
+            .related-grid { grid-template-columns: 1fr; }
+            .modal-header { padding: 20px 18px 14px; }
+            .modal-content { padding: 20px 18px; }
+            .modal-tags { padding: 0 18px; }
+            .modal-related { padding: 0 18px 20px; }
+        }
+
+        /* 滚动条 */
+        .modal-content::-webkit-scrollbar { width: 5px; }
+        .modal-content::-webkit-scrollbar-track { background: transparent; }
+        .modal-content::-webkit-scrollbar-thumb { background: #D0C8BE; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -391,78 +533,83 @@
 
 <nav class="navbar">
     <a href="/" class="navbar-brand">
-        <div class="logo"><i class="fas fa-dragon" style="color:white"></i></div>
+        <div class="logo"><i class="fas fa-feather-alt" style="color:white;font-size:14px"></i></div>
         黄河生态方舟
     </a>
     <div class="navbar-links">
-        <a href="/" class="nav-btn">首页</a>
-        <a href="/species/" class="nav-btn">物种百科</a>
-        <a href="/articles/" class="nav-btn active">科普文章</a>
-        <a href="/report/" class="nav-btn">上报</a>
+        <a href="/" class="nav-btn"><i class="fas fa-map-marked-alt"></i> 大屏</a>
+        <a href="/report/" class="nav-btn"><i class="fas fa-camera"></i> 上报</a>
+        <a href="/species/" class="nav-btn"><i class="fas fa-book"></i> 物种百科</a>
+        <a href="/articles/" class="nav-btn active"><i class="fas fa-newspaper"></i> 科普</a>
+        <a href="/gallery/" class="nav-btn"><i class="fas fa-images"></i> 图库</a>
+        <a href="/profile/" class="nav-btn"><i class="fas fa-user"></i> 个人</a>
     </div>
 </nav>
 
 <div class="page-header">
-    <h1><i class="fas fa-newspaper"></i> 科普文章</h1>
-    <p>黄河湿地生态知识 · 保护动态 · 物种故事</p>
-</div>
-
-<div class="stats-row">
-    <div class="stat-card">
-        <div class="dot" style="background:#9B59B6"></div>
-        <div class="num" id="totalCount">—</div>
-        <div class="lbl">全部文章</div>
-    </div>
-    <div class="stat-card">
-        <div class="dot" style="background:#27AE60"></div>
-        <div class="num" id="habitatCount">—</div>
-        <div class="lbl">栖息地保护</div>
-    </div>
-    <div class="stat-card">
-        <div class="dot" style="background:#e74c3c"></div>
-        <div class="num" id="speciesCount">—</div>
-        <div class="lbl">物种保护</div>
-    </div>
-    <div class="stat-card">
-        <div class="dot" style="background:#3498DB"></div>
-        <div class="num" id="knowledgeCount">—</div>
-        <div class="lbl">生态知识</div>
-    </div>
-    <div class="stat-card">
-        <div class="dot" style="background:#f39c12"></div>
-        <div class="num" id="newsCount">—</div>
-        <div class="lbl">保护动态</div>
-    </div>
-</div>
-
-<div class="search-bar">
-    <i class="fas fa-search"></i>
-    <input type="text" id="searchInput" placeholder="搜索文章标题、内容..." oninput="filterArticles()">
-</div>
-
-<div class="category-tabs">
-    <div class="cat-tab active" data-cat="全部" onclick="setCategory(this)">
-        <span class="cat-dot" style="background:#9B59B6"></span>全部
-    </div>
-    <div class="cat-tab" data-cat="habitat" onclick="setCategory(this)">
-        <span class="cat-dot" style="background:#27AE60"></span>栖息地保护
-    </div>
-    <div class="cat-tab" data-cat="species" onclick="setCategory(this)">
-        <span class="cat-dot" style="background:#e74c3c"></span>物种保护
-    </div>
-    <div class="cat-tab" data-cat="knowledge" onclick="setCategory(this)">
-        <span class="cat-dot" style="background:#3498DB"></span>生态知识
-    </div>
-    <div class="cat-tab" data-cat="news" onclick="setCategory(this)">
-        <span class="cat-dot" style="background:#f39c12"></span>保护动态
+    <div class="header-inner">
+        <div class="header-eyebrow"><i class="fas fa-book-open"></i> 生态科普 · 知识分享</div>
+        <h1>科普<span style="color:rgba(255,255,255,0.2)"> · </span><em>文章</em></h1>
+        <p>黄河湿地生态知识 · 保护动态 · 物种故事，在这里读懂黄河生态。</p>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="dot" style="background:#C8922A"></div>
+                <div class="num" id="totalCount">—</div>
+                <div class="lbl">全部文章</div>
+            </div>
+            <div class="stat-card">
+                <div class="dot" style="background:#4A8C6F"></div>
+                <div class="num" id="habitatCount">—</div>
+                <div class="lbl">栖息地保护</div>
+            </div>
+            <div class="stat-card">
+                <div class="dot" style="background:#B85450"></div>
+                <div class="num" id="speciesCount">—</div>
+                <div class="lbl">物种保护</div>
+            </div>
+            <div class="stat-card">
+                <div class="dot" style="background:#4A7A9C"></div>
+                <div class="num" id="knowledgeCount">—</div>
+                <div class="lbl">生态知识</div>
+            </div>
+            <div class="stat-card">
+                <div class="dot" style="background:#C08040"></div>
+                <div class="num" id="newsCount">—</div>
+                <div class="lbl">保护动态</div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="articles-container">
+<div class="filter-bar">
+    <div class="filter-bar-inner">
+        <div class="search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="搜索文章标题、内容..." oninput="filterArticles()">
+        </div>
+        <div class="cat-tab active" data-cat="全部" onclick="setCategory(this)">
+            <span class="cat-dot" style="background:#C8922A"></span>全部
+        </div>
+        <div class="cat-tab" data-cat="habitat" onclick="setCategory(this)">
+            <span class="cat-dot" style="background:#4A8C6F"></span>栖息地
+        </div>
+        <div class="cat-tab" data-cat="species" onclick="setCategory(this)">
+            <span class="cat-dot" style="background:#B85450"></span>物种保护
+        </div>
+        <div class="cat-tab" data-cat="knowledge" onclick="setCategory(this)">
+            <span class="cat-dot" style="background:#4A7A9C"></span>生态知识
+        </div>
+        <div class="cat-tab" data-cat="news" onclick="setCategory(this)">
+            <span class="cat-dot" style="background:#C08040"></span>保护动态
+        </div>
+    </div>
+</div>
+
+<div class="articles-wrap">
     <div class="result-hint" id="resultHint" style="display:none">
         找到 <span id="resultCount">0</span> 篇相关文章
     </div>
-    <div id="articlesGrid"></div>
+    <div class="articles-grid" id="articlesGrid"></div>
     <div class="empty-state" id="emptyState" style="display:none">
         <i class="fas fa-book-open"></i>
         <h3>未找到相关文章</h3>
@@ -473,7 +620,11 @@
 <!-- 文章详情弹窗 -->
 <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
     <div class="modal-article" onclick="event.stopPropagation()">
-        <img id="modal-cover" class="modal-cover" src="" alt="">
+        <img id="modal-cover" class="modal-cover" src="" alt="" style="display:none">
+        <div id="modal-cover-placeholder" class="modal-cover-placeholder">
+            <div class="mcp-deco" id="modal-cover-bg"></div>
+            <span class="mcp-emoji" id="modal-cover-emoji"></span>
+        </div>
         <div class="modal-header">
             <div class="modal-cat-row">
                 <span class="modal-cat-badge" id="modal-cat-badge">—</span>
@@ -489,7 +640,7 @@
         </div>
         <div class="modal-tags" id="modal-tags"></div>
         <div class="modal-content" id="modal-content"></div>
-        <div class="modal-related">
+        <div class="modal-related" id="modal-related-section">
             <div class="modal-related-title"><i class="fas fa-feather-alt"></i> 相关推荐</div>
             <div class="related-grid" id="related-grid"></div>
         </div>
@@ -497,7 +648,9 @@
             <a id="modalLinkSpecies" href="/species/" class="btn-back" style="display:none" target="_blank">
                 <i class="fas fa-book"></i> 查看相关物种
             </a>
-            <button class="btn-back" onclick="closeModal()"><i class="fas fa-arrow-left"></i> 返回列表</button>
+            <button class="btn-back" onclick="closeModal()">
+                <i class="fas fa-arrow-left"></i> 返回列表
+            </button>
             <button class="btn-close-modal" onclick="closeModal()">关闭</button>
         </div>
     </div>
@@ -508,13 +661,12 @@ const API = '/api';
 let allArticles = [];
 let currentCategory = '全部';
 let searchKeyword = '';
-let currentArticleId = null;
 
 const CAT = {
-    'habitat':   { label: '栖息地保护', cls: 'badge-habitat',   icon: '🌿', color: '#27AE60', bg: 'linear-gradient(135deg,#27AE60,#1E8449)' },
-    'species':   { label: '物种保护',   cls: 'badge-species',   icon: '🦅', color: '#e74c3c', bg: 'linear-gradient(135deg,#e74c3c,#C0392B)' },
-    'knowledge': { label: '生态知识',   cls: 'badge-knowledge', icon: '💡', color: '#3498DB', bg: 'linear-gradient(135deg,#3498DB,#2980B9)' },
-    'news':      { label: '保护动态',   cls: 'badge-news',      icon: '📰', color: '#f39c12', bg: 'linear-gradient(135deg,#f39c12,#d68910)' },
+    'habitat':   { label: '栖息地保护', cls: 'cat-habitat',   color: '#4A8C6F', bg: 'linear-gradient(135deg,#4A8C6F,#3A7055)', img: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/D%C3%BClmen%2C_Rorup%2C_NSG_Roruper_Holz_--_2021_--_8187-91.jpg' },
+    'species':   { label: '物种保护',   cls: 'cat-species',   color: '#B85450', bg: 'linear-gradient(135deg,#B85450,#963830)', img: 'https://upload.wikimedia.org/wikipedia/commons/9/9f/Wildlife-photography-in-kerala.jpg' },
+    'knowledge': { label: '生态知识',   cls: 'cat-knowledge', color: '#4A7A9C', bg: 'linear-gradient(135deg,#4A7A9C,#3A5A7C)', img: 'https://upload.wikimedia.org/wikipedia/commons/d/da/Leaf_Litter_-_Guelph%2C_Ontario.jpg' },
+    'news':      { label: '保护动态',   cls: 'cat-news',      color: '#C08040', bg: 'linear-gradient(135deg,#C08040,#A06020)', img: 'https://upload.wikimedia.org/wikipedia/commons/8/82/LEKKI_CONSERVATION_CENTRE.jpg' },
 };
 
 function getCat(cat) { return CAT[cat] || CAT['knowledge']; }
@@ -555,35 +707,72 @@ function renderCards(articles) {
     hint.style.display = searchKeyword || currentCategory !== '全部' ? 'block' : 'none';
     document.getElementById('resultCount').textContent = articles.length;
 
-    grid.innerHTML = articles.map(a => {
-        const ci = getCat(a.category);
-        const readtime = calcReadTime(a.content);
-        const date = friendlyDate(a.created_at);
-        return `<div class="article-card" data-id="${a.id}" onclick="showDetail(${a.id})">
-            <div class="article-thumb">
-                ${a.cover_image
-                    ? `<img src="${a.cover_image}" alt="${a.title}" loading="lazy">`
-                    : `<div class="thumb-placeholder" style="background:${thumbBg(a.category)}">${ci.icon}</div>`
+    // 第一篇为大卡片，其余为普通卡片
+    const [featured, ...rest] = articles;
+
+    let html = '';
+
+    if (featured) {
+        const ci = getCat(featured.category);
+        const readtime = calcReadTime(featured.content);
+        const date = friendlyDate(featured.created_at);
+        const catBadge = `<span class="feat-cat-badge ${ci.cls}">${ci.label}</span>`;
+        html += `<div class="article-card-featured" data-id="${featured.id}" onclick="showDetail(${featured.id})">
+            <div class="feat-thumb">
+                ${featured.cover_image
+                    ? `<img src="${featured.cover_image}" alt="${featured.title}" loading="lazy">`
+                    : `<img src="${ci.img}" alt="${featured.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
                 }
-                <div class="cat-overlay">
-                    <span class="article-cat-badge ${ci.cls}">${ci.icon} ${ci.label}</span>
-                </div>
+                <div class="feat-cat-tag">${catBadge}</div>
             </div>
-            <div class="article-card-body">
-                <div class="article-card-header">
-                    <span class="article-date">${date}</span>
-                </div>
-                <div class="article-title">${a.title}</div>
-                <div class="article-summary">${a.summary || '暂无摘要'}</div>
-                <div class="article-footer">
-                    <span class="article-meta"><i class="fas fa-user"></i> ${a.author_name || '未知作者'}</span>
-                    <span class="article-meta reads"><i class="fas fa-eye"></i> ${a.views || 0}</span>
-                    <span class="read-time"><i class="fas fa-clock"></i> ${readtime}</span>
-                    <span class="read-more">阅读全文 <i class="fas fa-arrow-right"></i></span>
+            <div class="feat-body">
+                <div></div>
+                <div class="feat-title">${featured.title}</div>
+                <div class="feat-summary">${featured.summary || '暂无摘要'}</div>
+                <div class="feat-footer">
+                    <div class="feat-meta">
+                        <span><i class="fas fa-user"></i> ${featured.author_name || '未知作者'}</span>
+                        <span><i class="fas fa-eye"></i> ${featured.views || 0}</span>
+                        <span><i class="far fa-clock"></i> ${date}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="feat-readtime"><i class="fas fa-clock"></i> ${readtime}</span>
+                        <i class="fas fa-arrow-right feat-arrow"></i>
+                    </div>
                 </div>
             </div>
         </div>`;
-    }).join('');
+    }
+
+    if (rest.length > 0) {
+        html += rest.map(a => {
+            const ci = getCat(a.category);
+            const readtime = calcReadTime(a.content);
+            const date = friendlyDate(a.created_at);
+            return `<div class="article-card" data-id="${a.id}" onclick="showDetail(${a.id})">
+                <div class="article-thumb">
+                    ${a.cover_image
+                        ? `<img src="${a.cover_image}" alt="${a.title}" loading="lazy">`
+                        : `<img src="${ci.img}" alt="${a.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
+                    }
+                    <div class="article-cat-tag">
+                        <span class="article-cat-badge ${ci.cls}">${ci.label}</span>
+                    </div>
+                </div>
+                <div class="article-card-body">
+                    <div class="article-date"><i class="far fa-calendar"></i> ${date}</div>
+                    <div class="article-title">${a.title}</div>
+                    <div class="article-summary">${a.summary || '暂无摘要'}</div>
+                    <div class="article-card-footer">
+                        <span class="article-meta"><i class="fas fa-user"></i> ${a.author_name || '未知作者'}</span>
+                        <span class="article-readtime"><i class="fas fa-clock"></i> ${readtime}</span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    grid.innerHTML = html;
 }
 
 function filterArticles() {
@@ -615,19 +804,23 @@ function applyFilters() {
 function showDetail(id) {
     const a = allArticles.find(x => x.id === id);
     if (!a) return;
-    currentArticleId = id;
     const ci = getCat(a.category);
 
     const cover = document.getElementById('modal-cover');
+    const coverPlaceholder = document.getElementById('modal-cover-placeholder');
     if (a.cover_image) {
-        cover.src = a.cover_image; cover.className = 'modal-cover';
+        cover.src = a.cover_image;
+        cover.style.display = 'block';
+        cover.className = 'modal-cover';
+        coverPlaceholder.style.display = 'none';
     } else {
-        cover.src = ''; cover.className = 'modal-cover placeholder';
-        cover.style.background = thumbBg(a.category);
-        cover.innerHTML = `<span style="font-size:80px">${ci.icon}</span>`;
+        cover.src = ci.img;
+        cover.style.display = 'block';
+        cover.className = 'modal-cover';
+        coverPlaceholder.style.display = 'none';
     }
 
-    document.getElementById('modal-cat-badge').textContent = `${ci.icon} ${ci.label}`;
+    document.getElementById('modal-cat-badge').textContent = `${ci.label}`;
     document.getElementById('modal-cat-badge').className = `modal-cat-badge ${ci.cls}`;
     document.getElementById('modal-title').textContent = a.title;
     document.getElementById('modal-author').textContent = a.author_name || '未知作者';
@@ -640,7 +833,7 @@ function showDetail(id) {
     const kwList = ['黄河', '湿地', '保护', '生态', '鸟类', '水鸟', '候鸟', '濒危', '栖息地', '迁徙'];
     const found = kwList.filter(k => a.content && a.content.includes(k));
     if (found.length) {
-        tagsEl.innerHTML = found.slice(0,4).map(k => `<span class="modal-tag">${k}</span>`).join('');
+        tagsEl.innerHTML = found.slice(0, 4).map(k => `<span class="modal-tag">${k}</span>`).join('');
         tagsEl.style.display = 'flex';
     } else { tagsEl.style.display = 'none'; }
 
@@ -648,19 +841,18 @@ function showDetail(id) {
 
     const related = allArticles.filter(x => x.category === a.category && x.id !== a.id).slice(0, 2);
     const relGrid = document.getElementById('related-grid');
+    const relSection = document.getElementById('modal-related-section');
     if (related.length) {
         relGrid.innerHTML = related.map(r => `
             <div class="related-card" onclick="showDetail(${r.id})">
                 <div class="r-title">${r.title}</div>
                 <div class="r-meta">${friendlyDate(r.created_at)} · ${calcReadTime(r.content)}</div>
             </div>`).join('');
-        relGrid.parentElement.style.display = 'block';
-    } else { relGrid.parentElement.style.display = 'none'; }
+        relSection.style.display = 'block';
+    } else { relSection.style.display = 'none'; }
 
-    // 根据文章内容中的物种名设置百科链接
     const speciesLinkEl = document.getElementById('modalLinkSpecies');
-    if (a.content) {
-        // 用文章标题或摘要中的关键词去百科页搜索
+    if (a.content || a.title) {
         const keyword = (a.title || '').replace(/['""''""''""']/g, '').trim().split(/[，。、,\s]+/)[0];
         speciesLinkEl.href = `/species/?search=${encodeURIComponent(keyword)}`;
         speciesLinkEl.style.display = 'inline-flex';
@@ -681,26 +873,14 @@ function showDetail(id) {
         bar.style.width = h > 0 ? (s/h*100).toFixed(1) + '%' : '0%';
     };
 
-    // 调用后端接口记录阅读次数
     fetch(`${API}/articles/${id}/view/`, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
             const newViews = data.views || (a.views || 0) + 1;
             a.views = newViews;
             document.getElementById('modal-views').textContent = newViews;
-            // 同步更新列表中该文章的显示
-            const card = document.querySelector(`.article-card[data-id="${id}"]`);
-            if (card) {
-                const readsEl = card.querySelector('.article-meta.reads');
-                if (readsEl) readsEl.innerHTML = `<i class="fas fa-eye"></i> ${newViews}`;
-            }
         })
         .catch(() => {});
-
-    // 给当前打开的文章卡片标记 data-id，方便后续查找
-    document.querySelectorAll('.article-card[data-id]').forEach(c => c.removeAttribute('data-id'));
-    const openedCard = Array.from(document.querySelectorAll('.article-card')).find(c => c.querySelector('.article-title')?.textContent === a.title);
-    if (openedCard) openedCard.setAttribute('data-id', id);
 }
 
 function closeModal(e) {
@@ -717,13 +897,13 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(e
 async function loadArticles() {
     const grid = document.getElementById('articlesGrid');
     grid.innerHTML = Array.from({length: 3}, () => `
-        <div class="skeleton-card">
+        <div class="skeleton-card" style="grid-column:span 6">
             <div class="skeleton-thumb"></div>
             <div class="skeleton-body">
                 <div class="skeleton-line" style="width:25%"></div>
                 <div class="skeleton-line" style="width:80%"></div>
                 <div class="skeleton-line" style="width:95%"></div>
-                <div class="skeleton-line" style="width:70%"></div>
+                <div class="skeleton-line" style="width:60%"></div>
             </div>
         </div>`).join('');
 
@@ -749,8 +929,8 @@ async function loadArticles() {
             document.getElementById('searchInput').value = autoSearch;
             filterArticles();
             const tryOpen = (attempts) => {
-                const cards = document.querySelectorAll('.article-card');
-                if (cards.length > 0) { cards[0].click(); }
+                const cards = document.querySelectorAll('.article-card, .article-card-featured');
+                if (cards.length > 0) cards[0].click();
                 else if (attempts > 0) setTimeout(() => tryOpen(attempts - 1), 200);
             };
             setTimeout(() => tryOpen(5), 300);

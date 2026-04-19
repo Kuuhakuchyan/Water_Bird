@@ -45,6 +45,7 @@ urlpatterns = [
     # 物种百科（含详情页）
     path('species/', lambda r: render(r, 'species.html'), name='species'),
     re_path(r'^species/(?P<species_id>\d+)/$', lambda r, species_id: render(r, 'species-detail.html'), name='species_detail'),
+    path('gallery/', lambda r: render(r, 'species-gallery.html'), name='species_gallery'),
 
     # 科普文章（含详情页）
     path('articles/', lambda r: render(r, 'articles.html'), name='articles'),
