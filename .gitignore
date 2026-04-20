@@ -23,7 +23,11 @@ db.sqlite3
 
 # Media
 /media/
-/Water_Bird/media/
+# Explicitly ignore only the media subdirectories that should be excluded
+# Water_Bird/media/species/gallery/ is tracked (via .gitattributes + LFS)
+/Water_Bird/media/observations/
+/Water_Bird/media/uploads/
+/Water_Bird/media/__pycache__/
 
 # Byte-compiled / optimized / DLL files
 *.pyc

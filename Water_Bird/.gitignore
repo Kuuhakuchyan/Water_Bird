@@ -23,7 +23,10 @@ db.sqlite3
 *.pyc
 
 # Media & Static
-media/
+# Ignore specific media subdirs (gallery is tracked via Git LFS in .gitattributes)
+media/observations/
+media/uploads/
+media/__pycache__/
 static/
 
 # Environment
