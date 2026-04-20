@@ -5,7 +5,7 @@ from import_export.admin import ImportExportModelAdmin
 from import_export.widgets import ForeignKeyWidget
 # 👇 引入所有用到的模型 (记得加 Product)
 from .models import SpeciesInfo, WetlandZone, MonitoringRoute, UserProfile, ObservationRecord, AIDetectionResult, \
-    Product, Article, ExchangeRecord
+    Product, Article, ExchangeRecord, SpeciesImage
 from datetime import datetime
 
 # ====================
@@ -203,3 +203,11 @@ class ExchangeRecordAdmin(admin.ModelAdmin):
     list_display = ('user', 'product', 'points_spent', 'status', 'created_at')
     list_filter = ('status', 'created_at')
     search_fields = ('user__username', 'product__name')
+
+
+@admin.register(SpeciesImage)
+class SpeciesImageAdmin(admin.ModelAdmin):
+    list_display = ('species', 'caption', 'source', 'is_featured', 'views', 'created_at')
+    list_filter = ('source', 'is_featured', 'created_at')
+    search_fields = ('species__name_cn', 'caption')
+    list_editable = ('is_featured',)

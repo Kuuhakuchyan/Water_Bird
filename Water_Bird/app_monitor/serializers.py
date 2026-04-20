@@ -1,7 +1,7 @@
 from rest_framework import serializers
 import random
 # 引入所有需要的模型
-from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile, SpeciesInfo, Article, ExchangeRecord
+from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile, SpeciesInfo, Article, ExchangeRecord, SpeciesImage
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
@@ -115,7 +115,62 @@ class ExchangeRecordSerializer(serializers.ModelSerializer):
 
 
 # ==========================================
-# 0b. 物种列表序列化器（增强版）
+# 物种图片序列化器
+# ==========================================
+class SpeciesImageSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+    source_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SpeciesImage
+        fields = ['id', 'species', 'url', 'caption', 'source', 'source_display', 'source_url', 'source_author', 'is_featured', 'created_at']
+
+    def get_url(self, obj):
+        # Priority 1: local image field (stored in media/species/gallery/)
+        if obj.image and str(obj.image) not in ('', 'False', 'None'):
+            request = self.context.get('request')
+            path = str(obj.image).lstrip('/')
+            if request:
+                return request.build_absolute_uri('/media/' + path)
+            return '/media/' + path
+        # Priority 2: external URL — return as-is
+        if obj.image_url:
+            return obj.image_url
+        return None
+
+    def _strip_wikimedia_thumb(self, url):
+        """Strip Wikimedia thumbnail path to return original image URL.
+        Wikimedia thumbnail URL format:
+          .../thumb/{H}/{F}/{size}px-{F}.jpg  →  .../thumb/{H}/{F}
+        where H = single-char hash, F = original filename.
+        """
+        if not url or '/thumb/' not in url:
+            return url
+        thumb_idx = url.find('/thumb/')
+        after_thumb = url[thumb_idx + 7:]  # skip '/thumb/'
+        parts = after_thumb.split('/')
+        # parts[0] = single-char hash (e.g. 'a')
+        # parts[1] = original filename (e.g. 'a7_Black_stork_in_Ranthambore.jpg')
+        # everything after parts[1] is the thumbnail wrapper, discard it
+        if len(parts) < 2:
+            return url
+        return url[:thumb_idx] + '/thumb/' + parts[0] + '/' + parts[1]
+
+    def get_source_display(self, obj):
+        source_map = {
+            'wikimedia': '维基百科',
+            'birdsource': 'Birdsourcing',
+            'ibc': 'Internet Bird Collection',
+            'xeno_canto': 'Xeno-Canto',
+            'npc': '中国鸟类图库',
+            'manual': '手动上传',
+            'other': '其他来源',
+        }
+        return source_map.get(obj.source, obj.source)
+
+
+# ==========================================
+# 物种列表序列化器（增强版）
 # ==========================================
 class SpeciesInfoSerializer(serializers.ModelSerializer):
     # 该物种被观测的次数（仅统计已审核通过的记录）
@@ -126,12 +181,17 @@ class SpeciesInfoSerializer(serializers.ModelSerializer):
     iucn_status = serializers.SerializerMethodField()
     # 该物种关联的科普文章数
     article_count = serializers.SerializerMethodField()
+    # 图片相关
+    cover_image_url = serializers.SerializerMethodField()
+    gallery_images = SpeciesImageSerializer(source='images', many=True, read_only=True)
+    gallery_count = serializers.SerializerMethodField()
 
     class Meta:
         model = SpeciesInfo
         fields = [
             'id', 'name_cn', 'name_latin', 'order', 'family',
             'protection_level', 'distribution_habit', 'cover_image',
+            'cover_image_url', 'gallery_images', 'gallery_count',
             'observation_count', 'last_observed', 'iucn_status', 'article_count'
         ]
 
@@ -159,6 +219,34 @@ class SpeciesInfoSerializer(serializers.ModelSerializer):
             is_published=True,
             content__icontains=obj.name_cn
         ).count()
+
+    def get_cover_image_url(self, obj):
+        # Priority 1: SpeciesInfo.cover_image field (legacy field)
+        if obj.cover_image and str(obj.cover_image) not in ('', 'False', 'None'):
+            request = self.context.get('request')
+            path = str(obj.cover_image).lstrip('/')
+            if request:
+                return request.build_absolute_uri('/media/' + path)
+            return '/media/' + path
+        # Priority 2: featured SpeciesImage for this species
+        featured = obj.images.filter(is_featured=True).first()
+        if featured:
+            return self._resolve_image_url(featured)
+        # Priority 3: any SpeciesImage (order by views then created)
+        first_image = obj.images.order_by('-views', '-created_at').first()
+        if first_image:
+            return self._resolve_image_url(first_image)
+        return None
+
+    def _resolve_image_url(self, img_obj):
+        """Resolve image URL from SpeciesImage object."""
+        if img_obj.image and str(img_obj.image) not in ('', 'False', 'None'):
+            path = str(img_obj.image).lstrip('/')
+            return '/media/' + path
+        return img_obj.image_url if img_obj.image_url else None
+
+    def get_gallery_count(self, obj):
+        return obj.images.count()
 
 
 # ==========================================

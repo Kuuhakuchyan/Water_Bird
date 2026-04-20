@@ -9,12 +9,13 @@ from rest_framework.authtoken.views import obtain_auth_token
 from app_monitor.views import (
     ObservationViewSet, ZoneViewSet, TransectViewSet,
     index_view, UserProfileViewSet, RegisterViewSet,
-    SpeciesViewSet, ArticleViewSet, ProductViewSet,
+    SpeciesViewSet, SpeciesImageViewSet, ArticleViewSet, ProductViewSet,
 )
 
 # === 1. 注册 API 路由 ===
 router = DefaultRouter()
 router.register(r'species', SpeciesViewSet)
+router.register(r'species-images', SpeciesImageViewSet, basename='species-image')
 router.register(r'observations', ObservationViewSet, basename='observation')
 router.register(r'zones', ZoneViewSet)
 router.register(r'transects', TransectViewSet)

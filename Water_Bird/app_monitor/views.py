@@ -2,10 +2,10 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Sum, Q  # 引入 Q 用于复杂查询
+from django.db.models import Sum, Q, Prefetch  # 引入 Q 用于复杂查询
 
 # DRF 相关引用
-from rest_framework import viewsets, permissions, status, serializers
+from rest_framework import viewsets, permissions, status, serializers, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -15,7 +15,7 @@ D = None
 
 # === 引入模型 ===
 # 确保包含 Product, UserProfile
-from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile, SpeciesInfo, Article, ExchangeRecord
+from .models import ObservationRecord, WetlandZone, MonitoringRoute, Product, UserProfile, SpeciesInfo, Article, ExchangeRecord, SpeciesImage
 from django.contrib.auth.models import User
 
 # === 引入序列化器 ===
@@ -29,6 +29,7 @@ from .serializers import (
     UserProfileUpdateSerializer,
     UserAvatarUpdateSerializer,
     SpeciesInfoSerializer,
+    SpeciesImageSerializer,
     ArticleSerializer,
     ExchangeRecordSerializer,
 )
@@ -73,6 +74,86 @@ class SpeciesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SpeciesInfo.objects.all().order_by('name_cn')
     serializer_class = SpeciesInfoSerializer
     permission_classes = [permissions.AllowAny]
+
+
+# ==========================================
+# 1c. 物种图片库视图 /api/species-images/
+# ==========================================
+class SpeciesImageViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SpeciesImage.objects.all().order_by('-is_featured', '-views', '-created_at')
+    serializer_class = SpeciesImageSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        species_id = self.request.query_params.get('species_id')
+        if species_id:
+            queryset = queryset.filter(species_id=species_id)
+        return queryset
+
+    # 设置精选图片：指定某张图片为某物种的封面
+    @action(detail=True, methods=['post'], url_path='set-featured')
+    def set_featured(self, request, pk=None):
+        """将指定图片设为该物种的精选封面图。
+        请求体：{ "species_id": 123 }（可选，API会自动从图片对象获取）
+        """
+        image = self.get_object()
+        species_id = request.data.get('species_id') or image.species_id
+
+        # 将同物种其他图片的 is_featured 设为 False
+        SpeciesImage.objects.filter(species_id=species_id).exclude(pk=image.pk).update(is_featured=False)
+        # 将指定图片设为精选
+        image.is_featured = True
+        image.save(update_fields=['is_featured'])
+
+        # 重新获取该物种的封面图 URL
+        from app_monitor.serializers import SpeciesInfoSerializer
+        species = SpeciesInfo.objects.get(pk=species_id)
+        cover_url = SpeciesInfoSerializer(species, context={'request': request}).data.get('cover_image_url')
+
+        return Response({
+            'success': True,
+            'image_id': image.pk,
+            'species_id': species_id,
+            'cover_image_url': cover_url,
+            'message': f'已将图片设为 {image.species.name_cn} 的精选封面'
+        })
+
+    # 批量设置精选（一次性设置多个图片的精选状态）
+    @action(detail=False, methods=['post'], url_path='batch-set-featured')
+    def batch_set_featured(self, request):
+        """批量设置精选图片。
+        请求体：{ "image_ids": [1, 2, 3] } — 第一个为精选
+        """
+        image_ids = request.data.get('image_ids', [])
+        if not image_ids:
+            return Response({'success': False, 'message': '请提供 image_ids'}, status=400)
+
+        featured_id = image_ids[0] if image_ids else None
+        species_id = None
+
+        # 获取第一个图片的物种ID
+        if featured_id:
+            try:
+                first_img = SpeciesImage.objects.get(pk=featured_id)
+                species_id = first_img.species_id
+            except SpeciesImage.DoesNotExist:
+                return Response({'success': False, 'message': f'图片 {featured_id} 不存在'}, status=404)
+
+        # 清除该物种所有精选状态
+        if species_id:
+            SpeciesImage.objects.filter(species_id=species_id).update(is_featured=False)
+
+        # 设置新的精选
+        updated = SpeciesImage.objects.filter(pk__in=image_ids).update(is_featured=True)
+
+        return Response({
+            'success': True,
+            'featured_id': featured_id,
+            'species_id': species_id,
+            'updated_count': updated,
+            'message': '精选图片已更新'
+        })
 
 
 # ==========================================
