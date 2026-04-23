@@ -240,10 +240,15 @@ class SpeciesInfoSerializer(serializers.ModelSerializer):
 
     def _resolve_image_url(self, img_obj):
         """Resolve image URL from SpeciesImage object."""
+        request = self.context.get('request')
         if img_obj.image and str(img_obj.image) not in ('', 'False', 'None'):
             path = str(img_obj.image).lstrip('/')
+            if request:
+                return request.build_absolute_uri('/media/' + path)
             return '/media/' + path
-        return img_obj.image_url if img_obj.image_url else None
+        if img_obj.image_url:
+            return img_obj.image_url
+        return None
 
     def get_gallery_count(self, obj):
         return obj.images.count()

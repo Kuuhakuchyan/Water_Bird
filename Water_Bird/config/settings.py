@@ -101,6 +101,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -169,3 +172,4 @@ SIMPLEUI_ICON = {
 # === CORS 配置 ===
 CORS_ALLOW_ALL_ORIGINS = True  # 开发环境允许所有跨域请求
 CORS_ALLOW_CREDENTIALS = True
+
