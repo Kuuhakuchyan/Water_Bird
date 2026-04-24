@@ -1,17 +1,18 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.utils import timezone
+from django.db import transaction
+from django.db.models import Sum, Q, F
 from datetime import timedelta
-from django.db.models import Sum, Q, Prefetch  # 引入 Q 用于复杂查询
+import logging
 
-# DRF 相关引用
+# DRF related imports
 from rest_framework import viewsets, permissions, status, serializers, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-# GIS 相关引用 (已废弃，改为 JSONField 存储)
-Point = None
-D = None
+# Get logger
+logger = logging.getLogger('app_monitor')
 
 # === 引入模型 ===
 # 确保包含 Product, UserProfile
@@ -199,20 +200,33 @@ class ObservationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        当用户 POST 上传数据时执行
+        When user POSTs observation data, auto-associate user and award points.
+        Uses atomic transaction + explicit get-then-create to prevent race conditions
+        where concurrent submissions could both try to create UserProfile.
         """
-        # 1. 自动关联当前登录用户
-        serializer.save(uploader=self.request.user)
-
-        # 2. 积分奖励逻辑 (上传一条 +10分)
-        try:
-            # 获取或创建用户的积分档案
-            profile, created = UserProfile.objects.get_or_create(user=self.request.user)
-            profile.score += 10
-            profile.save()
-            print(f"用户 {self.request.user.username} 上传成功，积分+10，当前: {profile.score}")
-        except Exception as e:
-            print(f"加分失败: {e}")
+        user = self.request.user
+        with transaction.atomic():
+            record = serializer.save(uploader=user)
+            try:
+                profile = UserProfile.objects.select_for_update().get(user=user)
+            except UserProfile.DoesNotExist:
+                try:
+                    profile = UserProfile.objects.create(user=user, score=10)
+                except transaction.TransactionManagementError:
+                    profile = UserProfile.objects.select_for_update().get(user=user)
+                else:
+                    logger.info(
+                        "Observation uploaded: user=%s record_id=%s, created profile with score=10",
+                        user.username, record.id
+                    )
+                    return
+            profile.score = F('score') + 10
+            profile.save(update_fields=['score'])
+            profile.refresh_from_db()
+            logger.info(
+                "Observation uploaded: user=%s record_id=%s, score awarded=10, total=%s",
+                user.username, record.id, profile.score
+            )
 
     # === GIS 功能: 附近预警 ===
     @action(detail=False, methods=['get'])
@@ -242,33 +256,47 @@ class ProductViewSet(viewsets.ModelViewSet):
         user = request.user
 
         try:
-            profile = user.profile
+            with transaction.atomic():
+                profile = UserProfile.objects.select_for_update().get(user=user)
+                product = Product.objects.select_for_update().get(pk=product.pk)
+
+                if product.stock <= 0:
+                    return Response({"error": "商品库存不足"}, status=400)
+
+                if profile.score < product.price:
+                    return Response({
+                        "error": f"积分不足，还需要 {product.price - profile.score} 分"
+                    }, status=400)
+
+                spent = product.price
+                profile.score = F('score') - spent
+                profile.save(update_fields=['score'])
+                profile.refresh_from_db()
+
+                product.stock = F('stock') - 1
+                product.save(update_fields=['stock'])
+                product.refresh_from_db()
+
+                ExchangeRecord.objects.create(
+                    user=user,
+                    product=product,
+                    points_spent=spent,
+                    status='pending'
+                )
+
+                logger.info(
+                    "Redemption: user=%s redeemed=%s (price=%s), remaining_score=%s, stock=%s",
+                    user.username, product.name, spent, profile.score, product.stock
+                )
+
+                return Response({
+                    "message": f"成功兑换: {product.name}",
+                    "remaining_score": profile.score
+                })
         except UserProfile.DoesNotExist:
             return Response({"error": "用户档案不存在"}, status=400)
-
-        # 1. 校验库存
-        if product.stock <= 0:
-            return Response({"error": "商品库存不足"}, status=400)
-
-        # 2. 校验积分
-        if profile.score < product.price:
-            return Response({"error": f"积分不足，还需要 {product.price - profile.score} 分"}, status=400)
-
-        # 3. 执行交易
-        spent = product.price
-        profile.score -= spent
-        profile.save()
-
-        product.stock -= 1
-        product.save()
-
-        # 4. 记录兑换历史
-        ExchangeRecord.objects.create(user=user, product=product, points_spent=spent, status='pending')
-
-        return Response({
-            "message": f"成功兑换: {product.name}",
-            "remaining_score": profile.score
-        })
+        except Product.DoesNotExist:
+            return Response({"error": "商品不存在"}, status=400)
 
     # GET /api/products/me/exchanges/  <-- 用户查看自己的兑换记录
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='me/exchanges')
@@ -282,12 +310,15 @@ class ProductViewSet(viewsets.ModelViewSet):
 # 5. 用户档案视图 /api/profiles/
 # ==========================================
 class UserProfileUpdateScoreSerializer(serializers.Serializer):
-    """专用于积分更新的序列化器"""
-    score = serializers.IntegerField(required=True)
+    """Score update serializer — uses delta instead of absolute value to prevent
+    clients from overwriting the score to arbitrary values."""
+    delta = serializers.IntegerField(required=True, help_text="积分增量，正数增加，负数减少")
 
     def update(self, instance, validated_data):
-        instance.score = validated_data['score']
+        delta = validated_data['delta']
+        instance.score = F('score') + delta
         instance.save(update_fields=['score'])
+        instance.refresh_from_db()
         return instance
 
 
@@ -296,21 +327,25 @@ class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserInfoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    # GET /api/profiles/me/  <-- 前端获取自己信息的接口
+    # GET /api/profiles/me/  <-- Frontend fetches current user info
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    # PATCH /api/profiles/me/score/  <-- 游戏通关后更新积分的接口
+    # PATCH /api/profiles/me/score/  <-- Game completion score update (uses delta)
     @action(detail=False, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def score(self, request):
         serializer = UserProfileUpdateScoreSerializer(data=request.data)
         if serializer.is_valid():
-            profile = request.user.profile
-            profile.score = serializer.validated_data['score']
-            profile.save(update_fields=['score'])
-            return Response({'score': profile.score})
+            with transaction.atomic():
+                profile = UserProfile.objects.select_for_update().get(user=request.user)
+                serializer.update(profile, serializer.validated_data)
+                logger.info(
+                    "Score updated: user=%s delta=%s new_score=%s",
+                    request.user.username, serializer.validated_data['delta'], profile.score
+                )
+                return Response({'score': profile.score})
         return Response(serializer.errors, status=400)
 
     # PUT /api/profiles/me/  <-- 更新个人资料
@@ -357,8 +392,10 @@ class ArticleViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.AllowAny])
     def view(self, request, pk=None):
         article = self.get_object()
-        article.views += 1
-        article.save(update_fields=['views'])
+        with transaction.atomic():
+            Article.objects.filter(pk=article.pk).update(views=F('views') + 1)
+            article.refresh_from_db()
+        logger.info("Article viewed: id=%s title=%s views=%s", article.pk, article.title, article.views)
         return Response({'views': article.views})
 
 

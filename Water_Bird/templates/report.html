@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>上报观鸟记录 | 黄河生态方舟</title>
+    <script>
+        // Injected server-side — avoids hardcoding the key in HTML source.
+        window.TDT_KEY = "{{ TDT_KEY|escapejs }}";
+    </script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -446,7 +450,7 @@ function toast(msg, type) {
 
 // ========== 地图初始化 ==========
 function initMap() {
-    const tk = "0de0375367832014891a9f40e0e42911";
+    const tk = window.TDT_KEY || '';
     const tdt = t => `http://t0.tianditu.gov.cn/${t}_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${t}&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tk}`;
     const vec = L.layerGroup([L.tileLayer(tdt('vec')), L.tileLayer(tdt('cva'))]);
 

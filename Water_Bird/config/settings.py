@@ -1,9 +1,13 @@
 import os
 import platform  # 引入系统判断模块
 from pathlib import Path
+from dotenv import load_dotenv
 
-# 构建路径
+# 构建路径（必须在 load_dotenv 之前定义）
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 加载 .env 文件中的环境变量
+load_dotenv(BASE_DIR / '.env')
 
 # 安全密钥 (开发环境)
 SECRET_KEY = 'django-insecure-custom-key-for-xuan'
@@ -28,7 +32,7 @@ INSTALLED_APPS = [
     'import_export',  # 导入导出支持
     'leaflet',  # GIS 后台地图控件
     'corsheaders',
-    'app_monitor',  # 我们的监控 App
+    'Water_Bird.app_monitor',  # 我们的监控 App
 ]
 
 MIDDLEWARE = [
@@ -43,7 +47,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = 'Water_Bird.config.urls'
 
 TEMPLATES = [
     {
@@ -56,12 +60,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'Water_Bird.app_monitor.context_processors.tianditu_key',
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = 'Water_Bird.config.wsgi.application'
 
 # === 2. SQLite 数据库配置（临时，用于跳过 PostgreSQL） ===
 DATABASES = {
@@ -110,8 +115,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# === 5. GIS 配置 ===
-TDT_KEY = '0de0375367832014891a9f40e0e42911'
+# === 5. GIS Configuration ===
+# Tianditu map API key — loaded from environment variable with a placeholder fallback.
+# In production, set TDT_KEY environment variable to your actual key.
+# Never commit the real key to version control.
+import os
+TDT_KEY = os.environ.get('TDT_KEY', 'YOUR_TIANDITU_API_KEY')
 
 LEAFLET_CONFIG = {
     'DEFAULT_CENTER': (34.75, 113.62),

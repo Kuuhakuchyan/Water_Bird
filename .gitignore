@@ -9,6 +9,9 @@ __pycache__/
 dist/
 build/
 
+# Environment variables (contains secrets — API keys, passwords, etc.)
+.env
+
 # Virtual environments
 venv/
 ENV/

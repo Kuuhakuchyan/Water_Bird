@@ -6,7 +6,7 @@ from django.views.static import serve
 from django.shortcuts import render
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
-from app_monitor.views import (
+from Water_Bird.app_monitor.views import (
     ObservationViewSet, ZoneViewSet, TransectViewSet,
     index_view, UserProfileViewSet, RegisterViewSet,
     SpeciesViewSet, SpeciesImageViewSet, ArticleViewSet, ProductViewSet,

@@ -4,502 +4,687 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>湿地侦探 | 黄河生态方舟</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/app_monitor/css/games-shared.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="../static/app_monitor/css/games.css">
     <style>
-        .case-file {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(245,245,220,0.95);
-            color: #3d2914;
-            padding: 15px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            border: 3px solid #8b4513;
-            z-index: 10;
-            min-width: 220px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            max-height: 80vh;
-            overflow-y: auto;
+        :root {
+            --g-primary: #5d4037;
+            --g-primary-light: #8d6e63;
+            --g-primary-dark: #3e2723;
+            --g-accent: #e9c46a;
+            --g-btn-gradient: linear-gradient(135deg, #5d4037 0%, #8d6e63 100%);
         }
-        .case-file h4 {
-            margin: 0 0 10px 0;
-            color: #8b4513;
-            border-bottom: 2px dashed #8b4513;
-            padding-bottom: 8px;
-            font-size: 15px;
-        }
-        .evidence-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .evidence-list li {
-            padding: 6px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px dotted #ccc;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-        .evidence-list li:last-child {
-            border-bottom: none;
-        }
-        .evidence-list li.found {
-            color: #2e7d32;
-            background: rgba(76,175,80,0.1);
-            padding: 6px 8px;
-            margin: 2px -8px;
-            border-radius: 5px;
-        }
-        .evidence-list li.pending {
-            color: #999;
-        }
-        .evidence-list li .icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #ddd;
-            border-radius: 50%;
-            font-size: 11px;
-        }
-        .evidence-list li.found .icon {
-            background: #4CAF50;
-            color: white;
-        }
-        .species-hint {
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 2px solid #8b4513;
-            font-size: 11px;
-            color: #666;
-        }
-        .species-hint strong {
-            color: #8b4513;
-        }
-        .clue-panel {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #5d4037, #3e2723);
-            padding: 12px 25px;
-            border-radius: 25px;
-            color: #f5f5dc;
-            font-size: 14px;
-            z-index: 10;
-            border: 2px solid #ffd700;
-            max-width: 600px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-        .magnifier-btn {
-            position: absolute;
-            background: linear-gradient(135deg, #fff8e1, #ffe0b2);
-            border: 3px solid #8b4513;
-            border-radius: 50%;
-            width: 65px;
-            height: 65px;
-            cursor: pointer;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .magnifier-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-        }
-        .magnifier-btn.used {
-            background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
-            border-color: #4CAF50;
-        }
-        .timer-display {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 12px 18px;
-            border-radius: 10px;
-            font-size: 14px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .timer-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .timer-bar {
-            width: 120px;
-            height: 10px;
-            background: #333;
-            border-radius: 5px;
+        .dtc-case-bg {
+            position: absolute; inset: 0; z-index: 0;
+            background: linear-gradient(160deg, #f5f0e8 0%, #ede4d4 100%);
             overflow: hidden;
         }
-        .timer-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #8BC34A);
-            transition: width 0.3s;
+        .dtc-case-bg::before {
+            content: ''; position: absolute; inset: 0; z-index: 1;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(93,64,55,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(93,64,55,0.04) 0%, transparent 50%);
         }
-        .timer-fill.warning {
-            background: linear-gradient(90deg, #FF9800, #FFC107);
+        .dtc-rule-list {
+            display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;
+            width: 100%; max-width: 380px;
         }
-        .timer-fill.danger {
-            background: linear-gradient(90deg, #F44336, #E91E63);
-            animation: pulse 0.5s infinite;
+        .dtc-rule-item {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.7); padding: 6px 12px; border-radius: 10px;
+            font-size: 12.5px; color: #5d4037;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        .dtc-rule-item i { color: var(--g-primary-light); min-width: 18px; text-align: center; }
+        .dtc-hud-timer {
+            position: absolute; top: 16px; left: 16px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            color: white; padding: 12px 18px; border-radius: 14px; font-size: 14px; z-index: 10;
+            min-width: 220px; display: none;
         }
-        .bird-selector {
-            position: absolute;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            background: rgba(0,0,0,0.7);
-            padding: 8px 15px;
-            border-radius: 20px;
-            z-index: 10;
+        .dtc-hud-timer.show { display: block; }
+        .dtc-timer-row {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
         }
-        .hint-box {
-            position: absolute;
-            bottom: 140px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(139,69,19,0.9);
-            padding: 10px 20px;
-            border-radius: 10px;
-            color: #ffd700;
-            font-size: 12px;
-            z-index: 10;
-            border: 2px solid #ffd700;
-            max-width: 500px;
-            text-align: center;
+        .dtc-timer-row:last-child { margin-bottom: 0; }
+        .dtc-timer-bar { flex: 1; height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden; }
+        .dtc-timer-fill { height: 100%; border-radius: 5px; transition: width 0.3s, background 0.5s; }
+        .dtc-hud-case {
+            position: absolute; top: 16px; right: 16px;
+            background: rgba(245,240,232,0.95); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            color: #3e2723; padding: 14px 18px; border-radius: 12px; font-size: 13px; z-index: 10;
+            min-width: 220px; max-height: 80vh; overflow-y: auto;
+            border: 2px solid #8d6e63; box-shadow: 0 4px 15px rgba(0,0,0,0.25); display: none;
         }
-        .hint-box i {
-            margin-right: 5px;
+        .dtc-hud-case.show { display: block; }
+        .dtc-hud-case h4 { margin: 0 0 10px 0; font-size: 15px; color: #5d4037; border-bottom: 2px dashed #8d6e63; padding-bottom: 7px; }
+        .dtc-evi-item {
+            display: flex; align-items: center; gap: 9px; padding: 6px 0;
+            border-bottom: 1px dotted #ccc; font-size: 12.5px; transition: all 0.3s;
+        }
+        .dtc-evi-item:last-child { border-bottom: none; }
+        .dtc-evi-item .evi-icon {
+            width: 26px; height: 26px; border-radius: 50%; background: #ddd;
+            display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0;
+        }
+        .dtc-evi-item.found { color: #2e7d32; background: rgba(76,175,80,0.08); padding: 6px 10px; margin: 3px -10px; border-radius: 8px; }
+        .dtc-evi-item.found .evi-icon { background: #4CAF50; color: white; }
+        .dtc-evi-item.pending { color: #bbb; }
+        .dtc-magnifier {
+            position: absolute; bottom: 28px; right: 20px;
+            width: 64px; height: 64px; border-radius: 50%;
+            border: 3px solid #8d6e63;
+            background: linear-gradient(135deg, #fff8e1, #ffe0b2);
+            cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;
+            font-size: 26px; transition: all 0.25s; box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: none;
+        }
+        .dtc-magnifier.show { display: flex; }
+        .dtc-magnifier:hover { transform: scale(1.1); }
+        .dtc-magnifier.used { background: linear-gradient(135deg, #c8e6c9, #a5d6a7); border-color: #4CAF50; }
+        .dtc-clue-panel {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #5d4037, #3e2723);
+            padding: 12px 26px; border-radius: 28px; color: #f5f0dc; font-size: 14px; z-index: 10;
+            border: 2px solid var(--g-accent); max-width: 600px; width: calc(100% - 100px);
+            text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.35); display: none;
+        }
+        .dtc-clue-panel.show { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .dtc-case-progress {
+            position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+            display: none; align-items: center; gap: 8px;
+            background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+            padding: 6px 16px; border-radius: 20px; color: white; font-size: 12px; z-index: 10;
+        }
+        .dtc-case-progress.show { display: flex; }
+        .dtc-case-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: rgba(255,255,255,0.3); border: 2px solid rgba(255,255,255,0.5);
+        }
+        .dtc-case-dot.done { background: #4CAF50; border-color: #4CAF50; }
+        .dtc-case-dot.active { background: var(--g-accent); border-color: var(--g-accent); box-shadow: 0 0 8px var(--g-accent); }
+        .dtc-options-panel {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(245,240,232,0.97); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            padding: 16px 20px 20px; z-index: 15; display: none; border-top: 3px solid #8d6e63;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+        }
+        .dtc-options-panel.show { display: block; }
+        .dtc-options-title { font-size: 13px; color: #8d6e63; font-weight: 600; margin-bottom: 10px; text-align: center; }
+        .dtc-options-grid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .dtc-option-card {
+            width: 110px; background: white; border: 2px solid #d7ccc8;
+            border-radius: 14px; overflow: hidden; cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .dtc-option-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); border-color: #8d6e63; }
+        .dtc-option-card.correct { border-color: #4CAF50; background: #e8f5e9; }
+        .dtc-option-card.wrong { border-color: #f44336; background: #ffebee; }
+        .dtc-option-card.disabled { pointer-events: none; opacity: 0.7; }
+        .dtc-option-img {
+            height: 75px; background: #f5f0e8;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .dtc-option-img img { width: 100%; height: 100%; object-fit: cover; }
+        .dtc-option-img .dtc-option-placeholder { font-size: 32px; color: #d7ccc8; }
+        .dtc-option-name { padding: 8px 6px; font-size: 12px; font-weight: 600; color: #3e2723; text-align: center; }
+        .dtc-option-feedback { padding: 3px; font-size: 10px; text-align: center; display: none; }
+        .dtc-option-card.correct .dtc-option-feedback { color: #4CAF50; display: block; }
+        .dtc-option-card.wrong .dtc-option-feedback { color: #f44336; display: block; }
+        .dtc-science-overlay {
+            position: fixed; inset: 0; background: rgba(10,25,18,0.85); backdrop-filter: blur(8px);
+            z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .dtc-science-overlay.show { opacity: 1; pointer-events: all; }
+        .dtc-science-card {
+            background: white; border-radius: 20px; max-width: 520px; width: 100%;
+            overflow: hidden; transform: translateY(20px); transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+        .dtc-science-overlay.show .dtc-science-card { transform: translateY(0); }
+        .dtc-science-header {
+            position: relative; height: 180px; background: #f5f0e8; overflow: hidden;
+        }
+        .dtc-science-header img { width: 100%; height: 100%; object-fit: cover; }
+        .dtc-science-badge {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(61,107,79,0.9); color: white; padding: 4px 10px;
+            border-radius: 20px; font-size: 11px; font-weight: 600;
+        }
+        .dtc-science-result-tag {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            padding: 8px 20px; border-radius: 30px; font-size: 18px; font-weight: 700; display: none;
+        }
+        .dtc-science-result-tag.correct { background: rgba(76,175,80,0.95); color: white; display: block; }
+        .dtc-science-result-tag.wrong { background: rgba(244,67,54,0.95); color: white; display: block; }
+        .dtc-science-close {
+            position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(0,0,0,0.4); border: none; color: white; font-size: 16px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .dtc-science-close:hover { background: rgba(0,0,0,0.6); }
+        .dtc-science-body { padding: 18px 20px; }
+        .dtc-science-name { font-size: 22px; font-weight: 700; color: #3e2723; margin-bottom: 2px; }
+        .dtc-science-latin { font-size: 12px; color: #a1887f; font-style: italic; margin-bottom: 12px; }
+        .dtc-science-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .dtc-science-tag { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .dtc-protect-tag { background: #fff3e0; color: #e65100; }
+        .dtc-iucn-tag { background: #e8f5e9; color: #2e7d32; }
+        .dtc-science-desc { font-size: 13px; color: #5d4037; line-height: 1.7; background: #faf8f5; padding: 12px; border-radius: 10px; border-left: 3px solid #8d6e63; }
+        .dtc-final-overlay {
+            position: fixed; inset: 0; background: rgba(245,240,232,0.97); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .dtc-final-overlay.show { display: flex; }
+        .dtc-final-card {
+            background: white; border-radius: 20px; max-width: 500px; width: 100%;
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .dtc-final-header {
+            background: linear-gradient(135deg, #5d4037, #8d6e63); color: white;
+            padding: 24px 20px; text-align: center; border-radius: 20px 20px 0 0;
+        }
+        .dtc-final-header h2 { margin: 0 0 4px; font-size: 22px; }
+        .dtc-final-score { font-size: 48px; font-weight: 800; color: var(--g-accent); margin: 8px 0; }
+        .dtc-final-stats { display: flex; gap: 16px; justify-content: center; margin-top: 10px; }
+        .dtc-final-stat { background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 13px; }
+        .dtc-final-stat strong { font-size: 16px; }
+        .dtc-final-cases { padding: 16px 20px; }
+        .dtc-final-case-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px; border-radius: 12px; margin-bottom: 8px;
+            background: #faf8f5; border: 1px solid #ede4d4;
+        }
+        .dtc-final-case-item.correct { border-left: 3px solid #4CAF50; }
+        .dtc-final-case-item.wrong { border-left: 3px solid #f44336; }
+        .dtc-final-case-num {
+            width: 24px; height: 24px; border-radius: 50%; background: #8d6e63; color: white;
+            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;
+        }
+        .dtc-final-case-item.correct .dtc-final-case-num { background: #4CAF50; }
+        .dtc-final-case-item.wrong .dtc-final-case-num { background: #f44336; }
+        .dtc-final-case-info { flex: 1; }
+        .dtc-final-case-name { font-size: 14px; font-weight: 600; color: #3e2723; }
+        .dtc-final-case-status { font-size: 11px; color: #a1887f; margin-top: 1px; }
+        .dtc-final-case-pts { font-size: 14px; font-weight: 700; color: var(--g-accent); }
+        .dtc-final-footer { padding: 0 20px 20px; text-align: center; }
+        .dtc-next-btn {
+            display: block; width: 100%; margin-top: 14px; padding: 12px;
+            background: var(--g-btn-gradient); color: white; border: none;
+            border-radius: 12px; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .dtc-next-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(93,64,55,0.3); }
+        .dtc-evi-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50%; background: #8d6e63; color: white;
+            font-size: 11px; font-weight: 700; flex-shrink: 0; margin-right: 6px;
+        }
+        .dtc-evi-hint {
+            font-size: 11px; color: #a1887f; margin-top: 3px; padding-left: 26px;
+        }
+        .dtc-evi-item.pending .dtc-evi-num { background: #ccc; }
+        .dtc-evi-item.pending .dtc-evi-desc { color: #bbb; }
+        .dtc-evi-item.hinted .dtc-evi-num { background: #1976D2; }
+        .dtc-evi-item.hinted .dtc-evi-desc { color: #1976D2; }
+        @media (max-width: 480px) {
+            .dtc-hud-case { max-width: 160px; }
+            .dtc-option-card { width: 95px; }
         }
     </style>
 </head>
 <body>
-    <div class="game-wrapper">
-        <div class="game-header">
-            <div class="game-title">
-                <i class="fas fa-search"></i>
-                湿地侦探
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <a href="/" style="color: var(--c-dark); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">
-                    <i class="fas fa-arrow-left"></i> 返回
-                </a>
-            </div>
-        </div>
+    <header class="gh">
+        <a href="/" class="gh-logo">
+            <div class="gh-icon"><i class="fas fa-search"></i></div>
+            <span class="gh-title">湿地侦探</span>
+        </a>
+        <nav class="gh-nav">
+            <a href="/"><i class="fas fa-home"></i> 返回首页</a>
+        </nav>
+    </header>
 
-        <div class="canvas-container" id="canvasContainer">
-            <canvas id="gameCanvas" class="game-canvas"></canvas>
+    <main class="gw">
+        <div class="g-canvas-wrap">
+            <div class="dtc-case-bg"></div>
 
-            <div class="case-file" id="caseFile">
-                <h4><i class="fas fa-folder-open"></i> 案件档案</h4>
-                <ul class="evidence-list" id="evidenceList"></ul>
-                <div class="species-hint" id="speciesHint">
-                    <strong>案件类型：</strong> <span id="caseType">加载中...</span>
+            <!-- 案件进度 -->
+            <div class="dtc-case-progress" id="dtcCaseProgress">
+                <div class="dtc-case-dot" id="dtcDot0"></div>
+                <div class="dtc-case-dot" id="dtcDot1"></div>
+                <div class="dtc-case-dot" id="dtcDot2"></div>
+            </div>
+
+            <!-- 游戏 HUD -->
+            <div class="dtc-hud-timer" id="dtcTimer">
+                <div class="dtc-timer-row">
+                    <i class="fas fa-clock" style="color:var(--g-accent)"></i>
+                    <div class="dtc-timer-bar"><div class="dtc-timer-fill" id="dtcTimerFill" style="width:100%"></div></div>
+                    <span id="dtcTimerText">90</span>秒
+                </div>
+                <div class="dtc-timer-row">
+                    <i class="fas fa-star" style="color:var(--g-accent)"></i>
+                    得分 <strong id="dtcScoreDisplay" style="color:var(--g-accent)">0</strong>
+                </div>
+                <div class="dtc-timer-row">
+                    <i class="fas fa-search" style="color:#9c27b0"></i>
+                    已发现 <span id="dtcFoundCount">0</span>/<span id="dtcTotalCount">3</span>
                 </div>
             </div>
 
-            <div class="timer-display">
-                <div class="timer-row">
-                    <i class="fas fa-clock" style="color: #FFD700;"></i>
-                    <div class="timer-bar">
-                        <div class="timer-fill" id="timerBar" style="width: 100%;"></div>
-                    </div>
-                    <span id="timerText">120</span>秒
-                </div>
-                <div class="timer-row">
-                    <i class="fas fa-star" style="color: #FFD700;"></i>
-                    <span>得分: <span id="scoreDisplay">0</span></span>
-                </div>
-                <div class="timer-row">
-                    <i class="fas fa-search" style="color: #9C27B0;"></i>
-                    <span>发现: <span id="foundCount">0</span>/<span id="totalCount">3</span></span>
-                </div>
+            <!-- 证据面板 -->
+            <div class="dtc-hud-case" id="dtcCasePanel">
+                <h4><i class="fas fa-folder-open"></i> 证据收集</h4>
+                <div id="dtcEviList"></div>
             </div>
 
-            <button class="magnifier-btn" id="magnifierBtn" title="使用放大镜">
+            <!-- 放大镜按钮 -->
+            <button class="dtc-magnifier" id="dtcMagnifier" title="激活放大镜">
                 <i class="fas fa-search-plus"></i>
             </button>
 
-            <div class="hint-box" id="hintBox" style="display: none;">
-                <i class="fas fa-lightbulb"></i>
-                <span id="hintText"></span>
-            </div>
-
-            <div class="clue-panel" id="cluePanel">
+            <!-- 线索提示 -->
+            <div class="dtc-clue-panel" id="dtcCluePanel">
                 <i class="fas fa-comment-dots"></i>
-                <span id="clueText">在湿地中找到所有证据线索!</span>
+                <span id="dtcClueText">在湿地中找到所有证据线索！</span>
             </div>
 
-            <div class="game-overlay" id="startOverlay">
+            <!-- 选项面板 -->
+            <div class="dtc-options-panel" id="dtcOptionsPanel">
+                <div class="dtc-options-title">请选择你推断的物种</div>
+                <div class="dtc-options-grid" id="dtcOptionsGrid"></div>
+            </div>
+
+            <canvas id="gameCanvas" class="g-canvas"></canvas>
+
+            <!-- 开始界面 -->
+            <div class="g-overlay" id="startOverlay" style="background:rgba(245,240,232,0.92);">
                 <h2><i class="fas fa-user-secret"></i> 湿地侦探</h2>
-                <p style="color: #666; margin: 10px 0;">根据现场留下的线索推断出现的物种</p>
-                
-                <div style="margin: 15px 0; text-align: left; padding: 0 20px; font-size: 13px; color: #555;">
-                    <p><i class="fas fa-crosshairs" style="color: var(--c-aqua);"></i> 点击场景中发光的可疑物品收集证据</p>
-                    <p><i class="fas fa-search-plus" style="color: var(--c-aqua);"></i> 激活放大镜可以更清楚地看到细节</p>
-                    <p><i class="fas fa-lightbulb" style="color: #FFD700;"></i> 每个物种都有独特的证据组合</p>
-                    <p><i class="fas fa-clock" style="color: #FF5722;"></i> 在时间耗尽前完成推理</p>
+                <p class="g-subtitle">深入湿地现场，收集证据推断物种身份</p>
+
+                <div class="dtc-rule-list">
+                    <div class="dtc-rule-item"><i class="fas fa-crosshairs"></i> 点击场景中发光的物品收集证据</div>
+                    <div class="dtc-rule-item"><i class="fas fa-search-plus"></i> 激活放大镜可更清楚看到细节</div>
+                    <div class="dtc-rule-item"><i class="fas fa-puzzle-piece"></i> 收集全部证据后选择物种</div>
+                    <div class="dtc-rule-item"><i class="fas fa-book-open"></i> 每轮3个案件，全部完成后获得报告</div>
                 </div>
-                <button class="start-btn" style="margin-top: 15px;" onclick="detective.start()">
+
+                <button class="g-btn" onclick="detective.start()" style="background:var(--g-btn-gradient)">
                     <i class="fas fa-play"></i> 开始调查
                 </button>
             </div>
+        </div>
+    </main>
 
-            <div class="game-overlay" id="winOverlay" style="display: none;">
-                <div style="text-align: center;">
-                    <h2 style="color: #4CAF50;"><i class="fas fa-trophy"></i> 案件告破!</h2>
-                    <p style="font-size: 36px; margin: 15px 0;">
-                        <i class="fas fa-star" style="color: #FFD700;"></i>
-                        <span id="winScore">0</span>
-                        <i class="fas fa-star" style="color: #FFD700;"></i>
-                    </p>
-                    <p id="speciesResult" style="font-size: 18px; color: #8b4513;"></p>
-                    <button class="start-btn" style="margin-top: 20px;" onclick="detective.restart()">
-                        <i class="fas fa-redo"></i> 下一案件
-                    </button>
-                </div>
+    <!-- 科普卡 -->
+    <div class="dtc-science-overlay" id="dtcScienceOverlay">
+        <div class="dtc-science-card">
+            <div class="dtc-science-header">
+                <img id="dtcSciImg" src="" alt="">
+                <span class="dtc-science-badge" id="dtcSciBadge"></span>
+                <div class="dtc-science-result-tag" id="dtcSciResultTag"></div>
+                <button class="dtc-science-close" onclick="detective.closeScience()"><i class="fas fa-times"></i></button>
             </div>
-
-            <div class="game-overlay" id="gameOverOverlay" style="display: none;">
-                <div class="game-over-content">
-                    <h2><i class="fas fa-frown"></i> 时间耗尽</h2>
-                    <p style="font-size: 14px; color: #666; margin: 10px 0;">未能完成案件调查</p>
-                    <p style="font-size: 14px;">得分: <span id="finalScore">0</span></p>
-                    <button class="start-btn" style="margin-top: 15px;" onclick="detective.restart()">
-                        <i class="fas fa-redo"></i> 重新调查
-                    </button>
-                </div>
+            <div class="dtc-science-body">
+                <div class="dtc-science-name" id="dtcSciName"></div>
+                <div class="dtc-science-latin" id="dtcSciLatin"></div>
+                <div class="dtc-science-tags" id="dtcSciTags"></div>
+                <div class="dtc-science-desc" id="dtcSciDesc"></div>
+                <button class="dtc-next-btn" id="dtcNextBtn" onclick="detective.advanceFromScience()">
+                    下一题 <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
         </div>
+    </div>
 
-        <div class="glass-panel" style="margin-top: 15px; text-align: center;">
-            <h4 style="color: var(--c-dark); margin-bottom: 10px;">
-                <i class="fas fa-lightbulb" style="color: #FFD700;"></i> 侦探提示
-            </h4>
-            <p style="color: #666; font-size: 13px; line-height: 1.8;">
-                每种动物都会留下独特的痕迹：脚印形状、羽毛颜色、粪便特征、筑巢材料等<br>
-                仔细观察场景中发光的物品，每个物种需要收集全部3个证据！
-            </p>
+    <!-- 最终报告 -->
+    <div class="dtc-final-overlay" id="dtcFinalOverlay">
+        <div class="dtc-final-card">
+            <div class="dtc-final-header">
+                <h2><i class="fas fa-file-alt"></i> 调查报告</h2>
+                <div class="dtc-final-score" id="dtcFinalScore">0</div>
+                <div class="dtc-final-stats">
+                    <div class="dtc-final-stat"><strong id="dtcFinalCorrect">0</strong> 正确</div>
+                    <div class="dtc-final-stat"><strong id="dtcFinalWrong">0</strong> 错误</div>
+                </div>
+            </div>
+            <div class="dtc-final-cases" id="dtcFinalCases"></div>
+            <div class="dtc-final-footer">
+                <button class="g-btn" onclick="detective.restart()" style="background:var(--g-btn-gradient)">
+                    <i class="fas fa-redo"></i> 再来一轮
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        const speciesData = [
-            {
-                id: 'crane',
-                name: '丹顶鹤',
-                color: '#FFFFFF',
-                bgColor: '#f5f5f5',
-                hints: ['细长的红色头顶是丹顶鹤的标志', '喜欢在浅水区觅食', '繁殖期会在芦苇丛筑巢'],
-                clues: [
-                    { type: 'footprint', icon: 'fa-shoe-prints', desc: '细长的三趾脚印', hint: '看看地上，有什么脚印？', draw: 'drawFootprint', x: 0.15, y: 0.75, scale: 1.2 },
-                    { type: 'feather', icon: 'fa-feather-alt', desc: '白色羽毛带有黑色飞羽', hint: '附近有羽毛落下', draw: 'drawFeather', x: 0.55, y: 0.45, scale: 1 },
-                    { type: 'nest', icon: 'fa-egg', desc: '芦苇编织的巢穴', hint: '芦苇丛中有个巢', draw: 'drawNest', x: 0.82, y: 0.65, scale: 1.1 }
-                ]
-            },
-            {
-                id: 'otter',
-                name: '水獭',
-                color: '#5D4037',
-                bgColor: '#d7ccc8',
-                hints: ['水獭擅长游泳，有蹼足', '喜欢在河边洞穴居住', '主要吃鱼和贝类'],
-                clues: [
-                    { type: 'footprint', icon: 'fa-paw', desc: '带蹼的五趾脚印', hint: '泥地上有特殊的爪印', draw: 'drawOtterFootprint', x: 0.2, y: 0.8, scale: 1 },
-                    { type: 'slide', icon: 'fa-arrow-down', desc: '光滑的滑行痕迹', hint: '河岸上有滑行的痕迹', draw: 'drawSlide', x: 0.5, y: 0.72, scale: 1 },
-                    { type: 'bones', icon: 'fa-bone', desc: '鱼骨和贝壳残骸', hint: '有吃剩的食物残渣', draw: 'drawBones', x: 0.78, y: 0.55, scale: 1.2 }
-                ]
-            },
-            {
-                id: 'deer',
-                name: '梅花鹿',
-                color: '#FFCC80',
-                bgColor: '#fff8e1',
-                hints: ['雄鹿有分叉的角', '臀部有白色的斑纹', '晨昏活动较频繁'],
-                clues: [
-                    { type: 'footprint', icon: 'fa-shoe-prints', desc: '分叉的两趾蹄印', hint: '地上有蹄子印', draw: 'drawDeerFootprint', x: 0.12, y: 0.78, scale: 1 },
-                    { type: 'scratch', icon: 'fa-tree', desc: '树干上的角蹭痕迹', hint: '树皮被蹭坏了', draw: 'drawScratch', x: 0.45, y: 0.38, scale: 1.1 },
-                    { type: 'droppings', icon: 'fa-circle', desc: '椭圆形粪便颗粒', hint: '地上有一些粪便', draw: 'drawDroppings', x: 0.85, y: 0.7, scale: 0.9 }
-                ]
-            },
-            {
-                id: 'heron',
-                name: '苍鹭',
-                color: '#78909C',
-                bgColor: '#eceff1',
-                hints: ['苍鹭脖子较长', '喜欢站在浅水中等待猎物', '飞行时脖子成S形'],
-                clues: [
-                    { type: 'footprint', icon: 'fa-shoe-prints', desc: '细长的三趾爪印', hint: '水边的泥地上', draw: 'drawHeronFootprint', x: 0.18, y: 0.82, scale: 1.1 },
-                    { type: 'scales', icon: 'fa-fish', desc: '散落的鱼鳞', hint: '有吃剩的鱼', draw: 'drawScales', x: 0.52, y: 0.58, scale: 1 },
-                    { type: 'feather', icon: 'fa-feather', desc: '灰色长羽毛', hint: '附近有羽毛', draw: 'drawHeronFeather', x: 0.8, y: 0.42, scale: 1.2 }
-                ]
-            },
-            {
-                id: 'beaver',
-                name: '河狸',
-                color: '#8D6E63',
-                bgColor: '#efebe9',
-                hints: ['河狸尾巴扁平像桨', '会建造水坝', '用树木筑巢'],
-                clues: [
-                    { type: 'tail', icon: 'fa-hand-holding-water', desc: '扁平尾鳞印', hint: '泥地里有个奇怪的印记', draw: 'drawBeaverTail', x: 0.25, y: 0.85, scale: 1.3 },
-                    { type: 'bite', icon: 'fa-tree', desc: '树木上的门齿咬痕', hint: '树木被啃食过', draw: 'drawBite', x: 0.58, y: 0.35, scale: 1 },
-                    { type: 'chips', icon: 'fa-seedling', desc: '木屑和树枝碎片', hint: '附近有很多木屑', draw: 'drawChips', x: 0.82, y: 0.62, scale: 1.1 }
-                ]
-            }
+        /* ================================================================
+           物种数据：优先从 API 加载，回退使用内置数据
+           ================================================================ */
+        const BIRD_API_URL = '/api/species/';
+        let BIRD_DATA = [];
+
+        const FALLBACK_DATA = [
+            {id:1, name:'丹顶鹤', latin:'Grus japonensis', protection:'国家一级保护',
+             description:'丹顶鹤是鹤形目鹤科鸟类，体羽白色，头顶鲜红色，喉、颊和颈的大部分为暗褐色。栖息于浅水湖泊和芦苇沼泽湿地，迁徙时经过中国东部沿海地区。以鱼、虾、昆虫和植物根茎为食。求偶时雌雄对舞，巢穴用芦苇在浅水中筑成。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Grus_japonensis_-Ueno_Zoo-8.jpg/1200px-Grus_japonensis_-Ueno_Zoo-8.jpg'},
+            {id:2, name:'水獭', latin:'Lutra lutra', protection:'国家二级保护',
+             description:'水獭是食肉目鼬科动物，身体细长呈流线型，趾间有蹼，善游泳和潜水。栖息于江河、湖泊和海岸。以鱼、蟹、蛙和软体动物为食。有在河岸斜坡挖洞筑巢的习性，排便地点固定。玩耍时会在河岸滑行入水，留下独特的滑行痕迹。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Eurasian_Otter.jpg/1200px-Eurasian_Otter.jpg'},
+            {id:3, name:'白尾海雕', latin:'Haliaeetus albicilla', protection:'国家一级保护',
+             description:'白尾海雕是鹰形目鹰科大型猛禽，体羽大多暗褐色，尾白色。栖息于沿海、湖泊和河流。捕食鱼类、水鸟和小型哺乳动物。常在高大的树木或悬崖上筑巢，领域性强。羽毛脱换时会留下明显的痕迹。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/White-tailed_Eagle.jpg/1200px-White-tailed_Eagle.jpg'},
+            {id:4, name:'黑鹳', latin:'Ciconia nigra', protection:'国家一级保护',
+             description:'黑鹳是鹳形目鹳科鸟类，体羽除胸腹部白色外，其余均为黑色，具绿色金属光泽。栖息于山地溪流和沼泽湿地。飞行时呈直线，颈和腿伸直。以鱼、蛙、昆虫和小型爬行动物为食。巢穴建在岩壁或高大乔木上，会反复使用同一巢位多年。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Black_Ston_nesting.jpg/1200px-Black_Ston_nesting.jpg'},
+            {id:5, name:'大天鹅', latin:'Cygnus cygnus', protection:'国家二级保护',
+             description:'大天鹅是雁形目鸭科大型游禽，全身羽毛雪白，嘴黑色而基部黄色。栖息于开阔的大型湖泊、水库和河口湿地。迁徙时结成大群飞行，队列呈"一"字或"V"字形。以水生植物的叶、茎、根和种子为食，也会捕食少量水生昆虫。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Cygnus_cygnus_-_Viksin不清.jpg/1200px-Cygnus_cygnus_-_Viksin不清.jpg'},
+            {id:6, name:'东方白鹳', latin:'Ciconia boyciana', protection:'国家一级保护',
+             description:'东方白鹳是鹳形目鹳科大型涉禽，体羽白色，翅膀黑色，嘴粗长黑色。栖息于开阔的沼泽、湿地和农田。飞行时颈和腿向前伸直，翅膀扇动缓慢而有节奏。以鱼、蛙、昆虫和小型啮齿动物为食。喜欢在高大的枯树或电线杆上筑巢。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Oriental_Stork.jpg/1200px-Oriental_Stork.jpg'},
+            {id:7, name:'中华秋沙鸭', latin:'Mergus squamatus', protection:'国家一级保护',
+             description:'中华秋沙鸭是雁形目鸭科中型游禽，雄鸟头部黑色并带绿色光泽，胸部白色，胁部有鳞片状斑纹。栖息于清澈的急流和森林溪流。潜水捕食鱼类为主，也会吃水生昆虫和甲壳类。繁殖期在树洞中营巢，是中国特有的珍稀鸟类。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Scally-breasted_Waterhen.jpg/1200px-Scally-breasted_Waterhen.jpg'},
+            {id:8, name:'白鹤', latin:'Leucogeranus leucogeranus', protection:'国家一级保护',
+             description:'白鹤是鹤形目鹤科大型涉禽，全身羽毛除初级飞羽黑色外均为洁白色，脸部裸露皮肤红色。栖息于浅水沼泽和苔原湿地。迁徙距离极长，从西伯利亚繁殖地到中国鄱阳湖越冬。以植物根茎和水生生物为食。全球种群数量极为稀少，被列为极危物种。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Siberian_Crane.jpg/1200px-Siberian_Crane.jpg'},
+            {id:9, name:'卷羽鹈鹕', latin:'Pelecanus crispus', protection:'国家一级保护',
+             description:'卷羽鹈鹕是鹈形目鹈鹕科大型游禽，体羽灰白色，枕部羽毛卷曲。栖息于沿海湖泊、河口和大型沼泽湿地。飞行时翅膀平直，颈缩回。以鱼类为主食，用宽大的喉囊捕鱼后兜水吐出将鱼吞下。集群繁殖，在芦苇丛中筑巢。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Dalmatian_Pelican_%28Pelecanus_crispus%29.jpg/1200px-Dalmatian_Pelican_%28Pelecanus_crispus%29.jpg'},
+            {id:10, name:'斑海豹', latin:'Phoca largha', protection:'国家二级保护',
+             description:'斑海豹是鳍足目海豹科海洋哺乳动物，身体呈纺锤形，体毛灰黄色带有暗色斑点。栖息于寒带和温带沿海海域，繁殖期会上岸冰面或岩岸。以鱼类和甲壳类为食，潜水深度可达300米。在繁殖地会留下明显的体温痕迹和粪便痕迹。',
+             image_url:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Spotted_seal.jpg/1200px-Spotted_seal.jpg'},
         ];
 
-        const detective = {
-            canvas: null,
-            ctx: null,
-            isRunning: false,
-            score: 0,
-            timeLeft: 120,
-            currentCase: null,
-            foundClues: [],
-            magnifierActive: false,
-            frameCount: 0,
-            animationId: null,
-            hotspots: [],
-            cursorX: 0,
-            cursorY: 0,
-            treeSeed: 0,
+        /* 内置侦探场景证据：每个物种的专属现场线索
+           线索通过鸟类的形态特征和行为习性来描述，不直接说物种名 */
+        const BIRD_TRAITS = {
+            '丹顶鹤': {
+                footprint: { desc: '泥地上有一串细长的三趾脚印，步幅大、站立姿态优雅', hint: '这种鸟类以修长的双腿涉水行走，步履轻盈' },
+                feather:   { desc: '附近散落着白色飞羽，羽轴粗壮、羽瓣宽大', hint: '这种鸟的羽毛洁白如雪，飞行时翅膀宽大' },
+                nest:      { desc: '浅水区有用芦苇堆成的圆形巢穴，规模不小', hint: '这种鸟喜欢在水边用芦苇筑巢，巢穴较大' },
+            },
+            '白尾海雕': {
+                footprint: { desc: '岸边岩石上有大型的四趾爪印，指爪锐利粗壮', hint: '这种猛禽的爪子非常锋利，能抓捕大型猎物' },
+                feather:   { desc: '附近有深褐色大型飞羽，羽色深沉而威严', hint: '这种猛禽羽毛呈深褐色，展翅时非常壮观' },
+                nest:      { desc: '高大树木顶端有巨大的枝巢，枝条粗壮', hint: '这种猛禽喜欢在高处筑巢，巢穴很大且多年使用' },
+            },
+            '黑鹳': {
+                footprint: { desc: '浅滩淤泥上有细长的四趾涉水脚印，足部红色', hint: '这种鸟的腿和足部呈红色，修长而优美' },
+                feather:   { desc: '附近有黑色飞羽，羽色墨黑带绿色金属光泽', hint: '这种鸟的羽毛在阳光下泛出绿色金属光泽' },
+                nest:      { desc: '岩壁凹陷处有用枯枝搭建的平台巢，结构精巧', hint: '这种鸟喜欢在岩石或高大树木上筑巢' },
+            },
+            '大天鹅': {
+                footprint: { desc: '湖岸泥地上有大型的蹼印，足迹宽扁有力', hint: '这种游禽的脚有蹼，适合在水中活动' },
+                feather:   { desc: '附近散落着蓬松的白色羽毛，绒羽丰富', hint: '这种鸟通体雪白，羽毛非常浓密' },
+                nest:      { desc: '芦苇丛中有用枯草堆成的浮巢，巢壁厚实', hint: '这种鸟在水面附近筑浮巢，巢材丰富' },
+            },
+            '东方白鹳': {
+                footprint: { desc: '沼泽地有细长的四趾脚印，腿部修长、脚印间距均匀', hint: '这种大型涉禽的腿很长，站立时昂首挺胸' },
+                feather:   { desc: '附近有黑白分明的飞羽，黑白对比鲜明', hint: '这种鸟身体白色、翅膀黑色，对比强烈' },
+                nest:      { desc: '枯树顶端有用树枝搭建的大型巢穴，非常显眼', hint: '这种鸟喜欢在枯树或电线杆上筑巢' },
+            },
+            '中华秋沙鸭': {
+                footprint: { desc: '河岸卵石上有带蹼的三趾脚印，体型较小', hint: '这种潜水鸟类脚有蹼，擅长潜水捕鱼' },
+                feather:   { desc: '附近有深绿色头部飞羽和鳞片状胸部羽毛', hint: '这种鸟的雄鸟头部墨绿，非常醒目' },
+                nest:      { desc: '河岸树洞中有羽毛铺底的巢穴，规模较小', hint: '这种鸟在树洞中繁殖，是中国特有种' },
+            },
+            '白鹤': {
+                footprint: { desc: '苔原湿地有一串细长的红色三趾脚印，极为罕见', hint: '这种鹤类的腿和脚呈红色，极为珍稀' },
+                feather:   { desc: '附近散落着洁白的羽毛，翅尖黑色对比明显', hint: '这种鹤全身雪白，只有翅尖为黑色' },
+                nest:      { desc: '湿地浅水区有用苔藓和水草堆成的地面巢', hint: '这种鹤在地面筑巢，巢材以苔藓为主' },
+            },
+            '卷羽鹈鹕': {
+                footprint: { desc: '湖边泥地上有宽大的四趾蹼印，尺寸很大', hint: '这种鸟的蹼足非常大，便于水中活动' },
+                feather:   { desc: '附近有大型灰白色羽毛，羽色较浅、体型巨大', hint: '这种鸟体型非常大，喉囊是标志性特征' },
+                nest:      { desc: '芦苇丛深处有用芦苇铺成的地面巢，蛋个体很大', hint: '这种鸟集群繁殖，巢穴较大且靠近水面' },
+            },
+            '白琵鹭': {
+                footprint: { desc: '浅水淤泥上有细长的三趾脚印，步幅较小', hint: '这种涉禽体型中等，行动较为谨慎' },
+                feather:   { desc: '附近散落着白色飞羽，羽色纯白无杂', hint: '这种鸟通体白色，繁殖期冠羽呈淡黄色' },
+                nest:      { desc: '芦苇丛中有用芦苇茎搭成的碗状巢，很精致', hint: '这种鸟在芦苇丛中筑巢，巢穴较为精致' },
+            },
+            '斑嘴鸭': {
+                footprint: { desc: '河岸泥地上有典型的蹼印，体型中等偏小', hint: '这种野鸭常见于各类湿地，适应性强' },
+                feather:   { desc: '附近有棕色和灰色相间的飞羽，雄鸟嘴端有黄斑', hint: '这种野鸭的嘴端有黄色斑块，很好辨认' },
+                nest:      { desc: '岸边草丛中有用绒羽铺底的地面巢，较隐蔽', hint: '这种鸭子在岸边草丛中筑巢，很隐蔽' },
+            },
+        };
 
-            init: function() {
+        /* 根据物种名获取专属线索，找不到则用通用模板 */
+        function getBirdClues(name) {
+            const traits = BIRD_TRAITS[name];
+            if (traits) return traits;
+            const genericTemplates = [
+                {
+                    footprint: { desc: '泥地上有三趾脚印，步幅较大', hint: '这种鸟类以三趾行走于湿地' },
+                    feather:   { desc: '附近有羽毛散落，颜色醒目', hint: '这种鸟类的羽毛颜色比较特殊' },
+                    nest:      { desc: '芦苇丛中有个精心编织的巢', hint: '这种鸟类善于在水边筑巢' },
+                },
+                {
+                    footprint: { desc: '沙地上有带蹼的脚印，足迹宽大', hint: '这是一种擅长游泳的鸟类' },
+                    feather:   { desc: '附近散落着飞羽，羽色特别', hint: '这种鸟类的羽毛很有特色' },
+                    nest:      { desc: '水边有用枝条搭成的巢穴', hint: '这种鸟类在水边高处筑巢' },
+                },
+            ];
+            return genericTemplates[Math.floor(Math.random() * genericTemplates.length)];
+        }
+
+        function getSpeciesImage(bird) {
+            if (!bird) return '';
+            let url = bird.image_url || '';
+            /* Wikimedia 缩略图 URL 转为原始大图 */
+            if (url && url.indexOf('wikimedia.org') !== -1 && url.indexOf('/thumb/') !== -1) {
+                url = url.replace('/thumb/', '/').replace(/\/\d+px-[^/]+$/, '');
+            }
+            return url;
+        }
+
+        /* 加载物种数据：API 字段名是 name_cn / name_latin / cover_image_url */
+        async function loadSpeciesData() {
+            try {
+                const res = await fetch(BIRD_API_URL);
+                if (!res.ok) throw new Error('API not available');
+                const data = await res.json();
+                const arr = Array.isArray(data) ? data : (data.results || []);
+                if (arr.length >= 3) {
+                    /* 统一字段名：API 用 name_cn，内置数据用 name */
+                    BIRD_DATA = arr.map(s => ({
+                        ...s,
+                        name: s.name_cn || s.name || ('物种' + s.id),
+                        latin: s.name_latin || '',
+                        description: s.description || s.distribution || s.habitat || `这是${s.name_cn || '该物种'}的详细科普信息。`,
+                        image_url: s.cover_image_url || (s.gallery_images && s.gallery_images.length > 0 ? s.gallery_images[0].url : ''),
+                        protection: s.protection_level || s.protection || '无保护级别',
+                    }));
+                } else {
+                    BIRD_DATA = FALLBACK_DATA;
+                }
+            } catch {
+                BIRD_DATA = FALLBACK_DATA;
+            }
+        }
+
+        loadSpeciesData();
+
+        /* ================================================================
+           侦探游戏引擎
+           ================================================================ */
+        const detective = {
+            canvas: null, ctx: null,
+            isRunning: false, score: 0,
+            timeLeft: 90, currentCase: null, foundClues: [],
+            magnifierActive: false, frameCount: 0, animationId: null,
+            hotspots: [], cursorX: 0, cursorY: 0, treeSeed: 0,
+            /* 新属性：多案件 */
+            TOTAL_CASES: 3,
+            caseQueue: [],      /* 本轮的物种队列 */
+            currentCaseIndex: 0,
+            caseResults: [],    /* {species, selected, correct, score} */
+            selecting: false,   /* 是否在选择答案阶段 */
+
+            init() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.resizeCanvas();
                 window.addEventListener('resize', () => this.resizeCanvas());
 
-                this.canvas.addEventListener('mousemove', (e) => {
-                    const rect = this.canvas.getBoundingClientRect();
-                    this.cursorX = e.clientX - rect.left;
-                    this.cursorY = e.clientY - rect.top;
+                this.canvas.addEventListener('mousemove', e => {
+                    const r = this.canvas.getBoundingClientRect();
+                    this.cursorX = e.clientX - r.left;
+                    this.cursorY = e.clientY - r.top;
                 });
+                this.canvas.addEventListener('click', () => { if (this.isRunning && !this.selecting) this.handleClick(); });
 
-                this.canvas.addEventListener('click', (e) => {
-                    if (this.isRunning) this.handleClick();
-                });
-
-                $('#magnifierBtn').click(() => {
-                    if (!this.magnifierActive) {
+                $('#dtcMagnifier').click(() => {
+                    if (this.isRunning && !this.magnifierActive && !this.selecting) {
                         this.magnifierActive = true;
-                        $('#magnifierBtn').addClass('used');
-                        $('#magnifierBtn').html('<i class="fas fa-check"></i>');
-                        $('#clueText').text('放大镜已激活！点击证据查看详情。');
+                        $('#dtcMagnifier').addClass('used').html('<i class="fas fa-check"></i>');
                         this.score += 50;
                         this.updateUI();
+                        this.showClue('放大镜已激活！点击证据查看详情。');
                     }
                 });
 
                 this.drawStaticScene();
             },
 
-            resizeCanvas: function() {
-                const container = document.getElementById('canvasContainer');
-                this.canvas.width = container.clientWidth;
-                this.canvas.height = container.clientHeight;
+            resizeCanvas() {
+                const c = document.getElementById('startOverlay').parentElement;
+                this.canvas.width = c.clientWidth;
+                this.canvas.height = c.clientHeight;
             },
 
-            start: function() {
-                $('#startOverlay').hide();
-                $('#winOverlay').hide();
-                $('#gameOverOverlay').hide();
-                $('#hintBox').hide();
+            /* 打乱数组 */
+            shuffle(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            },
+
+            /* 开始游戏 */
+            async start() {
+                if (this.isRunning) return;
+                if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
+
+                /* 等待数据加载 */
+                if (BIRD_DATA.length === 0) {
+                    await new Promise(r => setTimeout(r, 800));
+                }
+                if (BIRD_DATA.length < 3) BIRD_DATA = FALLBACK_DATA;
+
+                this.score = 0;
+                this.currentCaseIndex = 0;
+                this.caseResults = [];
+                this.selecting = false;
+
+                /* 随机抽取3个物种 */
+                this.caseQueue = this.shuffle([...BIRD_DATA]).slice(0, this.TOTAL_CASES);
+
+                this._startCase();
+            },
+
+            /* 开始单个案件 */
+            _startCase() {
+                if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
 
                 this.isRunning = true;
                 this.foundClues = [];
                 this.magnifierActive = false;
                 this.frameCount = 0;
-                this.timeLeft = 120;
+                this.timeLeft = 90;
                 this.treeSeed = Math.random() * 1000;
+                this.selecting = false;
 
-                $('#magnifierBtn').removeClass('used').html('<i class="fas fa-search-plus"></i>');
+                this.currentCase = this.caseQueue[this.currentCaseIndex];
 
-                this.currentCase = speciesData[Math.floor(Math.random() * speciesData.length)];
-                
-                this.hotspots = this.currentCase.clues.map((c, i) => ({
-                    ...c,
-                    found: false,
-                    displayX: c.x * this.canvas.width,
-                    displayY: c.y * this.canvas.height,
-                    baseScale: c.scale || 1
-                }));
+                /* 根据当前物种动态生成专属线索 */
+                const birdName = this.currentCase.name;
+                const clues = getBirdClues(birdName);
+                console.log('[侦探] 当前物种:', birdName, '| 匹配线索:', clues ? '是' : '否');
+                this.hotspots = [
+                    {type:'footprint', icon:'fa-shoe-prints', desc:clues.footprint.desc, hint:clues.footprint.hint, found:false, displayX:0.15*this.canvas.width, displayY:0.75*this.canvas.height, baseScale:1.2},
+                    {type:'feather', icon:'fa-feather-alt', desc:clues.feather.desc, hint:clues.feather.hint, found:false, displayX:0.55*this.canvas.width, displayY:0.45*this.canvas.height, baseScale:1},
+                    {type:'nest', icon:'fa-egg', desc:clues.nest.desc, hint:clues.nest.hint, found:false, displayX:0.82*this.canvas.width, displayY:0.65*this.canvas.height, baseScale:1.1},
+                ];
 
-                $('#caseType').text(this.currentCase.name + '出没区域');
+                $('#dtcCaseProgress').addClass('show');
+                this._updateCaseProgress();
+                this._hideUI();
+                $('#dtcTimer, #dtcCasePanel, #dtcMagnifier, #dtcCluePanel').addClass('show');
+                $('#dtcMagnifier').removeClass('used').html('<i class="fas fa-search-plus"></i>');
+                $('#dtcOptionsPanel').removeClass('show');
+
                 this.updateCaseFile();
                 this.updateUI();
                 this.gameLoop();
             },
 
-            restart: function() {
-                this.start();
+            /* 更新案件进度指示器 */
+            _updateCaseProgress() {
+                for (let i = 0; i < this.TOTAL_CASES; i++) {
+                    const dot = $(`#dtcDot${i}`);
+                    dot.removeClass('done active');
+                    if (i < this.currentCaseIndex) dot.addClass('done');
+                    else if (i === this.currentCaseIndex) dot.addClass('active');
+                }
             },
 
-            gameLoop: function() {
-                if (!this.isRunning) return;
+            /* 隐藏UI面板 */
+            _hideUI() {
+                $('#startOverlay').hide();
+                $('#dtcOptionsPanel').removeClass('show');
+                $('#dtcScienceOverlay').removeClass('show');
+                $('#dtcFinalOverlay').removeClass('show');
+            },
 
-                this.update();
-                this.draw();
+            restart() {
+                this.isRunning = false;
+                if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
+                this._hideUI();
+                $('#dtcTimer, #dtcCasePanel, #dtcMagnifier, #dtcCluePanel, #dtcCaseProgress').removeClass('show');
+                $('#dtcOptionsPanel').removeClass('show');
+                $('#startOverlay').fadeIn(200);
+            },
+
+            gameLoop() {
+                if (!this.isRunning) return;
+                this.update(); this.draw();
                 this.animationId = requestAnimationFrame(() => this.gameLoop());
                 this.frameCount++;
-
-                if (this.frameCount % 60 === 0 && this.timeLeft > 0) {
+                if (this.frameCount % 60 === 0 && this.timeLeft > 0 && !this.selecting) {
                     this.timeLeft--;
                     this.updateTimer();
                     if (this.timeLeft === 0) {
-                        this.gameOver();
+                        /* 时间耗尽，直接记录失败并进入下一案或结束 */
+                        this._recordCaseResult(null);
                     }
                 }
             },
 
-            update: function() {
-                if (this.foundClues.length === this.hotspots.length && this.hotspots.length > 0) {
-                    this.win();
+            update() {
+                if (!this.selecting && this.foundClues.length === this.hotspots.length && this.hotspots.length > 0) {
+                    /* 所有证据收集完毕，显示选项 */
+                    this._showOptions();
                 }
             },
 
-            handleClick: function() {
-                const x = this.cursorX;
-                const y = this.cursorY;
-
+            handleClick() {
+                if (this.selecting) return;
                 for (let i = 0; i < this.hotspots.length; i++) {
                     const h = this.hotspots[i];
                     if (!h.found) {
-                        const dist = Math.hypot(x - h.displayX, y - h.displayY);
-                        const hitRadius = 45 * h.baseScale;
-                        
-                        if (dist < hitRadius) {
+                        const dist = Math.hypot(this.cursorX - h.displayX, this.cursorY - h.displayY);
+                        if (dist < 45 * h.baseScale) {
                             h.found = true;
                             this.foundClues.push(h);
                             this.score += 100 + (this.hotspots.length - this.foundClues.length) * 25;
-                            this.updateCaseFile();
-                            this.updateUI();
-                            $('#clueText').text(`发现证据: ${h.desc}`);
-                            $('#hintText').text(h.hint);
-                            $('#hintBox').fadeIn(300).delay(2000).fadeOut(300);
+                            this.updateCaseFile(); this.updateUI();
+                            this.showClue(`发现证据: ${h.desc}`);
                             this.createParticles(h.displayX, h.displayY);
                             break;
                         }
@@ -507,263 +692,337 @@
                 }
             },
 
-            updateTimer: function() {
-                const pct = (this.timeLeft / 120) * 100;
-                const bar = $('#timerBar');
-                const text = $('#timerText');
-                bar.css('width', pct + '%');
-                bar.removeClass('warning danger');
-                text.text(this.timeLeft);
-                if (pct < 25) bar.addClass('danger');
-                else if (pct < 50) bar.addClass('warning');
-            },
+            /* 显示选项面板 */
+            _showOptions() {
+                this.selecting = true;
+                this.isRunning = false;
+                if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
 
-            updateCaseFile: function() {
-                const list = $('#evidenceList');
-                list.empty();
-                this.hotspots.forEach((h) => {
-                    const cls = h.found ? 'found' : 'pending';
-                    list.append(`<li class="${cls}">
-                        <span class="icon"><i class="fas ${h.icon}"></i></span>
-                        ${h.found ? h.desc : '<span style="color:#999">???</span>'}
-                    </li>`);
+                /* 生成干扰项：从其他物种中选2个 */
+                const others = BIRD_DATA.filter(b => b.id !== this.currentCase.id);
+                const distractors = this.shuffle([...others]).slice(0, 2);
+                const options = this.shuffle([this.currentCase, ...distractors]);
+
+                /* 时间奖励 */
+                this.score += this.timeLeft * 2;
+
+                /* 保存选项数组供选择时使用 */
+                this._currentOptions = options;
+
+                const grid = $('#dtcOptionsGrid');
+                grid.empty();
+                options.forEach((bird, idx) => {
+                    const imgUrl = getSpeciesImage(bird);
+                    const card = $(`<div class="dtc-option-card" data-idx="${idx}">
+                        <div class="dtc-option-img">
+                            ${imgUrl ? `<img src="${imgUrl}" alt="${bird.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                            <div class="dtc-option-placeholder" ${imgUrl ? 'style="display:none"' : ''}><i class="fas fa-paw"></i></div>
+                        </div>
+                        <div class="dtc-option-name">${bird.name}</div>
+                        <div class="dtc-option-feedback"></div>
+                    </div>`);
+                    grid.append(card);
                 });
-                $('#foundCount').text(this.foundClues.length);
-                $('#totalCount').text(this.hotspots.length);
+
+                /* 事件委托：避免动态元素绑定问题 */
+                const self = this;
+                grid.off('click', '.dtc-option-card').on('click', '.dtc-option-card', (e) => {
+                    const idx = parseInt($(e.currentTarget).data('idx'));
+                    self._selectAnswer(self._currentOptions[idx]);
+                });
+
+                $('#dtcCluePanel').removeClass('show');
+                $('#dtcOptionsPanel').addClass('show');
             },
 
-            updateUI: function() {
-                $('#scoreDisplay').text(this.score);
+            _selectAnswer(bird) {
+                if (this.selecting === 'answered') return;
+                this.selecting = 'answered';
+
+                const correct = bird.id === this.currentCase.id;
+
+                /* 高亮选项：根据 data-idx 找卡 */
+                $('#dtcOptionsGrid .dtc-option-card').each((_, el) => {
+                    const idx = parseInt($(el).data('idx'));
+                    $(el).addClass('disabled');
+                    if (idx === this._currentOptions.findIndex(b => b.id === this.currentCase.id)) {
+                        $(el).addClass('correct').find('.dtc-option-feedback').text('正确答案');
+                    } else if (idx === this._currentOptions.findIndex(b => b.id === bird.id) && !correct) {
+                        $(el).addClass('wrong').find('.dtc-option-feedback').text('选择错误');
+                    }
+                });
+
+                if (!correct) {
+                    this.score = Math.max(0, this.score - 50);
+                    this.updateUI();
+                }
+
+                /* 记录结果 */
+                this._recordCaseResult(bird);
+
+                /* 延迟展示科普卡 */
+                setTimeout(() => {
+                    this.openScienceCard(this.currentCase, correct);
+                }, 600);
             },
 
-            createParticles: function(x, y) {
+            _recordCaseResult(selectedBird) {
+                const correct = selectedBird && selectedBird.id === this.currentCase.id;
+                this.caseResults.push({
+                    species: this.currentCase,
+                    selected: selectedBird ? selectedBird.name : '未选择',
+                    correct: correct,
+                });
+            },
+
+            openScienceCard(species, correct) {
+                const imgUrl = getSpeciesImage(species);
+                const desc = species.description || species.distribution || species.habitat || `这是${species.name}的详细科普信息。`;
+                const protection = species.protection || species.protection_level || '无保护级别';
+
+                $('#dtcSciImg').attr('src', imgUrl || '').css('display', imgUrl ? 'block' : 'none');
+                $('#dtcSciBadge').text(protection);
+                $('#dtcSciResultTag').removeClass('correct wrong').addClass(correct ? 'correct' : 'wrong');
+                $('#dtcSciResultTag').text(correct ? '推断正确！' : '推断错误');
+                $('#dtcSciName').text(species.name);
+                $('#dtcSciLatin').text(species.latin || '');
+
+                const tagsHtml = protection !== '无保护级别'
+                    ? `<span class="dtc-science-tag dtc-protect-tag"><i class="fas fa-shield-alt"></i> ${protection}</span>`
+                    : '';
+                $('#dtcSciTags').html(tagsHtml);
+                $('#dtcSciDesc').text(desc);
+
+                const isLast = this.currentCaseIndex >= this.TOTAL_CASES - 1;
+                $('#dtcNextBtn').html(isLast ? '查看报告 <i class="fas fa-file-alt"></i>' : '下一题 <i class="fas fa-arrow-right"></i>');
+
+                $('#dtcScienceOverlay').addClass('show');
+            },
+
+            advanceFromScience() {
+                $('#dtcScienceOverlay').removeClass('show');
+                $('#dtcOptionsPanel').removeClass('show');
+                this.currentCaseIndex++;
+                if (this.currentCaseIndex >= this.TOTAL_CASES) {
+                    this._showFinalReport();
+                } else {
+                    setTimeout(() => this._startCase(), 300);
+                }
+            },
+
+            closeScience() {
+                this.advanceFromScience();
+            },
+
+            _showFinalReport() {
+                this.isRunning = false;
+                if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
+                this._hideUI();
+                $('#dtcTimer, #dtcCasePanel, #dtcMagnifier, #dtcCluePanel, #dtcCaseProgress').removeClass('show');
+
+                /* 总分使用游戏中累积的分数 */
+                const totalScore = this.score;
+
+                const correctCount = this.caseResults.filter(r => r.correct).length;
+                const wrongCount = this.TOTAL_CASES - correctCount;
+
+                $('#dtcFinalScore').text(totalScore);
+                $('#dtcFinalCorrect').text(correctCount);
+                $('#dtcFinalWrong').text(wrongCount);
+
+                const casesHtml = this.caseResults.map((r, i) => {
+                    return `<div class="dtc-final-case-item ${r.correct ? 'correct' : 'wrong'}">
+                        <div class="dtc-final-case-num">${i + 1}</div>
+                        <div class="dtc-final-case-info">
+                            <div class="dtc-final-case-name">${r.species.name}</div>
+                            <div class="dtc-final-case-status">${r.correct ? '正确' : '错误'} · 选择了"${r.selected}"</div>
+                        </div>
+                        <div class="dtc-final-case-pts">${r.correct ? '+100' : '0'}</div>
+                    </div>`;
+                }).join('');
+                $('#dtcFinalCases').html(casesHtml);
+
+                $('#dtcFinalOverlay').addClass('show');
+                this._updateUserScore(totalScore);
+            },
+
+            _updateUserScore(earned) {
+                const token = localStorage.getItem('yb_token');
+                if (!token) return;
+                $.ajax({
+                    url: '/api/profiles/me/', method: 'GET',
+                    headers: {'Authorization': 'Token ' + token},
+                    success: data => {
+                        const ns = (data.score || 0) + earned;
+                        $.ajax({
+                            url: '/api/profiles/me/', method: 'PATCH',
+                            headers: {'Authorization': 'Token ' + token},
+                            contentType: 'application/json',
+                            data: JSON.stringify({score: ns})
+                        });
+                    }
+                });
+            },
+
+            _esc(str) {
+                return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+            },
+
+            showClue(text) {
+                $('#dtcClueText').text(text);
+                $('#dtcCluePanel').addClass('show');
+                setTimeout(() => $('#dtcCluePanel').removeClass('show'), 2500);
+            },
+
+            updateTimer() {
+                const pct = (this.timeLeft / 90) * 100;
+                const fill = $('#dtcTimerFill');
+                fill.css('width', pct + '%').removeClass('warning danger');
+                if (pct < 25) fill.addClass('danger');
+                else if (pct < 50) fill.addClass('warning');
+                $('#dtcTimerText').text(this.timeLeft);
+            },
+
+            updateCaseFile() {
+                const list = $('#dtcEviList');
+                list.empty();
+                console.log('[侦探] 渲染证据面板, hotspots:', this.hotspots.map(h => h.desc));
+                this.hotspots.forEach((h, idx) => {
+                    const cls = h.found ? 'found' : 'pending';
+                    const innerHtml = h.found
+                        ? `<span class="dtc-evi-desc">${h.desc}</span>`
+                        : `<span class="dtc-evi-desc" style="color:#bbb;font-style:italic">???</span>`;
+                    list.append(`<div class="dtc-evi-item ${cls}">
+                        <span class="dtc-evi-num">${idx + 1}</span>
+                        <div class="evi-icon"><i class="fas ${h.icon}"></i></div>
+                        ${innerHtml}
+                    </div>`);
+                });
+                $('#dtcFoundCount').text(this.foundClues.length);
+                $('#dtcTotalCount').text(this.hotspots.length);
+            },
+
+            updateUI() {
+                $('#dtcScoreDisplay').text(this.score);
+                this.updateTimer();
+            },
+
+            createParticles(x, y) {
                 for (let i = 0; i < 15; i++) {
                     setTimeout(() => {
-                        const angle = Math.random() * Math.PI * 2;
-                        const dist = Math.random() * 50;
-                        this.ctx.fillStyle = `rgba(255,215,0,${1 - i/15})`;
+                        const a = Math.random() * Math.PI * 2, d = Math.random() * 50;
+                        this.ctx.fillStyle = `rgba(255,215,0,${1 - i / 15})`;
                         this.ctx.beginPath();
-                        this.ctx.arc(
-                            x + Math.cos(angle) * dist,
-                            y + Math.sin(angle) * dist,
-                            3 + Math.random() * 3,
-                            0, Math.PI * 2
-                        );
+                        this.ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 3 + Math.random() * 3, 0, Math.PI * 2);
                         this.ctx.fill();
                     }, i * 40);
                 }
             },
 
-            win: function() {
-                this.isRunning = false;
-                cancelAnimationFrame(this.animationId);
-                this.score += this.timeLeft * 3;
-                $('#winScore').text(this.score);
-                $('#speciesResult').html(`<i class="fas fa-paw"></i> 推断物种：<strong>${this.currentCase.name}</strong>`);
-                $('#winOverlay').show();
-            },
-
-            gameOver: function() {
-                this.isRunning = false;
-                cancelAnimationFrame(this.animationId);
-                $('#finalScore').text(this.score);
-                $('#gameOverOverlay').show();
-            },
-
-            seededRandom: function(seed) {
+            seededRandom(seed) {
                 const x = Math.sin(seed) * 10000;
                 return x - Math.floor(x);
             },
 
-            draw: function() {
-                const ctx = this.ctx;
-                const w = this.canvas.width;
-                const h = this.canvas.height;
-
+            draw() {
+                const ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
                 ctx.clearRect(0, 0, w, h);
-
-                const caseColor = this.currentCase ? this.currentCase.bgColor : '#B0E0E6';
-                
-                const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-                skyGrad.addColorStop(0, '#87CEEB');
-                skyGrad.addColorStop(0.4, '#B0E0E6');
-                skyGrad.addColorStop(1, caseColor);
-                ctx.fillStyle = skyGrad;
+                const cc = this.currentCase ? '#B0E0E6' : '#B0E0E6';
+                const sg = ctx.createLinearGradient(0, 0, 0, h);
+                sg.addColorStop(0, '#87CEEB');
+                sg.addColorStop(0.4, '#B0E0E6');
+                sg.addColorStop(1, cc);
+                ctx.fillStyle = sg;
                 ctx.fillRect(0, 0, w, h);
-
                 ctx.fillStyle = 'rgba(30,144,255,0.3)';
                 ctx.fillRect(0, h * 0.55, w, h * 0.45);
-
                 this.drawWater(ctx, w, h);
-
-                this.drawBackgroundElements(ctx, w, h);
-
                 this.drawTrees(ctx, w, h);
-
                 this.drawReeds(ctx, w, h);
-
                 this.drawLilyPads(ctx, w, h);
-
-                this.drawHotspots(ctx);
-
+                if (!this.selecting) this.drawHotspots(ctx);
                 this.drawMagnifier(ctx);
             },
 
-            drawWater: function(ctx, w, h) {
+            drawStaticScene() {
+                this.currentCase = { name: '湿地现场', description: '场景预览' };
+                this.hotspots = [];
+                this.draw();
+            },
+
+            drawWater(ctx, w, h) {
                 ctx.strokeStyle = 'rgba(255,255,255,0.4)';
                 ctx.lineWidth = 2;
                 for (let i = 0; i < 12; i++) {
-                    const y = h * 0.6 + i * 25;
-                    const offset = Math.sin(this.frameCount * 0.03 + i * 0.5) * 8;
+                    const y = h * 0.6 + i * 25, off = Math.sin(this.frameCount * 0.03 + i * 0.5) * 8;
                     ctx.beginPath();
-                    ctx.moveTo(0, y + offset);
-                    for (let x = 0; x <= w; x += 20) {
-                        ctx.lineTo(x, y + Math.sin(x * 0.02 + this.frameCount * 0.02 + i) * 6 + offset);
-                    }
+                    for (let x = 0; x <= w; x += 20) ctx.lineTo(x, y + Math.sin(x * 0.02 + this.frameCount * 0.02 + i) * 6 + off);
                     ctx.stroke();
                 }
             },
-
-            drawBackgroundElements: function(ctx, w, h) {
-                ctx.fillStyle = '#5D4037';
-                ctx.fillRect(-10, h * 0.58, w + 20, 15);
-                
-                ctx.fillStyle = '#4E342E';
-                for (let x = 0; x < w; x += 80) {
-                    const rh = 20 + this.seededRandom(x * 0.1 + this.treeSeed) * 30;
+            drawTrees(ctx, w, h) {
+                [[0.05, 0.35, 0.8], [0.18, 0.32, 1], [0.35, 0.38, 0.7], [0.55, 0.33, 0.9], [0.72, 0.36, 0.75], [0.88, 0.34, 0.85], [0.95, 0.37, 0.6]].forEach(([px, py, s], i) => {
+                    const x = px * w, y = py * h, sz = 35 * s * (0.9 + this.seededRandom(i + this.treeSeed) * 0.2);
+                    ctx.fillStyle = '#5D4037';
+                    ctx.fillRect(x - 4, y, 8, sz * 0.7);
+                    ctx.fillStyle = '#2E7D32';
                     ctx.beginPath();
-                    ctx.moveTo(x, h * 0.58);
-                    ctx.lineTo(x + 40, h * 0.58 - rh);
-                    ctx.lineTo(x + 80, h * 0.58);
+                    ctx.arc(x, y - sz * 0.2, sz * 0.5, 0, Math.PI * 2);
                     ctx.fill();
-                }
-            },
-
-            drawTrees: function(ctx, w, h) {
-                const treePositions = [
-                    { x: 0.05, y: 0.35, s: 0.8 },
-                    { x: 0.18, y: 0.32, s: 1 },
-                    { x: 0.35, y: 0.38, s: 0.7 },
-                    { x: 0.55, y: 0.33, s: 0.9 },
-                    { x: 0.72, y: 0.36, s: 0.75 },
-                    { x: 0.88, y: 0.34, s: 0.85 },
-                    { x: 0.95, y: 0.37, s: 0.6 }
-                ];
-
-                treePositions.forEach((t, i) => {
-                    const x = t.x * w;
-                    const y = t.y * h;
-                    const s = t.s * (0.9 + this.seededRandom(i + this.treeSeed) * 0.2);
-                    this.drawTree(ctx, x, y, 35 * s);
+                    ctx.beginPath();
+                    ctx.arc(x - sz * 0.25, y + sz * 0.1, sz * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x + sz * 0.25, y + sz * 0.1, sz * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
                 });
             },
-
-            drawTree: function(ctx, x, y, size) {
-                ctx.fillStyle = '#5D4037';
-                ctx.fillRect(x - 4, y, 8, size * 0.7);
-                
-                ctx.fillStyle = '#2E7D32';
-                ctx.beginPath();
-                ctx.arc(x, y - size * 0.2, size * 0.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x - size * 0.25, y + size * 0.1, size * 0.4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x + size * 0.25, y + size * 0.1, size * 0.4, 0, Math.PI * 2);
-                ctx.fill();
-            },
-
-            drawReeds: function(ctx, w, h) {
-                const reedPositions = [
-                    0.02, 0.08, 0.14, 0.88, 0.92, 0.96
-                ];
-
-                reedPositions.forEach((rx, i) => {
-                    const x = rx * w;
-                    const baseY = h * 0.58;
-                    const height = 60 + this.seededRandom(i + 100) * 40;
-                    const sway = Math.sin(this.frameCount * 0.04 + i) * 5;
-                    
+            drawReeds(ctx, w, h) {
+                [0.02, 0.08, 0.14, 0.88, 0.92, 0.96].forEach((rx, i) => {
+                    const x = rx * w, baseY = h * 0.58, ht = 60 + this.seededRandom(i + 100) * 40, sw = Math.sin(this.frameCount * 0.04 + i) * 5;
                     ctx.fillStyle = '#558B2F';
-                    ctx.fillRect(x + sway, baseY - height, 5, height);
-                    
+                    ctx.fillRect(x + sw, baseY - ht, 5, ht);
                     ctx.fillStyle = '#7CB342';
                     ctx.beginPath();
-                    ctx.ellipse(x + sway, baseY - height - 8, 4, 12, 0, 0, Math.PI * 2);
+                    ctx.ellipse(x + sw, baseY - ht - 8, 4, 12, 0, 0, Math.PI * 2);
                     ctx.fill();
                 });
             },
-
-            drawLilyPads: function(ctx, w, h) {
-                const pads = [
-                    { x: 0.08, y: 0.72, s: 1 },
-                    { x: 0.25, y: 0.78, s: 0.8 },
-                    { x: 0.42, y: 0.74, s: 1.1 },
-                    { x: 0.68, y: 0.76, s: 0.9 },
-                    { x: 0.9, y: 0.73, s: 1 }
-                ];
-
-                pads.forEach((p, i) => {
-                    const x = p.x * w;
-                    const y = p.y * h;
-                    const s = p.s;
-                    const bob = Math.sin(this.frameCount * 0.05 + i) * 2;
-                    
+            drawLilyPads(ctx, w, h) {
+                [[0.08, 0.72, 1], [0.25, 0.78, 0.8], [0.42, 0.74, 1.1], [0.68, 0.76, 0.9], [0.9, 0.73, 1]].forEach(([px, py, ps], i) => {
+                    const x = px * w, y = py * h, bob = Math.sin(this.frameCount * 0.05 + i) * 2;
                     ctx.fillStyle = '#388E3C';
                     ctx.beginPath();
-                    ctx.ellipse(x, y + bob, 22 * s, 14 * s, 0, 0.2, Math.PI * 2 - 0.2);
+                    ctx.ellipse(x, y + bob, 22 * ps, 14 * ps, 0, 0.2, Math.PI * 2 - 0.2);
                     ctx.lineTo(x, y + bob);
                     ctx.fill();
-                    
-                    ctx.strokeStyle = '#2E7D32';
-                    ctx.lineWidth = 1;
-                    for (let j = -15; j < 15; j += 6) {
-                        ctx.beginPath();
-                        ctx.moveTo(x + j * s, y + bob);
-                        ctx.lineTo(x + j * s, y - 5 * s + bob);
-                        ctx.stroke();
-                    }
                 });
             },
-
-            drawHotspots: function(ctx) {
+            drawHotspots(ctx) {
                 this.hotspots.forEach((h, i) => {
-                    h.displayX = h.x * this.canvas.width;
-                    h.displayY = h.y * this.canvas.height;
-
                     if (!h.found) {
-                        const pulse = Math.sin(this.frameCount * 0.08 + i * 1.5) * 0.4 + 0.6;
-                        const glowRadius = 40 * h.baseScale;
-
-                        const glow = ctx.createRadialGradient(
-                            h.displayX, h.displayY, 0,
-                            h.displayX, h.displayY, glowRadius * 1.5
-                        );
-                        glow.addColorStop(0, `rgba(255,215,0,${pulse * 0.6})`);
-                        glow.addColorStop(0.5, `rgba(255,165,0,${pulse * 0.3})`);
-                        glow.addColorStop(1, 'rgba(255,165,0,0)');
-                        
-                        ctx.fillStyle = glow;
+                        const pulse = Math.sin(this.frameCount * 0.08 + i * 1.5) * 0.4 + 0.6, gr = 40 * h.baseScale;
+                        const gl = ctx.createRadialGradient(h.displayX, h.displayY, 0, h.displayX, h.displayY, gr * 1.5);
+                        gl.addColorStop(0, `rgba(255,215,0,${pulse * 0.6})`);
+                        gl.addColorStop(0.5, `rgba(255,165,0,${pulse * 0.3})`);
+                        gl.addColorStop(1, 'rgba(255,165,0,0)');
+                        ctx.fillStyle = gl;
                         ctx.beginPath();
-                        ctx.arc(h.displayX, h.displayY, glowRadius * 1.5, 0, Math.PI * 2);
+                        ctx.arc(h.displayX, h.displayY, gr * 1.5, 0, Math.PI * 2);
                         ctx.fill();
-
                         ctx.strokeStyle = `rgba(255,215,0,${pulse})`;
                         ctx.lineWidth = 3;
                         ctx.setLineDash([8, 4]);
                         ctx.beginPath();
-                        ctx.arc(h.displayX, h.displayY, glowRadius, 0, Math.PI * 2);
+                        ctx.arc(h.displayX, h.displayY, gr, 0, Math.PI * 2);
                         ctx.stroke();
                         ctx.setLineDash([]);
-
                         ctx.fillStyle = '#FFD700';
                         ctx.beginPath();
                         ctx.arc(h.displayX, h.displayY, 8, 0, Math.PI * 2);
                         ctx.fill();
-                        
                         ctx.fillStyle = '#333';
-                        ctx.font = 'bold 12px Font Awesome';
+                        ctx.font = 'bold 12px sans-serif';
                         ctx.textAlign = 'center';
                         ctx.fillText('?', h.displayX, h.displayY + 4);
                     } else {
@@ -771,330 +1030,48 @@
                         ctx.beginPath();
                         ctx.arc(h.displayX, h.displayY, 35 * h.baseScale, 0, Math.PI * 2);
                         ctx.fill();
-
                         ctx.strokeStyle = '#4CAF50';
                         ctx.lineWidth = 3;
                         ctx.beginPath();
                         ctx.arc(h.displayX, h.displayY, 35 * h.baseScale, 0, Math.PI * 2);
                         ctx.stroke();
-
                         ctx.fillStyle = 'white';
-                        ctx.font = 'bold 20px Font Awesome';
+                        ctx.font = 'bold 20px sans-serif';
                         ctx.textAlign = 'center';
                         ctx.fillText('\u2714', h.displayX, h.displayY + 7);
-
-                        this[h.draw](ctx, h.displayX, h.displayY, h.baseScale);
                     }
                 });
             },
-
-            drawMagnifier: function(ctx) {
+            drawMagnifier(ctx) {
                 if (!this.magnifierActive) return;
-
-                const mx = this.cursorX;
-                const my = this.cursorY;
-                const radius = 80;
-
+                const mx = this.cursorX, my = this.cursorY, r = 80;
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(mx, my, radius, 0, Math.PI * 2);
+                ctx.arc(mx, my, r, 0, Math.PI * 2);
                 ctx.clip();
-
                 ctx.fillStyle = 'rgba(255,255,255,0.15)';
-                ctx.fillRect(mx - radius, my - radius, radius * 2, radius * 2);
-
+                ctx.fillRect(mx - r, my - r, r * 2, r * 2);
                 ctx.strokeStyle = '#8B4513';
                 ctx.lineWidth = 6;
                 ctx.beginPath();
-                ctx.arc(mx, my, radius - 3, 0, Math.PI * 2);
+                ctx.arc(mx, my, r - 3, 0, Math.PI * 2);
                 ctx.stroke();
-
-                ctx.strokeStyle = 'rgba(139,69,19,0.3)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(mx, my, radius * 0.7, 0, Math.PI * 2);
-                ctx.stroke();
-
                 ctx.restore();
-
                 ctx.strokeStyle = '#8B4513';
                 ctx.lineWidth = 8;
                 ctx.lineCap = 'round';
                 ctx.beginPath();
-                ctx.moveTo(mx + radius * 0.6, my + radius * 0.6);
-                ctx.lineTo(mx + radius * 1.3, my + radius * 1.3);
+                ctx.moveTo(mx + r * 0.6, my + r * 0.6);
+                ctx.lineTo(mx + r * 1.3, my + r * 1.3);
                 ctx.stroke();
-
                 ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                ctx.font = '10px Noto Sans SC';
+                ctx.font = '10px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('放大观察', mx, my + radius + 15);
+                ctx.fillText('放大观察', mx, my + r + 15);
             },
-
-            drawFootprint: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#8D6E63';
-                ctx.beginPath();
-                ctx.ellipse(x - 8 * scale, y + 5 * scale, 4 * scale, 8 * scale, -0.3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(x + 8 * scale, y + 5 * scale, 4 * scale, 8 * scale, 0.3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(x, y - 5 * scale, 3 * scale, 10 * scale, 0, 0, Math.PI * 2);
-                ctx.fill();
-            },
-
-            drawFeather: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#FFFFFF';
-                ctx.beginPath();
-                ctx.moveTo(x, y - 20 * scale);
-                ctx.bezierCurveTo(
-                    x + 15 * scale, y - 10 * scale,
-                    x + 15 * scale, y + 10 * scale,
-                    x, y + 20 * scale
-                );
-                ctx.bezierCurveTo(
-                    x - 15 * scale, y + 10 * scale,
-                    x - 15 * scale, y - 10 * scale,
-                    x, y - 20 * scale
-                );
-                ctx.fill();
-                ctx.strokeStyle = '#ccc';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(x, y - 18 * scale);
-                ctx.lineTo(x, y + 18 * scale);
-                ctx.stroke();
-            },
-
-            drawNest: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#8D6E63';
-                ctx.beginPath();
-                ctx.ellipse(x, y, 30 * scale, 15 * scale, 0, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.strokeStyle = '#5D4037';
-                ctx.lineWidth = 2;
-                for (let i = -25; i < 25; i += 8) {
-                    ctx.beginPath();
-                    ctx.moveTo(x + i, y - 10 * scale);
-                    ctx.quadraticCurveTo(x + i + 3, y + 5 * scale, x + i, y + 12 * scale);
-                    ctx.stroke();
-                }
-                
-                ctx.fillStyle = '#F5F5DC';
-                ctx.beginPath();
-                ctx.ellipse(x, y - 3 * scale, 8 * scale, 6 * scale, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(x - 10 * scale, y - 2 * scale, 7 * scale, 5 * scale, 0, 0, Math.PI * 2);
-                ctx.fill();
-            },
-
-            drawOtterFootprint: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#5D4037';
-                for (let i = 0; i < 5; i++) {
-                    const angle = (i / 5) * Math.PI - Math.PI / 2;
-                    const px = x + Math.cos(angle) * 8 * scale;
-                    const py = y + Math.sin(angle) * 6 * scale;
-                    ctx.beginPath();
-                    ctx.ellipse(px, py, 4 * scale, 5 * scale, angle, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                ctx.beginPath();
-                ctx.ellipse(x, y, 6 * scale, 8 * scale, 0, 0, Math.PI * 2);
-                ctx.fill();
-            },
-
-            drawSlide: function(ctx, x, y, scale) {
-                ctx.fillStyle = 'rgba(139,69,19,0.5)';
-                ctx.beginPath();
-                ctx.moveTo(x - 20 * scale, y - 30 * scale);
-                ctx.quadraticCurveTo(x, y, x + 20 * scale, y + 10 * scale);
-                ctx.quadraticCurveTo(x, y, x - 20 * scale, y - 30 * scale);
-                ctx.fill();
-                
-                ctx.strokeStyle = '#5D4037';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(x - 20 * scale, y - 30 * scale);
-                ctx.quadraticCurveTo(x, y, x + 20 * scale, y + 10 * scale);
-                ctx.stroke();
-            },
-
-            drawBones: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#F5F5DC';
-                
-                ctx.beginPath();
-                ctx.ellipse(x - 10 * scale, y, 8 * scale, 4 * scale, 0.3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.ellipse(x + 8 * scale, y + 5 * scale, 6 * scale, 3 * scale, -0.2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.fillStyle = '#BCAAA4';
-                for (let i = 0; i < 5; i++) {
-                    ctx.beginPath();
-                    ctx.arc(x - 5 * scale + i * 6 * scale, y + 8 * scale, 3 * scale, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            },
-
-            drawDeerFootprint: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#8D6E63';
-                ctx.beginPath();
-                ctx.ellipse(x - 6 * scale, y, 4 * scale, 9 * scale, -0.2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(x + 6 * scale, y, 4 * scale, 9 * scale, 0.2, 0, Math.PI * 2);
-                ctx.fill();
-            },
-
-            drawScratch: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#5D4037';
-                ctx.fillRect(x - 5 * scale, y - 30 * scale, 10 * scale, 60 * scale);
-                
-                ctx.strokeStyle = '#8D6E63';
-                ctx.lineWidth = 2;
-                for (let i = 0; i < 4; i++) {
-                    const scratchY = y - 25 * scale + i * 15 * scale;
-                    ctx.beginPath();
-                    ctx.moveTo(x - 12 * scale, scratchY);
-                    ctx.lineTo(x + 12 * scale, scratchY + (Math.random() - 0.5) * 5);
-                    ctx.stroke();
-                }
-            },
-
-            drawDroppings: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#6D4C41';
-                for (let i = 0; i < 6; i++) {
-                    ctx.beginPath();
-                    ctx.ellipse(
-                        x + (Math.random() - 0.5) * 30 * scale,
-                        y + (Math.random() - 0.5) * 20 * scale,
-                        5 * scale,
-                        3 * scale,
-                        Math.random() * Math.PI,
-                        0, Math.PI * 2
-                    );
-                    ctx.fill();
-                }
-            },
-
-            drawHeronFootprint: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#78909C';
-                ctx.beginPath();
-                ctx.ellipse(x - 6 * scale, y + 8 * scale, 2 * scale, 6 * scale, -0.3, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(x + 6 * scale, y + 8 * scale, 2 * scale, 6 * scale, 0.3, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(x, y - 8 * scale, 2 * scale, 12 * scale, 0, 0, 0, Math.PI * 2);
-                ctx.fill();
-            },
-
-            drawScales: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#B0BEC5';
-                for (let i = 0; i < 8; i++) {
-                    ctx.beginPath();
-                    ctx.ellipse(
-                        x + (Math.random() - 0.5) * 30 * scale,
-                        y + (Math.random() - 0.5) * 25 * scale,
-                        5 * scale,
-                        3 * scale,
-                        Math.random() * Math.PI,
-                        0, Math.PI * 2
-                    );
-                    ctx.fill();
-                }
-            },
-
-            drawHeronFeather: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#78909C';
-                ctx.beginPath();
-                ctx.moveTo(x, y - 25 * scale);
-                ctx.bezierCurveTo(
-                    x + 10 * scale, y - 15 * scale,
-                    x + 8 * scale, y + 10 * scale,
-                    x, y + 25 * scale
-                );
-                ctx.bezierCurveTo(
-                    x - 8 * scale, y + 10 * scale,
-                    x - 10 * scale, y - 15 * scale,
-                    x, y - 25 * scale
-                );
-                ctx.fill();
-                ctx.strokeStyle = '#546E7A';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(x, y - 22 * scale);
-                ctx.lineTo(x, y + 22 * scale);
-                ctx.stroke();
-            },
-
-            drawBeaverTail: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#6D4C41';
-                ctx.beginPath();
-                ctx.ellipse(x, y, 25 * scale, 12 * scale, 0, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.strokeStyle = '#5D4037';
-                ctx.lineWidth = 1;
-                for (let i = -20; i < 20; i += 6) {
-                    ctx.beginPath();
-                    ctx.moveTo(x + i * scale, y - 10 * scale);
-                    ctx.lineTo(x + i * scale, y + 10 * scale);
-                    ctx.stroke();
-                }
-            },
-
-            drawBite: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#5D4037';
-                ctx.fillRect(x - 20 * scale, y - 25 * scale, 40 * scale, 50 * scale);
-                
-                ctx.fillStyle = '#8D6E63';
-                ctx.beginPath();
-                ctx.arc(x - 5 * scale, y - 15 * scale, 3 * scale, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x + 3 * scale, y - 10 * scale, 3 * scale, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x - 2 * scale, y - 5 * scale, 3 * scale, 0, Math.PI * 2);
-                ctx.fill();
-            },
-
-            drawChips: function(ctx, x, y, scale) {
-                ctx.fillStyle = '#A1887F';
-                for (let i = 0; i < 10; i++) {
-                    ctx.save();
-                    ctx.translate(
-                        x + (Math.random() - 0.5) * 35 * scale,
-                        y + (Math.random() - 0.5) * 25 * scale
-                    );
-                    ctx.rotate(Math.random() * Math.PI);
-                    ctx.fillRect(-4 * scale, -2 * scale, 8 * scale, 4 * scale);
-                    ctx.restore();
-                }
-            },
-
-            drawStaticScene: function() {
-                this.currentCase = speciesData[0];
-                this.hotspots = this.currentCase.clues.map(c => ({
-                    ...c,
-                    displayX: c.x * this.canvas.width,
-                    displayY: c.y * this.canvas.height,
-                    baseScale: c.scale || 1
-                }));
-                this.draw();
-            }
         };
 
-        $(function() {
-            detective.init();
-        });
+        $(() => detective.init());
     </script>
 </body>
 </html>

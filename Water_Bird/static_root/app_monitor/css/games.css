@@ -1,0 +1,362 @@
+/* ============================================================
+   SHARED GAME DESIGN TOKENS & UTILITIES
+   Loaded by: bird-runner, migration, floating-island,
+              wetland-detective, wetland-restorer
+   ============================================================ */
+
+/* -----------------------------------------------------------
+   CSS Custom Properties (Design Tokens)
+   ----------------------------------------------------------- */
+:root {
+    /* Core palette */
+    --g-primary:       #2D6A4F;
+    --g-primary-lt:   #52B788;
+    --g-primary-dk:   #1B4332;
+    --g-accent:       #E9C46A;
+    --g-accent-hot:   #E76F51;
+    --g-bg:           #F2EDE4;
+    --g-surface:      rgba(255, 255, 255, 0.88);
+    --g-surface-dk:   rgba(20, 35, 25, 0.88);
+    --g-text:         #2C2C2C;
+    --g-text-muted:   #8A8A8A;
+    --g-text-light:   rgba(255,255,255,0.85);
+    --g-border:       rgba(45, 106, 79, 0.15);
+
+    /* Radius */
+    --g-r-sm:  8px;
+    --g-r-md:  14px;
+    --g-r-lg:  22px;
+    --g-r-xl:  32px;
+    --g-r-pill: 999px;
+
+    /* Shadows */
+    --g-sd-sm: 0 2px 10px rgba(0,0,0,0.09);
+    --g-sd-md: 0 6px 24px rgba(0,0,0,0.13);
+    --g-sd-lg: 0 16px 48px rgba(0,0,0,0.18);
+    --g-sd-glow: 0 0 20px rgba(45,106,79,0.35);
+
+    /* Glass */
+    --g-glass-bg: rgba(255,255,255,0.72);
+    --g-glass-bd: rgba(255,255,255,0.45);
+    --g-glass-blur: blur(14px);
+
+    /* Fonts */
+    --g-font: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* -----------------------------------------------------------
+   Base Reset
+   ----------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--g-font);
+    background: var(--g-bg);
+    color: var(--g-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* -----------------------------------------------------------
+   Shared Layout
+   ----------------------------------------------------------- */
+.game-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px 16px 40px;
+}
+
+.game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 4px;
+    margin-bottom: 12px;
+}
+
+.game-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--g-primary-dk);
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--g-primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+}
+
+.logo-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--g-primary-dk);
+}
+
+/* -----------------------------------------------------------
+   Canvas Container
+   ----------------------------------------------------------- */
+.canvas-container {
+    position: relative;
+    border-radius: var(--g-r-lg);
+    overflow: hidden;
+    box-shadow: var(--g-sd-md);
+    background: #e8e4dd;
+}
+
+.canvas-container canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: default;
+}
+
+/* -----------------------------------------------------------
+   Shared Overlay (base — game-specific panels extend this)
+   ----------------------------------------------------------- */
+.game-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    padding: 24px;
+}
+
+.game-overlay-content {
+    background: var(--g-glass-bg);
+    backdrop-filter: var(--g-glass-blur);
+    -webkit-backdrop-filter: var(--g-glass-blur);
+    border: 1px solid var(--g-glass-bd);
+    border-radius: var(--g-r-xl);
+    box-shadow: var(--g-sd-lg);
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 460px;
+    text-align: center;
+    animation: gFadeIn 0.3s ease-out;
+}
+
+@keyframes gFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* -----------------------------------------------------------
+   Shared Buttons
+   ----------------------------------------------------------- */
+.g-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: var(--g-r-pill);
+    font-family: var(--g-font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.22s ease;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.g-btn:active { transform: scale(0.97); }
+
+.g-btn-primary {
+    background: var(--g-primary);
+    color: white;
+    box-shadow: var(--g-sd-sm), 0 4px 12px rgba(45,106,79,0.28);
+}
+.g-btn-primary:hover {
+    background: var(--g-primary-lt);
+    box-shadow: var(--g-sd-md), 0 6px 16px rgba(45,106,79,0.36);
+    transform: translateY(-1px);
+}
+
+.g-btn-accent {
+    background: var(--g-accent);
+    color: #5a3a00;
+    box-shadow: var(--g-sd-sm);
+}
+.g-btn-accent:hover {
+    background: #f0d080;
+    transform: translateY(-1px);
+}
+
+.g-btn-secondary {
+    background: rgba(255,255,255,0.5);
+    color: var(--g-primary-dk);
+    border: 1.5px solid var(--g-border);
+}
+.g-btn-secondary:hover {
+    background: rgba(255,255,255,0.75);
+    border-color: var(--g-primary-lt);
+}
+
+/* -----------------------------------------------------------
+   Shared Stat Badge
+   ----------------------------------------------------------- */
+.g-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.48);
+    color: white;
+    padding: 5px 14px;
+    border-radius: var(--g-r-pill);
+    font-size: 13px;
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.g-stat .g-stat-icon { font-size: 11px; opacity: 0.75; }
+.g-stat .g-stat-val  { color: var(--g-accent); font-weight: 700; }
+
+/* -----------------------------------------------------------
+   Glass Panel (shared decorative container)
+   ----------------------------------------------------------- */
+.g-glass-panel {
+    background: var(--g-glass-bg);
+    backdrop-filter: var(--g-glass-blur);
+    -webkit-backdrop-filter: var(--g-glass-blur);
+    border: 1px solid var(--g-glass-bd);
+    border-radius: var(--g-r-md);
+    box-shadow: var(--g-sd-sm);
+}
+
+/* -----------------------------------------------------------
+   Score / Result Panel (shared)
+   ----------------------------------------------------------- */
+.g-result-grade {
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--g-accent);
+    text-shadow: 0 2px 12px rgba(233,196,106,0.4);
+}
+
+.g-result-label {
+    font-size: 14px;
+    color: var(--g-text-muted);
+    margin-top: 4px;
+    margin-bottom: 20px;
+}
+
+.g-result-score {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--g-primary-dk);
+}
+
+.g-result-score-lbl {
+    font-size: 12px;
+    color: var(--g-text-muted);
+    margin-bottom: 24px;
+}
+
+.g-result-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 28px;
+}
+
+.g-result-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.g-result-stat .val {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.g-result-stat .lbl {
+    font-size: 11px;
+    color: var(--g-text-muted);
+}
+
+.g-result-stat.correct .val { color: #2D6A4F; }
+.g-result-stat.wrong   .val { color: #E76F51; }
+.g-result-stat.combo   .val { color: var(--g-accent); }
+
+/* -----------------------------------------------------------
+   Game Rule Card (shared glass panel)
+   ----------------------------------------------------------- */
+.g-rules {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: var(--g-r-md);
+    padding: 14px 18px;
+    font-size: 12.5px;
+    color: var(--g-text-muted);
+    line-height: 1.7;
+    text-align: left;
+    margin-top: 16px;
+}
+
+.g-rules strong { color: var(--g-primary-dk); }
+
+/* -----------------------------------------------------------
+   High Score Badge
+   ----------------------------------------------------------- */
+.g-highscore {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(233,196,106,0.18);
+    border: 1px solid rgba(233,196,106,0.4);
+    color: #7a5a00;
+    padding: 4px 12px;
+    border-radius: var(--g-r-pill);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.g-highscore .fa-star { color: var(--g-accent); }
+
+/* -----------------------------------------------------------
+   Animations
+   ----------------------------------------------------------- */
+@keyframes gBounce {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.12); }
+}
+
+@keyframes gSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gPulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.5; }
+}
+
+/* -----------------------------------------------------------
+   Responsive
+   ----------------------------------------------------------- */
+@media (max-width: 640px) {
+    .game-wrapper { padding: 10px 10px 32px; }
+    .game-overlay-content { padding: 28px 20px; }
+    .g-result-grade { font-size: 56px; }
+    .g-result-score { font-size: 36px; }
+}

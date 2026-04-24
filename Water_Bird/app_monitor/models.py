@@ -1,7 +1,9 @@
-from django.contrib.gis.db import models  # GIS 的 models (使用 JSONField 替代 PointField)
+from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 
 
 # ====================
@@ -164,7 +166,11 @@ class ObservationRecord(models.Model):
 class AIDetectionResult(models.Model):
     image = models.ImageField(upload_to='ai_records/%Y/%m/', verbose_name="识别图片")
     species_name = models.CharField(max_length=50, verbose_name="识别结果", default="未知")
-    confidence = models.FloatField(verbose_name="置信度", default=0.0)
+    confidence = models.FloatField(
+        verbose_name="置信度",
+        default=0.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(1.0)]
+    )
     habit_info = models.TextField(verbose_name="习性简介", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="识别时间")
 
@@ -174,7 +180,7 @@ class AIDetectionResult(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.species_name} ({self.confidence:.1%})"
+        return f"{self.species_name} ({min(self.confidence, 1.0):.1%})"
 
 
 # ====================
@@ -185,7 +191,15 @@ class Product(models.Model):
     price = models.IntegerField(verbose_name="所需积分")
     image = models.ImageField(upload_to='products/', verbose_name="商品图片")
     description = models.TextField(blank=True, verbose_name="商品描述")
-    stock = models.IntegerField(default=999, verbose_name="库存")
+    stock = models.IntegerField(
+        default=999,
+        verbose_name="库存",
+        validators=[MinValueValidator(0)]
+    )
+
+    def clean(self):
+        if self.stock < 0:
+            raise ValidationError({'stock': '库存不能为负数'})
 
     class Meta:
         verbose_name = "积分商城商品"
@@ -309,4 +323,12 @@ class SpeciesImage(models.Model):
         if self.image:
             return self.image.url
         return self.image_url or None
+
+    def clean(self):
+        if not self.image and not self.image_url:
+            raise ValidationError('至少需要设置图片URL或上传本地图片之一。')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
