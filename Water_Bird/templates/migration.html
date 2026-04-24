@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -6,7 +7,7 @@
     <title>候鸟迁徙记 | 黄河生态方舟</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../static/app_monitor/css/games-shared.css">
+    <link rel="stylesheet" href="{% static 'app_monitor/css/games-shared.css' %}?v=2026042404">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         :root {
@@ -43,58 +44,62 @@
         }
         @keyframes mg-twinkle { 0%,100%{opacity:0.3} 50%{opacity:1} }
 
+        /* ── Overlay title tweaks ── */
+        #startOverlay h2 { font-size: 22px !important; margin-bottom: 4px !important; }
+        #startOverlay .g-subtitle { font-size: 12px !important; margin-bottom: 10px !important; }
+
         /* ── Bird selection cards ── */
         .mg-bird-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
-            width: 100%; max-width: 460px; margin-bottom: 14px;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            width: 100%; max-width: 420px; margin-bottom: 12px;
         }
         .mg-bird-card {
             background: rgba(255,255,255,0.12);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1.5px solid rgba(255,255,255,0.2);
-            border-radius: 16px; padding: 14px 12px; cursor: pointer;
+            border-radius: 14px; padding: 10px 8px; cursor: pointer;
             transition: all 0.3s ease; text-align: center;
         }
         .mg-bird-card:hover {
             border-color: rgba(255,202,40,0.6);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 28px rgba(255,202,40,0.18);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255,202,40,0.18);
             background: rgba(255,255,255,0.18);
         }
         .mg-bird-card.selected {
             border-color: var(--g-accent);
             background: rgba(255,202,40,0.14);
-            box-shadow: 0 0 0 2px rgba(255,202,40,0.4), 0 8px 32px rgba(255,202,40,0.22);
+            box-shadow: 0 0 0 2px rgba(255,202,40,0.4), 0 6px 24px rgba(255,202,40,0.22);
         }
-        .mg-bird-icon { width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; }
+        .mg-bird-icon { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; }
         .mg-bird-canvas { display: block; }
-        .mg-bird-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-        .mg-bird-stats { display: flex; flex-direction: column; gap: 4px; }
-        .mg-stat-row { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 11px; color: rgba(255,255,255,0.65); }
-        .mg-stat-bar { width: 60px; height: 5px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; }
-        .mg-stat-fill { height: 100%; border-radius: 3px; }
+        .mg-bird-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+        .mg-bird-stats { display: flex; flex-direction: column; gap: 3px; }
+        .mg-stat-row { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 10px; color: rgba(255,255,255,0.65); }
+        .mg-stat-bar { width: 55px; height: 4px; background: rgba(255,255,255,0.12); border-radius: 2px; overflow: hidden; }
+        .mg-stat-fill { height: 100%; border-radius: 2px; }
 
         /* ── Rules ── */
-        .mg-rules { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; width: 100%; max-width: 360px; }
-        .mg-rule-item { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 7px 14px; border-radius: 10px; font-size: 13px; color: rgba(255,255,255,0.8); }
-        .mg-rule-item i { color: var(--g-accent); min-width: 16px; }
+        .mg-rules { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; width: 100%; max-width: 400px; }
+        .mg-rule-item { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 6px 12px; border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.8); }
+        .mg-rule-item i { color: var(--g-accent); min-width: 14px; }
 
         /* ── In-game HUD ── */
-        .mg-hud { position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: none; justify-content: space-between; align-items: flex-start; z-index: 10; pointer-events: none; }
+        .mg-hud { position: absolute; top: 0; left: 0; right: 0; padding: 16px 20px; display: none; justify-content: space-between; align-items: flex-start; z-index: 10; pointer-events: none; }
         .mg-hud.show { display: flex; }
         .mg-hud-panel {
-            background: rgba(13,27,42,0.55);
+            background: rgba(13,27,42,0.6);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255,255,255,0.12);
-            color: white; padding: 12px 16px; border-radius: 14px; font-size: 13px; pointer-events: auto;
+            color: white; padding: 14px 18px; border-radius: 14px; font-size: 14px; pointer-events: auto;
         }
-        .mg-hud-panel h4 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--g-accent); letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-        .mg-stat-line { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
-        .mg-energy-bar { width: 110px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
-        .mg-energy-fill { height: 100%; border-radius: 4px; transition: width 0.3s, background 0.5s; }
-        .mg-distance-bar { width: 140px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+        .mg-hud-panel h4 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--g-accent); letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; }
+        .mg-stat-line { display: flex; align-items: center; gap: 12px; padding: 5px 0; }
+        .mg-energy-bar { width: 130px; height: 9px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+        .mg-energy-fill { height: 100%; border-radius: 5px; transition: width 0.3s, background 0.5s; }
+        .mg-distance-bar { width: 160px; height: 9px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
         .mg-distance-fill {
             height: 100%;
             background: linear-gradient(90deg, #3949AB, #5C6BC0, #7986CB, #4FC3F7, #26A69A, #66BB6A);
@@ -108,6 +113,124 @@
             padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600;
         }
         @media (max-width: 480px) { .mg-bird-grid { max-width: 380px; gap: 10px; } }
+
+        /* === 科普知识卡片 === */
+        .mg-fact-card {
+            position: fixed;
+            top: 80px; right: 16px;
+            z-index: 200;
+            width: 280px;
+            background: rgba(13, 27, 42, 0.97);
+            border: 1.5px solid rgba(255, 202, 40, 0.3);
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: mgFactSlideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+        @keyframes mgFactSlideIn {
+            from { opacity: 0; transform: translateX(30px) scale(0.9); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .mg-fact-card.fade-out {
+            animation: mgFactSlideOut 0.3s ease forwards;
+        }
+        @keyframes mgFactSlideOut {
+            from { opacity: 1; transform: translateX(0) scale(1); }
+            to   { opacity: 0; transform: translateX(30px) scale(0.9); }
+        }
+        .mg-fact-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .mg-fact-icon {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .mg-fact-title {
+            font-size: 13px; font-weight: 700; color: #FFCA28; flex: 1;
+        }
+        .mg-fact-badge {
+            font-size: 10px; padding: 2px 7px; border-radius: 8px;
+            background: rgba(255,202,40,0.15); color: #FFCA28; font-weight: 600;
+        }
+        .mg-fact-content {
+            font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.6;
+            max-height: 120px; overflow-y: auto;
+        }
+        .mg-fact-footer {
+            margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,202,40,0.15);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .mg-fact-close {
+            background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.5);
+            font-size: 11px; padding: 4px 8px; border-radius: 8px; transition: all 0.2s;
+        }
+        .mg-fact-close:hover { background: rgba(255,202,40,0.1); color: #FFCA28; }
+        .mg-fact-hint {
+            font-size: 10px; color: rgba(255,255,255,0.35); display: flex; align-items: center; gap: 4px;
+        }
+        /* === 区域提示条 === */
+        .mg-zone-fact {
+            position: fixed;
+            bottom: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 200;
+            background: rgba(13,27,42,0.95);
+            border: 1.5px solid rgba(255,202,40,0.3);
+            border-radius: 14px;
+            padding: 10px 20px;
+            text-align: center;
+            animation: mgFactSlideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            min-width: 260px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .mg-zone-fact.fade-out {
+            animation: mgFactSlideOut 0.3s ease forwards;
+        }
+        .mg-zone-fact-title {
+            font-size: 12px; color: #FFCA28; font-weight: 700; margin-bottom: 4px;
+        }
+        .mg-zone-fact-content {
+            font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5;
+        }
+        /* === 科普按钮 === */
+        .mg-fact-btn {
+            position: absolute; top: 0; right: 16px; z-index: 16;
+            background: rgba(255,202,40,0.85); color: #263238;
+            border: none; padding: 5px 13px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            display: none; align-items: center; gap: 5px;
+            font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            transition: all 0.2s; pointer-events: auto;
+        }
+        .mg-fact-btn.show { display: flex; }
+        .mg-fact-btn:hover { background: rgba(255,202,40,1); transform: scale(1.05); }
+        /* === 鸟类选择页科普信息 === */
+        .mg-bird-fact-text {
+            background: rgba(255,202,40,0.08);
+            border: 1px solid rgba(255,202,40,0.2);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+        .mg-bird-card-fact {
+            background: rgba(255,202,40,0.06);
+            border-top: 1px dashed rgba(255,202,40,0.2);
+            padding: 7px 12px 8px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.5;
+            border-radius: 0 0 16px 16px;
+            margin: 0 -12px -14px;
+            display: none;
+        }
+        .mg-bird-card.selected .mg-bird-card-fact { display: block; }
+        #winOverlay, #gameOverOverlay { justify-content: center; }
+        #winOverlay > div, #gameOverOverlay > div { margin: auto; }
     </style>
 </head>
 <body>
@@ -146,6 +269,11 @@
                 </div>
             </div>
 
+            <!-- 科普按钮 -->
+            <button class="mg-fact-btn" id="mgFactBtn" onclick="migrationGame.showBirdFactCard()">
+                <i class="fas fa-graduation-cap"></i> 科普
+            </button>
+
             <canvas id="gameCanvas" class="g-canvas"></canvas>
 
             <div class="g-overlay" id="startOverlay" style="background:rgba(13,27,42,0.82);">
@@ -183,7 +311,7 @@
                     <div style="font-size:26px;margin:8px 0;color:#FFCA28;" id="mgFinalDistance">0 分</div>
                     <p style="font-size:12px;color:rgba(255,255,255,0.55);" id="mgFailReason"></p>
                     <p style="font-size:14px;color:rgba(255,255,255,0.8);margin:8px 0;">得分 <strong id="mgFinalScore" style="color:#FFCA28">0</strong></p>
-                    <button class="g-btn" style="background:linear-gradient(135deg,#FFCA28,#FFA726);color:#263238;font-weight:700;margin-top:12px;" onclick="migrationGame.restart()">
+                    <button class="g-btn" style="background:linear-gradient(135deg,#FFCA28,#FFA726);color:#263238;font-weight:700;margin-top:14px;" onclick="migrationGame.restart()">
                         <i class="fas fa-redo"></i> 重新迁徙
                     </button>
                 </div>
@@ -191,17 +319,105 @@
         </div>
 
         <div class="g-info-panel">
-            <h4><i class="fas fa-feather" style="color:#FFCA28"></i> 候鸟能力说明</h4>
-            <p>
-                <strong>白天鹅</strong>：平衡型，体力充足，适合新手 ·
-                <strong>丹顶鹤</strong>：速度快又灵活，但体力消耗较快 ·
-                <strong>大雁</strong>：体力充沛续航久，但转向较慢 ·
-                <strong>海鸥</strong>：极速型，灵活敏捷，但体力最少
-            </p>
+            <h4><i class="fas fa-graduation-cap" style="color:#FFCA28"></i> 候鸟知识百科</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;text-align:left;">
+                <div style="background:rgba(21,101,192,0.08);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#1565C0;margin-bottom:3px;"><i class="fas fa-feather-alt"></i> 白天鹅</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">飞行高度可达8000米，每年迁徙超5000公里</div>
+                </div>
+                <div style="background:rgba(136,14,79,0.08);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#880E4F;margin-bottom:3px;"><i class="fas fa-crane"></i> 丹顶鹤</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">国家一级保护动物，全球野生不足3000只</div>
+                </div>
+                <div style="background:rgba(27,94,32,0.08);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#1B5E20;margin-bottom:3px;"><i class="fas fa-bird"></i> 大雁</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">"人"字飞行可省30%体力，速度达70-90km/h</div>
+                </div>
+                <div style="background:rgba(0,105,92,0.08);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#00695C;margin-bottom:3px;"><i class="fas fa-wind"></i> 海鸥</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">可饮用海水，能通过盐腺排出多余盐分</div>
+                </div>
+            </div>
         </div>
     </main>
 
     <script>
+        /* ============================================================
+           科普知识数据
+        ============================================================ */
+        var MIGRATION_FACTS = {
+            birdTypes: {
+                swan: {
+                    title: '白天鹅',
+                    badge: '国家二级保护',
+                    icon: 'fa-feather-alt',
+                    color: '#FFFFFF',
+                    content: '白天鹅是忠贞的"爱情鸟"，一生只有一个伴侣。它们在迁徙时飞行高度可达 8000 米，利用山谷气流节省体力。每年飞行距离超过 5000 公里，从西伯利亚飞到中国黄河湿地越冬。'
+                },
+                crane: {
+                    title: '丹顶鹤',
+                    badge: '国家一级保护',
+                    icon: 'fa-crane',
+                    color: '#F5F5F5',
+                    content: '丹顶鹤是中国一级保护动物，因头顶红色肉冠而得名。它们拥有优美的求偶舞蹈，鸣声可传播 500 米以外。丹顶鹤每年在东北繁殖，黄河三角洲是其重要越冬地，目前全球野生种群不足 3000 只。'
+                },
+                goose: {
+                    title: '大雁',
+                    badge: '迁徙冠军',
+                    icon: 'fa-bird',
+                    color: '#8B7355',
+                    content: '大雁是最守纪律的迁徙者，飞行时排成"人"字形，利用气流减少 30% 的体力消耗。领头雁最为辛苦，需要不断变换位置让其他成员轮流领飞。大雁的飞行速度可达每小时 70-90 公里。'
+                },
+                gull: {
+                    title: '海鸥',
+                    badge: '湿地清道夫',
+                    icon: 'fa-wind',
+                    color: '#E8E8E8',
+                    content: '海鸥是海洋与湿地的"清洁工"，以腐肉、垃圾和小型鱼类为食，能帮助清理海岸线垃圾。它们还具有预测天气的能力——低飞预示暴风雨将至。海鸥可以喝海水，通过眼眶旁的盐腺排出多余盐分。'
+                }
+            },
+            zones: {
+                '荒原': '荒原是迁徙候鸟的重要中转站，提供了稀缺的觅食和休息场所。草原生态系统支撑着数百种鸟类的生活。',
+                '荒漠': '荒漠上空的气流可以帮助候鸟滑翔节省体力，但缺乏水源补充。荒漠中的绿洲是候鸟的生命补给站。',
+                '农田': '农田是候鸟重要的觅食地，收割后的麦田遗留的谷物是宝贵的能量来源，但也存在农药中毒风险。每年有大量候鸟在迁徙途中因农药中毒死亡。',
+                '城市边缘': '城市热岛效应使城区温度高于郊区，可能缩短候鸟的迁徙距离。但玻璃幕墙造成的光污染每年导致全球约 10 亿只鸟死亡。',
+                '河流': '河流是迁徙路线上的"绿色走廊"，为候鸟提供饮水和食物补给。黄河作为候鸟迁徙的南北通道，每年接待超过 100 万只候鸟。',
+                '湿地': '湿地是候鸟迁徙的终点站，提供了繁殖、越冬所需的一切资源。黄河三角洲是中国最重要的湿地之一，被列入国际重要湿地名录。'
+            },
+            obstacles: {
+                turbine: {
+                    title: '风力发电机',
+                    content: '风力发电机是近年新增的候鸟杀手。每年全球约有 10-50 万只候鸟在风机叶片下丧生，夜间趋光飞行的鸟类尤其危险。在候鸟迁徙高峰期，美国部分风电场会临时关闭以减少鸟击。'
+                },
+                building: {
+                    title: '玻璃幕墙',
+                    content: '玻璃幕墙在夜间反射天空和树木影像，造成鸟类撞击死亡。据估计，美国每年约有 6 亿只鸟因此死亡，高层建筑的玻璃窗是城市鸟类死亡的首要原因。'
+                },
+                hunter: {
+                    title: '非法捕猎',
+                    content: '非法捕猎仍是候鸟面临的主要威胁之一。候鸟迁徙高峰期，捕鸟网、诱鸟器等工具在部分地区仍然泛滥。全球每年约有 1200-3600 万只鸟死于非法捕猎。'
+                },
+                net: {
+                    title: '防鸟网',
+                    content: '防鸟网常用于保护果园和鱼塘，但逃逸困难，每年造成大量候鸟死亡。仅在欧洲，每年就有约 2500 万只鸟被防鸟网困住，其中许多是受保护物种。'
+                }
+            },
+            foods: {
+                fish: {
+                    title: '鱼类',
+                    content: '鱼类是鸬鹚、苍鹭等涉禽的主要能量来源，富含优质蛋白质和脂肪。一条小鱼可提供候鸟迁徙途中所需能量的 15-20%。'
+                },
+                berry: {
+                    title: '浆果',
+                    content: '浆果类食物富含糖分，能快速补充候鸟迁徙中消耗的能量，也是许多雀形目鸟类的最爱。迁徙前候鸟会大量进食浆果以积累脂肪。'
+                },
+                seed: {
+                    title: '谷物种子',
+                    content: '谷物种子是雁类和鸭类的重要食物，脂肪含量高，有助于候鸟积累迁徙所需的脂肪储备。迁徙期间，候鸟体重可增加 30-50%。'
+                }
+            }
+        };
+
         var birdTypes = [
             {id:'swan',  name:'白天鹅', icon:'fa-feather-alt', color:'#FFFFFF', bg:'#1565C0', speed:2.5, maxSpeed:5, energy:120, agility:0.4, boostCost:8, desc:'速度中等，体力充足'},
             {id:'crane', name:'丹顶鹤', icon:'fa-crane',      color:'#F5F5F5', bg:'#880E4F', speed:3,   maxSpeed:6.5, energy:90,  agility:0.55, boostCost:6, desc:'速度快，灵活敏捷'},
@@ -214,6 +430,7 @@
             targetScore:10000, energy:100, currentBird:null,
             frameCount:0, bird:null, obstacles:[], foods:[], particles:[],
             animationId:null, keys:{}, selectedBirdIndex:0, boosting:false,
+            lastZone:null, factCooldown:0, seenFacts:new Set(),
 
             init:function() {
                 this.canvas = document.getElementById('gameCanvas');
@@ -249,6 +466,7 @@
                 for (var i = 0; i < birdTypes.length; i++) {
                     var b = birdTypes[i];
                     var sel = i === this.selectedBirdIndex;
+                    var fact = MIGRATION_FACTS.birdTypes[b.id];
                     var card = document.createElement('div');
                     card.className = 'mg-bird-card' + (sel ? ' selected' : '');
                     card.setAttribute('data-idx', i);
@@ -260,7 +478,8 @@
                         '<div class="mg-stat-row"><i class="fas fa-bolt" style="color:#FFCA28"></i><div class="mg-stat-bar"><div class="mg-stat-fill" style="width:' + (b.energy/1.5) + '%;background:#FFCA28"></div></div>体力</div>' +
                         '<div class="mg-stat-row"><i class="fas fa-running" style="color:#7986CB"></i><div class="mg-stat-bar"><div class="mg-stat-fill" style="width:' + (b.speed*20) + '%;background:#7986CB"></div></div>速度</div>' +
                         '<div class="mg-stat-row"><i class="fas fa-sync" style="color:#90CAF9"></i><div class="mg-stat-bar"><div class="mg-stat-fill" style="width:' + (b.agility*100) + '%;background:#90CAF9"></div></div>灵活</div>' +
-                        '</div>';
+                        '</div>' +
+                        '<div class="mg-bird-card-fact"><i class="fas fa-graduation-cap" style="color:#FFCA28;margin-right:4px"></i>' + (fact ? fact.content.substring(0, 60) + '...' : '') + '</div>';
                     var self = this;
                     card.addEventListener('click', function(idx){ return function(){ self.selectBird(idx); }; }(i));
                     grid.appendChild(card);
@@ -547,11 +766,13 @@
                 document.getElementById('winOverlay').style.display = 'none';
                 document.getElementById('gameOverOverlay').style.display = 'none';
                 document.getElementById('mgHud').classList.add('show');
+                $('#mgFactBtn').addClass('show');
                 this.isRunning = true;
                 this.score = 0; this.distance = 0;
                 this.frameCount = 0; this.obstacles = []; this.foods = []; this.particles = [];
                 this.boosting = false;
                 this.keys = {};
+                this.lastZone = null; this.factCooldown = 0; this.seenFacts = new Set();
                 var cfg = birdTypes[this.selectedBirdIndex];
                 this.currentBird = cfg;
                 this.energy = cfg.energy;
@@ -565,6 +786,7 @@
                 if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
                 this.obstacles = []; this.foods = []; this.particles = [];
                 document.getElementById('mgHud').classList.remove('show');
+                $('#mgFactBtn').removeClass('show');
                 document.getElementById('winOverlay').style.display = 'none';
                 document.getElementById('gameOverOverlay').style.display = 'none';
                 document.getElementById('startOverlay').style.display = '';
@@ -606,6 +828,18 @@
                 if (this.frameCount % 30 === 0) this.spawnFood();
                 var spd = fwd * 0.8;
                 var self = this;
+
+                // Zone fact check
+                var zones=['荒原','荒漠','农田','城市边缘','河流','湿地'];
+                var spct = Math.min(1, this.score / this.targetScore);
+                var curZone = zones[Math.min(Math.floor(spct/100*(zones.length-1)), zones.length-1)];
+                if (curZone !== this.lastZone && this.factCooldown <= 0) {
+                    this.lastZone = curZone;
+                    this.showZoneFact(curZone);
+                    this.factCooldown = 180;
+                }
+                if (this.factCooldown > 0) this.factCooldown--;
+
                 this.obstacles.forEach(function(o){
                     o.x -= spd;
                     if(o.type==='turbine') o.windPhase += 0.08;
@@ -621,6 +855,11 @@
                         this.createParticles(b.x, b.y, '#FF5722', 12);
                         b.vx = -8; b.vy = (Math.random()-0.5)*10;
                         this.obstacles[i].hitCooldown = 10;
+                        var otype = this.obstacles[i].type;
+                        if (this.factCooldown <= 0) {
+                            this.showFactCard('obstacle', otype);
+                            this.factCooldown = 300;
+                        }
                     }
                 }
                 for (var j = 0; j < this.foods.length; j++) {
@@ -629,6 +868,10 @@
                         this.energy = Math.min(cfg.energy, this.energy+15);
                         this.score += 50;
                         this.createParticles(f.x, f.y, '#FFD700', 10);
+                        if (this.factCooldown <= 0) {
+                            this.showFactCard('food', f.type);
+                            this.factCooldown = 240;
+                        }
                         this.foods.splice(j,1); j--;
                     }
                 }
@@ -1011,6 +1254,90 @@
                 }
                 ctx.restore();
             },
+
+            showFactCard:function(category, itemId) {
+                var data = null;
+                if (category === 'obstacle') data = MIGRATION_FACTS.obstacles[itemId];
+                else if (category === 'food') data = MIGRATION_FACTS.foods[itemId];
+                if (!data) return;
+                var existing = document.getElementById('mgFactCard');
+                if (existing) existing.remove();
+                var card = document.createElement('div');
+                card.id = 'mgFactCard';
+                card.className = 'mg-fact-card';
+                card.innerHTML =
+                    '<div class="mg-fact-header">' +
+                    '<div class="mg-fact-icon" style="background:rgba(255,87,34,0.2); color:#FF5722">' +
+                    '<i class="fas fa-exclamation-triangle"></i></div>' +
+                    '<div class="mg-fact-title">' + data.title + '</div>' +
+                    '<div class="mg-fact-badge">危险警示</div>' +
+                    '</div>' +
+                    '<div class="mg-fact-content">' + data.content + '</div>' +
+                    '<div class="mg-fact-footer">' +
+                    '<span class="mg-fact-hint"><i class="fas fa-info-circle"></i> 了解风险，保护候鸟</span>' +
+                    '<button class="mg-fact-close" onclick="document.getElementById(\'mgFactCard\').classList.add(\'fade-out\')">' +
+                    '<i class="fas fa-times"></i> 关闭</button>' +
+                    '</div>';
+                document.body.appendChild(card);
+                var self = this;
+                setTimeout(function() {
+                    var el = document.getElementById('mgFactCard');
+                    if (el) el.classList.add('fade-out');
+                    setTimeout(function() { var e2 = document.getElementById('mgFactCard'); if (e2) e2.remove(); }, 300);
+                }, 5000);
+            },
+
+            showZoneFact:function(zoneName) {
+                var fact = MIGRATION_FACTS.zones[zoneName];
+                if (!fact) return;
+                var existing = document.getElementById('mgZoneFact');
+                if (existing) existing.remove();
+                var el = document.createElement('div');
+                el.id = 'mgZoneFact';
+                el.className = 'mg-zone-fact';
+                el.innerHTML =
+                    '<div class="mg-zone-fact-title"><i class="fas fa-map-marked-alt" style="margin-right:5px"></i>进入 ' + zoneName + ' 区域</div>' +
+                    '<div class="mg-zone-fact-content">' + fact + '</div>';
+                document.body.appendChild(el);
+                var self = this;
+                setTimeout(function() {
+                    var e = document.getElementById('mgZoneFact');
+                    if (e) e.classList.add('fade-out');
+                    setTimeout(function() { var e2 = document.getElementById('mgZoneFact'); if (e2) e2.remove(); }, 300);
+                }, 5000);
+            },
+
+            showBirdFactCard:function() {
+                if (!this.currentBird) return;
+                var birdId = this.currentBird.id;
+                var fact = MIGRATION_FACTS.birdTypes[birdId];
+                if (!fact) return;
+                var existing = document.getElementById('mgFactCard');
+                if (existing) existing.remove();
+                var card = document.createElement('div');
+                card.id = 'mgFactCard';
+                card.className = 'mg-fact-card';
+                card.innerHTML =
+                    '<div class="mg-fact-header">' +
+                    '<div class="mg-fact-icon" style="background:rgba(255,202,40,0.2); color:#FFCA28">' +
+                    '<i class="fas ' + fact.icon + '"></i></div>' +
+                    '<div class="mg-fact-title">' + fact.title + '</div>' +
+                    '<div class="mg-fact-badge">' + fact.badge + '</div>' +
+                    '</div>' +
+                    '<div class="mg-fact-content">' + fact.content + '</div>' +
+                    '<div class="mg-fact-footer">' +
+                    '<span class="mg-fact-hint"><i class="fas fa-feather"></i> 每一次飞行都是生命的壮举</span>' +
+                    '<button class="mg-fact-close" onclick="document.getElementById(\'mgFactCard\').classList.add(\'fade-out\')">' +
+                    '<i class="fas fa-times"></i> 关闭</button>' +
+                    '</div>';
+                document.body.appendChild(card);
+                var self = this;
+                setTimeout(function() {
+                    var el = document.getElementById('mgFactCard');
+                    if (el) el.classList.add('fade-out');
+                    setTimeout(function() { var e2 = document.getElementById('mgFactCard'); if (e2) e2.remove(); }, 6000);
+                }, 8000);
+            }
         };
 
         $(function(){ migrationGame.init(); });

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -6,7 +7,7 @@
     <title>生态浮岛 | 黄河生态方舟</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../static/app_monitor/css/games-shared.css">
+    <link rel="stylesheet" href="{% static 'app_monitor/css/games-shared.css' %}?v=2026042401">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         :root {
@@ -81,7 +82,7 @@
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
         }
         .fi-stat-item {
-            text-align: center; padding: 6px 4px;
+            text-align: center; padding: 8px 6px;
             background: rgba(0,105,92,0.06); border-radius: 10px;
         }
         .fi-stat-item .fi-stat-val {
@@ -99,30 +100,30 @@
         }
 
         /* === 控制提示 === */
-        .fi-rules { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; width: 100%; max-width: 300px; }
+        .fi-rules { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; width: 100%; max-width: 360px; }
         .fi-rule-item {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.7); padding: 5px 10px;
-            border-radius: 10px; font-size: 11.5px; color: #00695C;
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.7); padding: 8px 14px;
+            border-radius: 12px; font-size: 13px; color: #00695C;
         }
-        .fi-rule-item i { color: var(--g-accent); min-width: 16px; }
+        .fi-rule-item i { color: var(--g-accent); min-width: 18px; font-size: 14px; }
 
         /* === 游戏内 HUD === */
         .fi-hud {
             position: absolute; top: 0; left: 0; right: 0;
-            padding: 12px 14px;
+            padding: 14px 18px;
             display: none; justify-content: space-between; align-items: flex-start;
             z-index: 10; pointer-events: none;
         }
         .fi-hud.show { display: flex; }
         .fi-hud-panel {
-            background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            color: white; padding: 10px 14px; border-radius: 12px; font-size: 12.5px; pointer-events: auto;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            color: white; padding: 12px 16px; border-radius: 14px; font-size: 13.5px; pointer-events: auto;
         }
-        .fi-hud-panel h4 { margin: 0 0 8px; font-size: 12px; color: var(--g-accent); border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px; }
-        .fi-hud-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 3px 0; }
-        .fi-hud-bar { width: 80px; height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
-        .fi-hud-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+        .fi-hud-panel h4 { margin: 0 0 10px; font-size: 13px; color: var(--g-accent); border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 6px; }
+        .fi-hud-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 4px 0; }
+        .fi-hud-bar { width: 90px; height: 9px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+        .fi-hud-fill { height: 100%; border-radius: 5px; transition: width 0.3s; }
 
         /* === 物品栏 === */
         .fi-inventory {
@@ -155,16 +156,125 @@
         .fi-inv-btn.selected { border-color: var(--g-accent); background: rgba(255,167,38,0.2); box-shadow: 0 0 0 3px rgba(255,167,38,0.3); }
         .fi-inv-btn .inv-tooltip {
             position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.9); color: white; font-size: 11px; padding: 4px 8px;
-            border-radius: 6px; white-space: nowrap; pointer-events: none; display: none;
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.9); color: white; font-size: 11px; padding: 6px 10px;
+            border-radius: 6px; white-space: normal; width: 160px; text-align: left; pointer-events: none; display: none;
+            border: 1px solid rgba(255,255,255,0.15); line-height: 1.4; z-index: 50;
         }
+        .fi-inv-btn .inv-tooltip strong { display: block; margin-bottom: 3px; color: #FFCA28; }
         .fi-inv-btn:hover .inv-tooltip { display: block; }
 
         @media (max-width: 480px) {
             .fi-island-card { max-width: 280px; }
             .fi-stats-grid { grid-template-columns: repeat(3, 1fr); }
         }
+
+        /* === 科普知识卡片 === */
+        .fi-fact-card {
+            position: fixed;
+            top: 80px; right: 16px;
+            z-index: 200;
+            width: 280px;
+            background: rgba(224, 247, 250, 0.97);
+            border: 2px solid rgba(0, 105, 92, 0.3);
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 8px 32px rgba(0,105,92,0.2);
+            animation: fiFactSlideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+        @keyframes fiFactSlideIn {
+            from { opacity: 0; transform: translateX(30px) scale(0.9); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .fi-fact-card.fade-out {
+            animation: fiFactSlideOut 0.3s ease forwards;
+        }
+        @keyframes fiFactSlideOut {
+            from { opacity: 1; transform: translateX(0) scale(1); }
+            to   { opacity: 0; transform: translateX(30px) scale(0.9); }
+        }
+        .fi-fact-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .fi-fact-icon {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .fi-fact-title {
+            font-size: 13px; font-weight: 700; color: #004D40; flex: 1;
+        }
+        .fi-fact-badge {
+            font-size: 10px; padding: 2px 7px; border-radius: 8px;
+            background: rgba(0,105,92,0.12); color: #00695C; font-weight: 600;
+        }
+        .fi-fact-content {
+            font-size: 12px; color: #00695C; line-height: 1.6;
+            max-height: 120px; overflow-y: auto;
+        }
+        .fi-fact-footer {
+            margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,105,92,0.15);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .fi-fact-close {
+            background: none; border: none; cursor: pointer; color: #6b7c6b;
+            font-size: 11px; padding: 4px 8px; border-radius: 8px; transition: all 0.2s;
+        }
+        .fi-fact-close:hover { background: rgba(0,105,92,0.1); color: #00695C; }
+        .fi-fact-hint {
+            font-size: 10px; color: #9e9e9e; display: flex; align-items: center; gap: 4px;
+        }
+        /* === 科普气泡 === */
+        .fi-fact-bubble {
+            position: fixed; z-index: 200; pointer-events: none;
+            background: rgba(224,247,250,0.97);
+            border: 1px solid rgba(0,105,92,0.3);
+            border-radius: 10px; padding: 6px 10px; font-size: 11px; color: #00695C;
+            max-width: 180px; text-align: center;
+            box-shadow: 0 4px 12px rgba(0,105,92,0.15);
+            animation: fiBubblePop 2.5s ease forwards;
+        }
+        @keyframes fiBubblePop {
+            0%   { opacity: 0; transform: translateY(8px) scale(0.8); }
+            15%  { opacity: 1; transform: translateY(0) scale(1); }
+            75%  { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-8px) scale(0.9); }
+        }
+        /* === 生态知识条 === */
+        .fi-ecology-bar {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 30; pointer-events: none;
+            background: rgba(224,247,250,0.95);
+            border: 1.5px solid rgba(0,105,92,0.25);
+            border-radius: 12px;
+            padding: 8px 18px;
+            font-size: 12px; color: #00695C;
+            text-align: center;
+            min-width: 200px;
+            animation: fiFactSlideIn 0.35s ease;
+            box-shadow: 0 4px 16px rgba(0,105,92,0.15);
+        }
+        .fi-ecology-bar.fade-out {
+            animation: fiFactSlideOut 0.3s ease forwards;
+        }
+        .fi-ecology-bar-icon { margin-bottom: 3px; }
+        /* === 科普按钮 === */
+        .fi-fact-btn {
+            position: absolute; top: 0; right: 16px; z-index: 16;
+            background: rgba(0,105,92,0.85); color: white;
+            border: none; padding: 8px 16px; border-radius: 20px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            display: none; align-items: center; gap: 6px;
+            font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            transition: all 0.2s; pointer-events: auto;
+        }
+        .fi-fact-btn.show { display: flex; }
+        .fi-fact-btn:hover { background: rgba(0,105,92,1); transform: scale(1.05); }
+        #gameOverOverlay { justify-content: center; }
+        #gameOverOverlay > div { margin: auto; }
+        #startOverlay h2 { font-size: 28px; margin-bottom: 6px; }
+        #startOverlay .g-subtitle { font-size: 14px; margin-bottom: 18px; }
+        .fi-island-card { margin-bottom: 18px; }
     </style>
 </head>
 <body>
@@ -207,6 +317,11 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 科普按钮 -->
+            <button class="fi-fact-btn" id="fiFactBtn" onclick="floatingGame.showEcologyTip()">
+                <i class="fas fa-graduation-cap"></i> 科普
+            </button>
 
             <!-- 物品栏 -->
             <div class="fi-inventory" id="fiInventory"></div>
@@ -293,18 +408,65 @@
         </div>
 
         <div class="g-info-panel">
-            <h4><i class="fas fa-lightbulb" style="color:#FFA726"></i> 建造技巧</h4>
-            <p>生态浮岛需要平衡重量：<strong>乔木/巨石</strong>重但稳定性好；<strong>芦苇/野花</strong>轻且能增加多样性；<strong>卵石</strong>可压舱；<strong>水鸟</strong>增加多样性但会降低稳定性。合理搭配才能拿高分！</p>
+            <h4><i class="fas fa-graduation-cap" style="color:#FFA726"></i> 生态浮岛知识</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;text-align:left;">
+                <div style="background:rgba(0,105,92,0.06);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#00695C;margin-bottom:3px;"><i class="fas fa-balance-scale" style="margin-right:4px"></i>生态平衡</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">物种越多，生态越稳定。生物与环境和谐共处才能可持续发展。</div>
+                </div>
+                <div style="background:rgba(0,105,92,0.06);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#00695C;margin-bottom:3px;"><i class="fas fa-sync" style="margin-right:4px"></i>生态演替</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">从裸露基质→先锋物种定居→多样化→稳定群落，模拟真实湿地生态。</div>
+                </div>
+                <div style="background:rgba(0,105,92,0.06);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#00695C;margin-bottom:3px;"><i class="fas fa-hands-helping" style="margin-right:4px"></i>互利共生</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">青蛙→捕食昆虫；鸟类→传播种子；昆虫→为植物授粉。生物间互帮互助。</div>
+                </div>
+                <div style="background:rgba(0,105,92,0.06);padding:8px 10px;border-radius:10px;font-size:12px;">
+                    <div style="font-weight:700;color:#00695C;margin-bottom:3px;"><i class="fas fa-exclamation-triangle" style="margin-right:4px"></i>失衡警示</div>
+                    <div style="color:#6b7c6b;line-height:1.4;">过重或两侧不均都会打破平衡，自然界同样遵循此规律。</div>
+                </div>
+            </div>
         </div>
     </main>
 
     <script>
+        /* ============================================================
+           科普知识数据
+        ============================================================ */
+        var FLOATING_ISLAND_FACTS = {
+            items: {
+                reed:     '芦苇：根系可净化水体，每平方米每年可截留约50克泥沙，是湿地的天然"清道夫"。',
+                flower:   '湿地花卉：为传粉昆虫提供食物，增加生态系统多样性，花粉和花蜜是蝴蝶的主要能量来源。',
+                grass:    '苔草：耐水淹，能在季节性积水区生长，根系固定土壤防止水土流失，是湿地先锋植物。',
+                bush:     '灌木丛：为小型鸟类提供筑巢场所，浆果是秋季候鸟的重要食物，灌木根系还能稳定岸坡。',
+                tree:     '湿地乔木（如柳树）：树洞为啄木鸟、猫头鹰提供住所，落叶分解后增加水体营养，形成微型生态系统。',
+                moss:     '苔藓：能吸收自身体重20倍的水分，是湿地含水量的天然调节器，还能监测空气污染程度。',
+                stone:    '卵石：白天吸热夜晚放热，调节近岸水温，为水生昆虫提供附着基质，是许多小型动物的家。',
+                boulder:  '巨石：形成微生境，为蜥蜴、青蛙提供晒太阳和隐蔽的场所，也是昆虫和微生物的栖息地。',
+                shell:    '贝壳：含钙物质缓慢释放，可调节水体酸碱度，贝壳碎片也是某些鸟类（如黑嘴鸥）的筑巢材料。',
+                driftwood:'漂流木：为水獭提供休息平台，也是甲虫和真菌的栖息基质，被称为河流生态系统的"诺亚方舟"。',
+                bird:     '湿地鸟类：帮助传播种子、控制昆虫数量，鸟粪还是天然肥料，形成良性生态循环。',
+                fish:     '鱼类：湿地生态系统能量流动的核心，连接浮游生物和大型捕食者，是食物链的关键环节。',
+                frog:     '青蛙：湿地健康的指示物种，其皮肤对环境污染极为敏感，是生态系统的天然"预警器"。',
+                dragonfly:'蜻蜓：稚虫捕食蚊子幼虫，成虫是空中"猎手"，一天可捕食上百只蚊虫，是天然灭蚊剂。',
+                snail:    '螺类：清理水体中的藻类和腐殖质，是湿地"清洁工"，也是鱼类的优质食物。'
+            },
+            ecology: {
+                diversity:  '物种多样性越高，生态系统越稳定。丰富的物种构成可以互相补充、抵御病虫害和气候变化。',
+                balance:    '浮岛的平衡体现了自然界的基本规律：生物与环境必须和谐共处，过重或失衡都会导致系统崩溃。',
+                succession: '生态浮岛的演替过程与真实湿地相似：从裸露基质→先锋物种定居→多样化→稳定顶极群落。',
+                symbiosis:  '浮岛上不同生物之间存在互利共生关系：青蛙捕食昆虫，鸟类传播植物种子，昆虫为植物授粉。'
+            }
+        };
+
         var floatingGame = {
             canvas:null, ctx:null, isRunning:false, score:0,
             frameCount:0, animationId:null,
             islandCount:3, selectedItem:'reed',
             islands:[], timeLeft:180,
             diversity:0, stability:100,
+            factCooldown:0, seenItems:new Set(),
             itemTypes:[
                 {id:'reed',     name:'芦苇',       category:'plant',  icon:'fa-water',        weight:0.3, stability:0.05,  diversity:1,  color:'#2e7d32'},
                 {id:'flower',   name:'野花',       category:'plant',  icon:'fa-spa',          weight:0.2, stability:0.02,  diversity:2,  color:'#e91e63'},
@@ -372,7 +534,9 @@
                         var btn = document.createElement('div');
                         btn.className = 'fi-inv-btn' + (it.id === self.selectedItem ? ' selected' : '');
                         btn.id = 'fiInv' + it.id;
-                        btn.innerHTML = '<i class="fas ' + it.icon + '" style="color:' + it.color + '"></i><span class="inv-tooltip">' + it.name + '</span>';
+                        var fact = FLOATING_ISLAND_FACTS.items[it.id] || '';
+                        var shortFact = fact.split('，')[0] + '。';
+                        btn.innerHTML = '<i class="fas ' + it.icon + '" style="color:' + it.color + '"></i><span class="inv-tooltip"><strong>' + it.name + '</strong><br>' + shortFact + '</span>';
                         btn.addEventListener('click', function(id){ return function(){ self.selectItem(id); }; }(it.id));
                         catDiv.appendChild(btn);
                     });
@@ -407,6 +571,11 @@
                         this.updateStats();
                         this.score += 3;
                         this.checkWin();
+                        // Show item fact
+                        if (this.factCooldown <= 0) {
+                            this.showItemFact(this.selectedItem, x, y);
+                            this.factCooldown = 180;
+                        }
                         return;
                     }
                 }
@@ -466,11 +635,13 @@
                 document.getElementById('gameOverOverlay').style.display = 'none';
                 document.getElementById('fiHud').classList.add('show');
                 document.getElementById('fiInventory').classList.add('show');
+                $('#fiFactBtn').addClass('show');
 
                 this.isRunning = true;
                 this.score = 0; this.diversity = 0; this.stability = 60;
                 this.frameCount = 0; this.timeLeft = 180;
                 this.selectedItem = 'reed';
+                this.factCooldown = 0; this.seenItems = new Set();
 
                 this.islands = [];
                 var w = this.canvas.width, h = this.canvas.height;
@@ -498,6 +669,7 @@
                 if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
                 document.getElementById('fiHud').classList.remove('show');
                 document.getElementById('fiInventory').classList.remove('show');
+                $('#fiFactBtn').removeClass('show');
                 document.getElementById('winOverlay').style.display = 'none';
                 document.getElementById('gameOverOverlay').style.display = 'none';
                 document.getElementById('startOverlay').style.display = '';
@@ -798,6 +970,76 @@
                     ctx.beginPath(); ctx.moveTo(x+12,y); ctx.lineTo(x+20,y-4); ctx.lineTo(x+20,y+4); ctx.closePath(); ctx.fill();
                     ctx.fillStyle='rgba(30,144,255,0.25)';
                 }
+            },
+
+            showItemFact:function(itemId, screenX, screenY) {
+                var fact = FLOATING_ISLAND_FACTS.items[itemId];
+                if (!fact) return;
+                // Show brief bubble near placement
+                var bubble = document.createElement('div');
+                bubble.className = 'fi-fact-bubble';
+                var parts = fact.split('：');
+                bubble.textContent = parts.length > 1 ? parts[0] + '：' + parts[1].substring(0, 30) + '...' : fact.substring(0, 40) + '...';
+                var rect = this.canvas.getBoundingClientRect();
+                bubble.style.left = (rect.left + screenX - 80) + 'px';
+                bubble.style.top = (rect.top + screenY - 60) + 'px';
+                document.body.appendChild(bubble);
+                setTimeout(function() { bubble.remove(); }, 2500);
+                // Also show full card
+                var self = this;
+                setTimeout(function() {
+                    if (self.isRunning) self.showFactCard(itemId);
+                }, 800);
+            },
+
+            showFactCard:function(itemId) {
+                var fact = FLOATING_ISLAND_FACTS.items[itemId];
+                if (!fact) return;
+                var cfg = this.itemTypes.find(function(t){ return t.id === itemId; });
+                var existing = document.getElementById('fiFactCard');
+                if (existing) existing.remove();
+                var card = document.createElement('div');
+                card.id = 'fiFactCard';
+                card.className = 'fi-fact-card';
+                card.innerHTML =
+                    '<div class="fi-fact-header">' +
+                    '<div class="fi-fact-icon" style="background:' + (cfg ? cfg.color + '20' : 'rgba(0,105,92,0.2)') + '; color:' + (cfg ? cfg.color : '#00695C') + '">' +
+                    '<i class="fas ' + (cfg ? cfg.icon : 'fa-leaf') + '"></i></div>' +
+                    '<div class="fi-fact-title">' + (cfg ? cfg.name : itemId) + '</div>' +
+                    '<div class="fi-fact-badge">生态知识</div>' +
+                    '</div>' +
+                    '<div class="fi-fact-content">' + fact + '</div>' +
+                    '<div class="fi-fact-footer">' +
+                    '<span class="fi-fact-hint"><i class="fas fa-lightbulb" style="color:#FFA726"></i> 每种生物都有独特价值</span>' +
+                    '<button class="fi-fact-close" onclick="document.getElementById(\'fiFactCard\').classList.add(\'fade-out\')">' +
+                    '<i class="fas fa-times"></i> 关闭</button>' +
+                    '</div>';
+                document.body.appendChild(card);
+                var self = this;
+                setTimeout(function() {
+                    var el = document.getElementById('fiFactCard');
+                    if (el) el.classList.add('fade-out');
+                    setTimeout(function() { var e2 = document.getElementById('fiFactCard'); if (e2) e2.remove(); }, 300);
+                }, 6000);
+            },
+
+            showEcologyTip:function() {
+                var tips = Object.values(FLOATING_ISLAND_FACTS.ecology);
+                if (!tips.length) return;
+                var tip = tips[Math.floor(Math.random() * tips.length)];
+                var existing = document.getElementById('fiEcologyBar');
+                if (existing) return;
+                var el = document.createElement('div');
+                el.id = 'fiEcologyBar';
+                el.className = 'fi-ecology-bar';
+                el.innerHTML = '<div class="fi-ecology-bar-icon"><i class="fas fa-leaf" style="color:#4CAF50"></i></div>' + tip;
+                document.querySelector('.g-canvas-wrap').appendChild(el);
+                var self = this;
+                setTimeout(function() {
+                    var e = document.getElementById('fiEcologyBar');
+                    if (e) e.classList.add('fade-out');
+                    setTimeout(function() { var e2 = document.getElementById('fiEcologyBar'); if (e2) e2.remove(); }, 300);
+                }, 5000);
             }
         };
 

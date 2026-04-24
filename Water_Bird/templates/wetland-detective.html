@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -6,7 +7,7 @@
     <title>湿地侦探 | 黄河生态方舟</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../static/app_monitor/css/games-shared.css">
+    <link rel="stylesheet" href="{% static 'app_monitor/css/games-shared.css' %}?v=2026042402">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         :root {
@@ -28,107 +29,118 @@
                 radial-gradient(circle at 80% 20%, rgba(93,64,55,0.04) 0%, transparent 50%);
         }
         .dtc-rule-list {
-            display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;
-            width: 100%; max-width: 380px;
+            display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;
+            width: 100%; max-width: 440px;
         }
         .dtc-rule-item {
-            display: flex; align-items: center; gap: 10px;
-            background: rgba(255,255,255,0.7); padding: 6px 12px; border-radius: 10px;
-            font-size: 12.5px; color: #5d4037;
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(255,255,255,0.75); padding: 10px 16px; border-radius: 12px;
+            font-size: 14px; color: #5d4037;
         }
-        .dtc-rule-item i { color: var(--g-primary-light); min-width: 18px; text-align: center; }
+        .dtc-rule-item i { color: var(--g-primary-light); min-width: 20px; text-align: center; font-size: 15px; }
+        .dtc-start-info-card {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            width: 100%; max-width: 480px; margin-bottom: 20px;
+        }
+        .dtc-start-info-item {
+            background: rgba(93,64,55,0.06); border: 1px solid rgba(93,64,55,0.12);
+            border-radius: 14px; padding: 14px 8px; text-align: center;
+        }
+        .dtc-start-info-icon { font-size: 28px; margin-bottom: 6px; }
+        .dtc-start-info-label { font-size: 11px; color: #8d6e63; font-weight: 500; margin-bottom: 2px; }
+        .dtc-start-info-val { font-size: 16px; font-weight: 700; color: #3e2723; }
         .dtc-hud-timer {
             position: absolute; top: 16px; left: 16px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            color: white; padding: 12px 18px; border-radius: 14px; font-size: 14px; z-index: 10;
-            min-width: 220px; display: none;
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            color: white; padding: 14px 20px; border-radius: 14px; font-size: 15px; z-index: 10;
+            min-width: 240px; display: none;
         }
         .dtc-hud-timer.show { display: block; }
         .dtc-timer-row {
-            display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
         }
         .dtc-timer-row:last-child { margin-bottom: 0; }
-        .dtc-timer-bar { flex: 1; height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden; }
-        .dtc-timer-fill { height: 100%; border-radius: 5px; transition: width 0.3s, background 0.5s; }
+        .dtc-timer-bar { flex: 1; height: 12px; background: rgba(255,255,255,0.15); border-radius: 6px; overflow: hidden; }
+        .dtc-timer-fill { height: 100%; border-radius: 6px; transition: width 0.3s, background 0.5s; }
         .dtc-hud-case {
             position: absolute; top: 16px; right: 16px;
-            background: rgba(245,240,232,0.95); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            color: #3e2723; padding: 14px 18px; border-radius: 12px; font-size: 13px; z-index: 10;
-            min-width: 220px; max-height: 80vh; overflow-y: auto;
+            background: rgba(245,240,232,0.96); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            color: #3e2723; padding: 16px 20px; border-radius: 14px; font-size: 14px; z-index: 10;
+            min-width: 240px; max-height: 80vh; overflow-y: auto;
             border: 2px solid #8d6e63; box-shadow: 0 4px 15px rgba(0,0,0,0.25); display: none;
         }
         .dtc-hud-case.show { display: block; }
-        .dtc-hud-case h4 { margin: 0 0 10px 0; font-size: 15px; color: #5d4037; border-bottom: 2px dashed #8d6e63; padding-bottom: 7px; }
+        .dtc-hud-case h4 { margin: 0 0 12px 0; font-size: 16px; color: #5d4037; border-bottom: 2px dashed #8d6e63; padding-bottom: 8px; }
         .dtc-evi-item {
-            display: flex; align-items: center; gap: 9px; padding: 6px 0;
-            border-bottom: 1px dotted #ccc; font-size: 12.5px; transition: all 0.3s;
+            display: flex; align-items: center; gap: 10px; padding: 7px 0;
+            border-bottom: 1px dotted #ccc; font-size: 13.5px; transition: all 0.3s;
         }
         .dtc-evi-item:last-child { border-bottom: none; }
         .dtc-evi-item .evi-icon {
-            width: 26px; height: 26px; border-radius: 50%; background: #ddd;
-            display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0;
+            width: 30px; height: 30px; border-radius: 50%; background: #ddd;
+            display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
         }
-        .dtc-evi-item.found { color: #2e7d32; background: rgba(76,175,80,0.08); padding: 6px 10px; margin: 3px -10px; border-radius: 8px; }
+        .dtc-evi-item.found { color: #2e7d32; background: rgba(76,175,80,0.1); padding: 7px 12px; margin: 4px -12px; border-radius: 10px; }
         .dtc-evi-item.found .evi-icon { background: #4CAF50; color: white; }
         .dtc-evi-item.pending { color: #bbb; }
         .dtc-magnifier {
-            position: absolute; bottom: 28px; right: 20px;
-            width: 64px; height: 64px; border-radius: 50%;
+            position: absolute; bottom: 30px; right: 24px;
+            width: 72px; height: 72px; border-radius: 50%;
             border: 3px solid #8d6e63;
             background: linear-gradient(135deg, #fff8e1, #ffe0b2);
             cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;
-            font-size: 26px; transition: all 0.25s; box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: none;
+            font-size: 30px; transition: all 0.25s; box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: none;
         }
         .dtc-magnifier.show { display: flex; }
         .dtc-magnifier:hover { transform: scale(1.1); }
         .dtc-magnifier.used { background: linear-gradient(135deg, #c8e6c9, #a5d6a7); border-color: #4CAF50; }
         .dtc-clue-panel {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
             background: linear-gradient(135deg, #5d4037, #3e2723);
-            padding: 12px 26px; border-radius: 28px; color: #f5f0dc; font-size: 14px; z-index: 10;
-            border: 2px solid var(--g-accent); max-width: 600px; width: calc(100% - 100px);
+            padding: 14px 30px; border-radius: 28px; color: #f5f0dc; font-size: 15px; z-index: 10;
+            border: 2px solid var(--g-accent); max-width: 640px; width: calc(100% - 120px);
             text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.35); display: none;
         }
-        .dtc-clue-panel.show { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .dtc-clue-panel.show { display: flex; align-items: center; justify-content: center; gap: 12px; }
         .dtc-case-progress {
             position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-            display: none; align-items: center; gap: 8px;
-            background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
-            padding: 6px 16px; border-radius: 20px; color: white; font-size: 12px; z-index: 10;
+            display: none; align-items: center; gap: 10px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            padding: 8px 18px; border-radius: 20px; color: white; font-size: 13px; z-index: 10;
         }
         .dtc-case-progress.show { display: flex; }
         .dtc-case-dot {
-            width: 10px; height: 10px; border-radius: 50%;
+            width: 12px; height: 12px; border-radius: 50%;
             background: rgba(255,255,255,0.3); border: 2px solid rgba(255,255,255,0.5);
         }
         .dtc-case-dot.done { background: #4CAF50; border-color: #4CAF50; }
         .dtc-case-dot.active { background: var(--g-accent); border-color: var(--g-accent); box-shadow: 0 0 8px var(--g-accent); }
         .dtc-options-panel {
             position: absolute; bottom: 0; left: 0; right: 0;
-            background: rgba(245,240,232,0.97); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            padding: 16px 20px 20px; z-index: 15; display: none; border-top: 3px solid #8d6e63;
+            background: rgba(245,240,232,0.97); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 18px 24px 24px; z-index: 15; display: none; border-top: 3px solid #8d6e63;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
         }
         .dtc-options-panel.show { display: block; }
-        .dtc-options-title { font-size: 13px; color: #8d6e63; font-weight: 600; margin-bottom: 10px; text-align: center; }
-        .dtc-options-grid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .dtc-options-title { font-size: 14px; color: #8d6e63; font-weight: 600; margin-bottom: 12px; text-align: center; }
+        .dtc-options-grid { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         .dtc-option-card {
-            width: 110px; background: white; border: 2px solid #d7ccc8;
-            border-radius: 14px; overflow: hidden; cursor: pointer;
+            width: 130px; background: white; border: 2px solid #d7ccc8;
+            border-radius: 16px; overflow: hidden; cursor: pointer;
             transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        .dtc-option-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); border-color: #8d6e63; }
+        .dtc-option-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.18); border-color: #8d6e63; }
         .dtc-option-card.correct { border-color: #4CAF50; background: #e8f5e9; }
         .dtc-option-card.wrong { border-color: #f44336; background: #ffebee; }
         .dtc-option-card.disabled { pointer-events: none; opacity: 0.7; }
         .dtc-option-img {
-            height: 75px; background: #f5f0e8;
+            height: 88px; background: #f5f0e8;
             display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
         .dtc-option-img img { width: 100%; height: 100%; object-fit: cover; }
-        .dtc-option-img .dtc-option-placeholder { font-size: 32px; color: #d7ccc8; }
-        .dtc-option-name { padding: 8px 6px; font-size: 12px; font-weight: 600; color: #3e2723; text-align: center; }
-        .dtc-option-feedback { padding: 3px; font-size: 10px; text-align: center; display: none; }
+        .dtc-option-img .dtc-option-placeholder { font-size: 36px; color: #d7ccc8; }
+        .dtc-option-name { padding: 10px 8px; font-size: 13px; font-weight: 600; color: #3e2723; text-align: center; }
+        .dtc-option-feedback { padding: 4px; font-size: 11px; text-align: center; display: none; }
         .dtc-option-card.correct .dtc-option-feedback { color: #4CAF50; display: block; }
         .dtc-option-card.wrong .dtc-option-feedback { color: #f44336; display: block; }
         .dtc-science-overlay {
@@ -302,6 +314,30 @@
             <div class="g-overlay" id="startOverlay" style="background:rgba(245,240,232,0.92);">
                 <h2><i class="fas fa-user-secret"></i> 湿地侦探</h2>
                 <p class="g-subtitle">深入湿地现场，收集证据推断物种身份</p>
+
+                <!-- 侦探信息卡 -->
+                <div class="dtc-start-info-card">
+                    <div class="dtc-start-info-item">
+                        <div class="dtc-start-info-icon" style="color:#5d4037"><i class="fas fa-briefcase"></i></div>
+                        <div class="dtc-start-info-label">每轮案件</div>
+                        <div class="dtc-start-info-val">3个</div>
+                    </div>
+                    <div class="dtc-start-info-item">
+                        <div class="dtc-start-info-icon" style="color:#e9c46a"><i class="fas fa-stopwatch"></i></div>
+                        <div class="dtc-start-info-label">时间限制</div>
+                        <div class="dtc-start-info-val">60秒</div>
+                    </div>
+                    <div class="dtc-start-info-item">
+                        <div class="dtc-start-info-icon" style="color:#4CAF50"><i class="fas fa-microscope"></i></div>
+                        <div class="dtc-start-info-label">候鸟物种</div>
+                        <div class="dtc-start-info-val">多种</div>
+                    </div>
+                    <div class="dtc-start-info-item">
+                        <div class="dtc-start-info-icon" style="color:#e91e63"><i class="fas fa-trophy"></i></div>
+                        <div class="dtc-start-info-label">完成报告</div>
+                        <div class="dtc-start-info-val">奖励</div>
+                    </div>
+                </div>
 
                 <div class="dtc-rule-list">
                     <div class="dtc-rule-item"><i class="fas fa-crosshairs"></i> 点击场景中发光的物品收集证据</div>
